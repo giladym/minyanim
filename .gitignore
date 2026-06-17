@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+out/
+.nuxt/
+.output/
+.vite/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Claude Code — may contain auth tokens / credentials
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Package manager locks (keep only one — remove whichever you don't use)
+# yarn.lock
+# pnpm-lock.yaml
