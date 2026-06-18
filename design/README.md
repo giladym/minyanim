@@ -16,9 +16,9 @@ application design"** on claude.ai/design.
   - `email-verification.html` / `email-password-reset.html` — branded transactional email
     templates (ported to `apps/backend/src/lib/email-templates.ts`)
 
-> **Open decision — brand wordmark**: the design mixes `מניין` (singular) and `מניינים`
-> (plural). Pick one canonical wordmark (English: *Minyanim*) and apply everywhere. Tracked
-> as Feature 001 FR-011.
+> **Brand wordmark — DECIDED: `מניין`** (English: *Minyanim*). The implementation uses it
+> consistently (i18n, emails, footer). The claude.ai design source still mixes in the plural
+> `מניינים` in a few spots — to be aligned via the design chat (FR-011).
 - **Chosen direction**: **A · Jerusalem Stone (אבן ירושלים)** — warm sand & clay, Assistant
   font, light + dark. (Alternatives explored: B · Voyage / indigo / Heebo; C · Maariv /
   navy + gold / Rubik.)
