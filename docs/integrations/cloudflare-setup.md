@@ -18,7 +18,7 @@ flags, and the bindings. Secrets handling follows [`../secrets.md`](../secrets.m
 |------|---------|-------|
 | **Wrangler** | **v4** (latest stable) | CLI + local runtime; pin the exact version. Prefer `wrangler.jsonc` over `wrangler.toml`. |
 | **@cloudflare/vite-plugin** | **v1.x** (GA) | Runs the real `workerd` runtime in `vite dev`; builds the frontend for Workers. |
-| **Node** (tooling only) | **20 LTS+** | For the build toolchain; the Workers runtime itself is not Node. |
+| **Node** (tooling only) | **22 LTS+** | wrangler v4 requires Node ≥22; for the build toolchain; the Workers runtime itself is not Node. |
 | pnpm | latest | Monorepo package manager (see ADR-0001). |
 
 ```bash

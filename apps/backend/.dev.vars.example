@@ -1,0 +1,6 @@
+# Copy to `.dev.vars` (git-ignored) and fill in. See docs/secrets.md + docs/integrations/.
+# Secrets are read via the Worker `env` binding — never committed, never in client code.
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+BETTER_AUTH_SECRET=""
+RESEND_API_KEY=""

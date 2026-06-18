@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "minyanim-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  // Non-secret config. APP_BASE_URL = the public frontend origin (dev value here; override
+  // per environment for staging/prod). Secrets live in .dev.vars / wrangler secret.
+  "vars": { "APP_BASE_URL": "http://localhost:5173" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "minyanim",
+      "database_id": "e07c357a-7d4b-4130-ad24-0ad70dea7c0f",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Native Rate Limiting binding (research D13) — auth/write endpoints. period ∈ {10,60}.
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "RATE_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": "1001",
+        "simple": { "limit": 20, "period": 60 }
+      }
+    ]
+  }
+}
