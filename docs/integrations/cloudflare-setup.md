@@ -104,6 +104,35 @@ wrangler d1 migrations apply minyanim --local
 wrangler d1 migrations apply minyanim --remote    # when deploying
 ```
 
+## First manual deploy (dev) — T059
+
+`APP_BASE_URL` in `wrangler.jsonc` `[vars]` is the **local-dev** value (`http://localhost:5173`).
+Do NOT hardcode the deployed URL there — it would break local dev. Instead pass the public URL
+at deploy time with `--var`:
+
+```bash
+# 1) Backend secrets (interactive — values never enter source/chat)
+cd apps/backend
+wrangler secret put GOOGLE_CLIENT_ID
+wrangler secret put GOOGLE_CLIENT_SECRET
+wrangler secret put BETTER_AUTH_SECRET           # a fresh prod secret, not the .dev.vars one
+
+# 2) Remote D1 migrations
+wrangler d1 migrations apply minyanim --remote
+
+# 3) Backend — override APP_BASE_URL with the public frontend origin
+wrangler deploy --var APP_BASE_URL:https://minyanim-frontend.count-game.workers.dev
+
+# 4) Frontend (after the backend exists, so the Service Binding resolves)
+cd ../frontend && pnpm build:prerender && wrangler deploy
+```
+
+Then in the Google Console add the deployed redirect URI:
+`https://minyanim-frontend.count-game.workers.dev/api/auth/callback/google`.
+
+(Proper per-environment config — separate Worker names + D1 + secrets per dev/staging/prod —
+is research D14, deferred. This deploys the single Worker; treat it as dev/staging.)
+
 ## Local secrets from your `.private` vault
 
 You stored the Google credentials in `.private` (git-ignored). For the app to read them
