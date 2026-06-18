@@ -12,13 +12,16 @@ application design"** on claude.ai/design.
   - `Minyanim Homepage.dc.html` — the rich marketing homepage (desktop + mobile, animated
     globe). Copy in [`HOMEPAGE-COPY.md`](./HOMEPAGE-COPY.md); brief in
     [`HOMEPAGE-BRIEF.md`](./HOMEPAGE-BRIEF.md).
+  - `Minyanim Homepage EN.dc.html` — English LTR homepage (mirrors the RTL layout via the same
+    token system; in code this is the same homepage component via i18n, not a separate file)
   - `Theme Explorer.dc.html` — three explored theme directions (A/B/C)
   - `email-verification.html` / `email-password-reset.html` — branded transactional email
     templates (ported to `apps/backend/src/lib/email-templates.ts`)
 
-> **Brand wordmark — DECIDED: `מניין`** (English: *Minyanim*). The implementation uses it
-> consistently (i18n, emails, footer). The claude.ai design source still mixes in the plural
-> `מניינים` in a few spots — to be aligned via the design chat (FR-011).
+> **Brand wordmark — `מניין`** (English: *Minyanim*). ✅ Consistent across the implementation
+> (i18n, emails, footer) AND the design source (brand fixes applied 2026-06-19: mission eyebrow,
+> verb agreement, testimonial). Common-noun plural `מניינים` ("מניינים פעילים" etc.) is correct
+> Hebrew and intentionally kept. (FR-011 resolved.)
 - **Chosen direction**: **A · Jerusalem Stone (אבן ירושלים)** — warm sand & clay, Assistant
   font, light + dark. (Alternatives explored: B · Voyage / indigo / Heebo; C · Maariv /
   navy + gold / Rubik.)
