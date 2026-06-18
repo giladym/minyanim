@@ -2,7 +2,7 @@
   "name": "minyanim",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "packageManager": "pnpm@9.12.3",
   "scripts": {
     "dev": "turbo run dev",

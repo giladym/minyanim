@@ -5,7 +5,7 @@ How to run the foundation locally and validate it end-to-end. Details live in
 
 ## Prerequisites
 
-- Node 18+ and a Cloudflare account with Wrangler authenticated (`wrangler login`)
+- Node 22+ and a Cloudflare account with Wrangler authenticated (`wrangler login`)
 - A **Google OAuth client** (Authorized redirect URI → `http://localhost:5173/api/auth/callback/google`
   for dev, and the production URL)
 - A **D1 database** created (`wrangler d1 create minyanim`) and bound in `wrangler.jsonc`

@@ -19,7 +19,7 @@ logging, and server-side Jewish-calendar computation. See [research.md](./resear
 
 ## Technical Context
 
-**Language/Version**: TypeScript (strict), React 18+, **Node 20 LTS** toolchain
+**Language/Version**: TypeScript (strict), React 18+, **Node 22 LTS** toolchain (wrangler v4 requires ≥22)
 
 **Primary Dependencies**: pnpm + Turborepo (monorepo); Vite + `@cloudflare/vite-plugin`;
 React + **TanStack Router** + **TanStack Query**; **Hono** + `@hono/zod-openapi` +
