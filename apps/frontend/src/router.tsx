@@ -1,15 +1,43 @@
-import { createRootRoute, createRoute, createRouter, Outlet } from "@tanstack/react-router";
+import { createRootRoute, createRoute, createRouter, Outlet, redirect } from "@tanstack/react-router";
 import { Home } from "./routes/home";
+import { SignIn, Register, ForgotPassword, ResetPassword, StaysPlaceholder } from "./features/auth/AuthScreens";
+import { authClient } from "./lib/auth-client";
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
 
-const indexRoute = createRoute({
+const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
+
+const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
-  component: Home,
+  path: "/sign-in",
+  validateSearch: (s): { redirect?: string } => ({
+    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+  }),
+  component: SignIn,
+});
+const registerRoute = createRoute({ getParentRoute: () => rootRoute, path: "/register", component: Register });
+const forgotRoute = createRoute({ getParentRoute: () => rootRoute, path: "/forgot-password", component: ForgotPassword });
+const resetRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
+
+// Protected: requires a session, else redirect to sign-in with a return path (T036).
+const staysRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/stays",
+  beforeLoad: async () => {
+    const { data } = await authClient.getSession();
+    if (!data) throw redirect({ to: "/sign-in", search: { redirect: "/stays" } });
+  },
+  component: StaysPlaceholder,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  signInRoute,
+  registerRoute,
+  forgotRoute,
+  resetRoute,
+  staysRoute,
+]);
 
 export const router = createRouter({ routeTree });
 

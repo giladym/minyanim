@@ -1,5 +1,7 @@
-/** Shared Zod contracts (request/response payloads). Fleshed out in task T012. */
+/** Shared Zod contracts (request/response payloads). */
 import { z } from "zod";
+
+export * from "./auth";
 
 /** E.164 international phone format. */
 export const e164 = z.string().regex(/^\+[1-9]\d{1,14}$/, "phone.invalid_e164");

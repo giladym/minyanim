@@ -82,10 +82,10 @@ TDD for every unit.
 **Goal**: identity via Google SSO or email+password (verify, reset), 30-day/shared-device sessions, account linking.
 **Independent test**: register w/ email → verify → sign in → still signed in after reopen; Google sign-in reaches the same dashboard.
 
-- [ ] T033 [P] [US2] Auth Zod schemas (sign-up, sign-in, reset, password rules) in `packages/shared/src/schemas/auth.ts`
-- [ ] T034 [US2] Sign-in/Register UI (Google button + email/password forms + "shared device" checkbox) in `apps/frontend/src/routes/auth/`
-- [ ] T035 [P] [US2] Email-verification + password-reset UI flows in `apps/frontend/src/routes/auth/`
-- [ ] T036 [US2] Protected-route guard + redirect-after-login (validated relative path) in `apps/frontend/src/lib/auth.ts`
+- [x] T033 [P] [US2] Auth Zod schemas (sign-up, sign-in, reset, password rules) in `packages/shared/src/schemas/auth.ts`
+- [x] T034 [US2] Sign-in/Register UI (Google button + email/password forms + "shared device" checkbox) in `apps/frontend/src/routes/auth/`
+- [x] T035 [P] [US2] Email-verification + password-reset UI flows in `apps/frontend/src/routes/auth/`
+- [x] T036 [US2] Protected-route guard + redirect-after-login (validated relative path) in `apps/frontend/src/lib/auth.ts`
 - [ ] T037 [US2] Verify Google + email/password server flows + account-linking by verified email in `apps/backend/src/auth.ts`
 - [ ] T038 [P] [US2] Apply rate-limit to sign-in / register / reset endpoints
 - [ ] T039 [P] [US2] Backend tests (vitest-pool-workers): register/verify/reset, 30d vs shared-device session, account linking, no account enumeration
