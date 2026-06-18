@@ -6,7 +6,11 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // Without this, the SPA fallback serves index.html for *navigation* requests to /api/*
+    // (e.g. the OAuth callback redirect) before the Worker runs — breaking the proxy. Force
+    // the Worker to handle /api/* first; all other paths still use asset/SPA serving.
+    "run_worker_first": ["/api/*"]
   },
   // Private backend reached via Service Binding (ADR-0005). The browser only hits this origin;
   // src/worker.ts proxies /api/* to BACKEND.
