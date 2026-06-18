@@ -40,14 +40,14 @@ TDD for every unit.
 
 **⚠️ Must complete before any user story.**
 
-- [ ] T011 Shared error-code enum + error-response Zod schema in `packages/shared/src/errors.ts`
-- [ ] T012 [P] Shared base Zod schemas/types (profile, phone E.164, calendar, auth) in `packages/shared/src/schemas/`
-- [ ] T013 Drizzle schema — `user` (+ better-auth `additionalFields` language/theme), `account`, `session`, `verification`, `phone_number`; FK `ON DELETE CASCADE` + indexes in `apps/backend/src/db/schema.ts`
-- [ ] T014 Generate + apply initial migration (`drizzle-kit generate`; `wrangler d1 migrations apply minyanim --local`) → `apps/backend/migrations/`
-- [ ] T015 better-auth config (Google + email/password incl. verify+reset, account-linking by verified email, D1 adapter, 30-day + shared-device sessions, cookie cache) in `apps/backend/src/auth.ts`
-- [ ] T016 `sendEmail()` util (Resend, swappable) + localized he/en verify/reset templates in `apps/backend/src/lib/email.ts` (key via `env`)
-- [ ] T017 [P] Structured JSON logger (Workers Observability) in `apps/backend/src/lib/logger.ts`
-- [ ] T018 [P] Typed `AppError` hierarchy mapped to shared error codes in `apps/backend/src/lib/errors.ts`
+- [x] T011 Shared error-code enum + error-response Zod schema in `packages/shared/src/errors.ts`
+- [x] T012 [P] Shared base Zod schemas/types (profile, phone E.164, calendar, auth) in `packages/shared/src/schemas/`
+- [x] T013 Drizzle schema — `user` (+ better-auth `additionalFields` language/theme), `account`, `session`, `verification`, `phone_number`; FK `ON DELETE CASCADE` + indexes in `apps/backend/src/db/schema.ts`
+- [x] T014 Generate + apply initial migration (`drizzle-kit generate`; `wrangler d1 migrations apply minyanim --local`) → `apps/backend/migrations/`
+- [x] T015 better-auth config (Google + email/password incl. verify+reset, account-linking by verified email, D1 adapter, 30-day + shared-device sessions, cookie cache) in `apps/backend/src/auth.ts`
+- [x] T016 `sendEmail()` util (Resend, swappable) + localized he/en verify/reset templates in `apps/backend/src/lib/email.ts` (key via `env`)
+- [x] T017 [P] Structured JSON logger (Workers Observability) in `apps/backend/src/lib/logger.ts`
+- [x] T018 [P] Typed `AppError` hierarchy mapped to shared error codes in `apps/backend/src/lib/errors.ts`
 - [ ] T019 Hono app + middleware chain (request-id, **security headers/CSP w/ script nonce**, **rate-limit binding**, centralized error handler, auth) in `apps/backend/src/index.ts` + `apps/backend/src/middleware/`
 - [ ] T020 Mount better-auth at `/api/auth/*` + **open-redirect validation** of the `redirect` param
 - [ ] T021 [P] `@hono/zod-openapi` + `@hono/swagger-ui` (OpenAPI doc + `/docs`) in `apps/backend/src/openapi/`
@@ -56,7 +56,7 @@ TDD for every unit.
 - [ ] T024 [P] Theme infra — `ThemeProvider` + no-flash inline script (reads `localStorage['minyanim_theme']`, OS fallback) in `apps/frontend/src/theme/`
 - [ ] T025 [P] Typed API client + auth client (TanStack Query) in `apps/frontend/src/lib/`
 - [ ] T026 [P] CI gate — GitHub Actions (typecheck, lint, vitest, axe) in `.github/workflows/ci.yml` (research D12)
-- [ ] T027 [P] `GET /api/health` (incl. D1 check) in `apps/backend/src/routes/health.ts`
+- [x] T027 [P] `GET /api/health` (incl. D1 check) in `apps/backend/src/routes/health.ts`
 
 **Checkpoint**: foundation ready — user stories can begin.
 
