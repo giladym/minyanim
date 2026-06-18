@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { user, phoneNumber } from "../db/schema";
 
@@ -18,4 +18,19 @@ export async function updateUser(
 
 export async function listPhones(db: Db, userId: string) {
   return db.select().from(phoneNumber).where(eq(phoneNumber.userId, userId));
+}
+
+export async function addPhone(db: Db, userId: string, e164: string, label: string | null) {
+  const id = crypto.randomUUID();
+  await db.insert(phoneNumber).values({ id, userId, e164, label, createdAt: new Date() });
+  return { id, e164, label };
+}
+
+/** Delete a phone the user owns; returns true if a row was removed. */
+export async function deletePhone(db: Db, userId: string, id: string): Promise<boolean> {
+  const removed = await db
+    .delete(phoneNumber)
+    .where(and(eq(phoneNumber.id, id), eq(phoneNumber.userId, userId)))
+    .returning({ id: phoneNumber.id });
+  return removed.length > 0;
 }

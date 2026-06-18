@@ -128,9 +128,9 @@ TDD for every unit.
 **Goal**: edit name, language, theme, and multiple phone numbers (E.164).
 **Independent test**: edit name, add a 2nd phone, switch language/theme → all persist after reload.
 
-- [ ] T049 [US5] Profile endpoints (`GET`/`PATCH /api/me`, `POST`/`DELETE /api/me/phones`) — router→controller→service→repository in `apps/backend/src/routes/me.ts`
-- [ ] T050 [P] [US5] Profile UI (name, language, theme, multiple phones) in `apps/frontend/src/routes/profile/`
-- [ ] T051 [P] [US5] Tests: phone E.164 validation (error codes), profile-update persistence
+- [x] T049 [US5] Profile endpoints (`GET`/`PATCH /api/me`, `POST`/`DELETE /api/me/phones`) — router→controller→service→repository in `apps/backend/src/routes/me.ts`
+- [x] T050 [P] [US5] Profile UI (name, language, theme, multiple phones) in `apps/frontend/src/routes/profile/`
+- [x] T051 [P] [US5] Tests: phone E.164 validation (error codes), profile-update persistence
 
 **Checkpoint**: profile editable; contact fields ready for later features.
 

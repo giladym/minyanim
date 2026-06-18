@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { languageSchema, themeSchema } from "./common";
+import { languageSchema, themeSchema, e164 } from "./common";
+
+export const addPhoneSchema = z.object({
+  e164,
+  label: z.string().max(60).nullish(),
+});
+export type AddPhoneInput = z.infer<typeof addPhoneSchema>;
 
 export const updateProfileSchema = z.object({
   name: z.string().min(1, "name.required").max(120).optional(),

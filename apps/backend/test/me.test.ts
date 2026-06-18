@@ -31,3 +31,24 @@ describe("/api/me", () => {
     expect(after.theme).toBe("dark");
   });
 });
+
+describe("/api/me/phones", () => {
+  it("adds a valid phone and rejects a non-E.164 one", async () => {
+    const cookie = await signIn();
+    const ok = await SELF.fetch("https://x/api/me/phones", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify({ e164: "+972501234567", label: "נייד" }) });
+    expect(ok.status).toBe(201);
+
+    const bad = await SELF.fetch("https://x/api/me/phones", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify({ e164: "0501234567" }) });
+    expect(bad.status).toBe(400);
+    expect((await bad.json()).errors[0].code).toBe("phone.invalid_e164");
+  });
+
+  it("deletes an owned phone (204) and 404s for an unknown id", async () => {
+    const cookie = await signIn();
+    const created = await (await SELF.fetch("https://x/api/me/phones", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify({ e164: "+14155550100" }) })).json();
+    const del = await SELF.fetch(`https://x/api/me/phones/${created.id}`, { method: "DELETE", headers: { cookie } });
+    expect(del.status).toBe(204);
+    const del2 = await SELF.fetch("https://x/api/me/phones/nope", { method: "DELETE", headers: { cookie } });
+    expect(del2.status).toBe(404);
+  });
+});

@@ -2,6 +2,7 @@ import { createRootRoute, createRoute, createRouter, Outlet, redirect } from "@t
 import { Home } from "./routes/home";
 import { SignIn, Register, ForgotPassword, ResetPassword, VerifyEmail, StaysPlaceholder } from "./features/auth/AuthScreens";
 import { AppShell } from "./components/AppShell";
+import { ProfilePage } from "./features/profile/Profile";
 import { authClient } from "./lib/auth-client";
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -33,6 +34,7 @@ const authedLayout = createRoute({
 });
 
 const staysRoute = createRoute({ getParentRoute: () => authedLayout, path: "/stays", component: StaysPlaceholder });
+const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/profile", component: ProfilePage });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -41,7 +43,7 @@ const routeTree = rootRoute.addChildren([
   forgotRoute,
   resetRoute,
   verifyRoute,
-  authedLayout.addChildren([staysRoute]),
+  authedLayout.addChildren([staysRoute, profileRoute]),
 ]);
 
 export const router = createRouter({ routeTree });
