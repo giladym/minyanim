@@ -1,0 +1,17 @@
+{
+  "//": "Project-scoped MCP servers (dev tooling only — NOT part of the deployed apps). Cloudflare's official remote servers use OAuth, so NO secret is stored here. On first use run /mcp in Claude Code to authenticate. Token-bearing servers must use ${ENV_VAR} expansion or go in the git-ignored .mcp.local.json — never inline secrets.",
+  "mcpServers": {
+    "cloudflare-docs": {
+      "type": "sse",
+      "url": "https://docs.mcp.cloudflare.com/sse"
+    },
+    "cloudflare-bindings": {
+      "type": "sse",
+      "url": "https://bindings.mcp.cloudflare.com/sse"
+    },
+    "cloudflare-observability": {
+      "type": "sse",
+      "url": "https://observability.mcp.cloudflare.com/sse"
+    }
+  }
+}
