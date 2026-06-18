@@ -13,5 +13,16 @@
       "database_id": "e07c357a-7d4b-4130-ad24-0ad70dea7c0f",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  // Native Rate Limiting binding (research D13) — auth/write endpoints. period ∈ {10,60}.
+  "unsafe": {
+    "bindings": [
+      {
+        "name": "RATE_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": "1001",
+        "simple": { "limit": 20, "period": 60 }
+      }
+    ]
+  }
 }

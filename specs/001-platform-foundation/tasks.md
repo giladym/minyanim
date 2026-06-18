@@ -48,9 +48,9 @@ TDD for every unit.
 - [x] T016 `sendEmail()` util (Resend, swappable) + localized he/en verify/reset templates in `apps/backend/src/lib/email.ts` (key via `env`)
 - [x] T017 [P] Structured JSON logger (Workers Observability) in `apps/backend/src/lib/logger.ts`
 - [x] T018 [P] Typed `AppError` hierarchy mapped to shared error codes in `apps/backend/src/lib/errors.ts`
-- [ ] T019 Hono app + middleware chain (request-id, **security headers/CSP w/ script nonce**, **rate-limit binding**, centralized error handler, auth) in `apps/backend/src/index.ts` + `apps/backend/src/middleware/`
-- [ ] T020 Mount better-auth at `/api/auth/*` + **open-redirect validation** of the `redirect` param
-- [ ] T021 [P] `@hono/zod-openapi` + `@hono/swagger-ui` (OpenAPI doc + `/docs`) in `apps/backend/src/openapi/`
+- [x] T019 Hono app + middleware chain (request-id, **security headers/CSP w/ script nonce**, **rate-limit binding**, centralized error handler, auth) in `apps/backend/src/index.ts` + `apps/backend/src/middleware/`
+- [x] T020 Mount better-auth at `/api/auth/*` + **open-redirect validation** of the `redirect` param
+- [x] T021 [P] `@hono/zod-openapi` + `@hono/swagger-ui` (OpenAPI doc + `/docs`) in `apps/backend/src/openapi/`
 - [ ] T022 Frontend Worker entry proxying `/api/*` to backend via Service Binding (`apps/frontend/src/worker.ts`) + local multi-worker dev config
 - [ ] T023 [P] Frontend bootstrap — TanStack Router + Query providers, root layout, react-i18next (he/en), `dir`/`lang` sync in `apps/frontend/src/main.tsx` + `src/i18n/`
 - [ ] T024 [P] Theme infra — `ThemeProvider` + no-flash inline script (reads `localStorage['minyanim_theme']`, OS fallback) in `apps/frontend/src/theme/`
