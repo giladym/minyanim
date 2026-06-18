@@ -43,5 +43,7 @@ jobs:
           BETTER_AUTH_SECRET="ci-dummy-secret-not-used-in-production-environments"
           RESEND_API_KEY=""
           EOF
+      - name: Apply D1 migrations to the local e2e database
+        run: pnpm --filter @minyanim/backend run db:migrate:local
       - name: E2E + axe (WCAG 2.1 AA gate)
         run: pnpm --filter @minyanim/frontend test:e2e
