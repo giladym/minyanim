@@ -55,7 +55,7 @@ TDD for every unit.
 - [ ] T023 [P] Frontend bootstrap — TanStack Router + Query providers, root layout, react-i18next (he/en), `dir`/`lang` sync in `apps/frontend/src/main.tsx` + `src/i18n/`
 - [ ] T024 [P] Theme infra — `ThemeProvider` + no-flash inline script (reads `localStorage['minyanim_theme']`, OS fallback) in `apps/frontend/src/theme/`
 - [ ] T025 [P] Typed API client + auth client (TanStack Query) in `apps/frontend/src/lib/`
-- [ ] T026 [P] CI gate — GitHub Actions (typecheck, lint, vitest, axe) in `.github/workflows/ci.yml` (research D12)
+- [x] T026 [P] CI gate — GitHub Actions (typecheck, lint, vitest, axe) in `.github/workflows/ci.yml` (research D12)
 - [x] T027 [P] `GET /api/health` (incl. D1 check) in `apps/backend/src/routes/health.ts`
 
 **Checkpoint**: foundation ready — user stories can begin.
