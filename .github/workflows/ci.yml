@@ -24,5 +24,28 @@ jobs:
         run: pnpm lint
       - name: Test (unit + worker)
         run: pnpm test
-      # Playwright + axe e2e (WCAG 2.1 AA gate) are added with the UI stories
-      # (US1/US2/US3) and will run here once present.
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter @minyanim/frontend exec playwright install --with-deps chromium
+      - name: Dummy local secrets (e2e only — never prod)
+        run: |
+          cat > apps/backend/.dev.vars <<'EOF'
+          GOOGLE_CLIENT_ID="ci-dummy"
+          GOOGLE_CLIENT_SECRET="ci-dummy"
+          BETTER_AUTH_SECRET="ci-dummy-secret-not-used-in-production-environments"
+          RESEND_API_KEY=""
+          EOF
+      - name: E2E + axe (WCAG 2.1 AA gate)
+        run: pnpm --filter @minyanim/frontend test:e2e

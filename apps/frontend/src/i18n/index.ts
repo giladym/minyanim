@@ -17,7 +17,9 @@ void i18n
     fallbackLng: "he",
     supportedLngs: SUPPORTED,
     interpolation: { escapeValue: false },
-    detection: { order: ["localStorage", "navigator"], lookupLocalStorage: "minyanim_lang", caches: ["localStorage"] },
+    // Anonymous visitors default to Hebrew (FR-004): only honor a saved choice, never the
+    // browser's navigator language. fallbackLng ("he") applies when nothing is stored.
+    detection: { order: ["localStorage"], lookupLocalStorage: "minyanim_lang", caches: ["localStorage"] },
   });
 
 /** Keep <html lang/dir> in sync with the active language (he → rtl, en → ltr). */

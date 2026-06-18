@@ -87,6 +87,7 @@ export function Home() {
     <div className="min-h-screen bg-bg font-sans text-ink">
       <Nav />
 
+      <main>
       {/* Hero */}
       <Section>
         <div className="grid items-center gap-10 md:grid-cols-2 md:gap-20">
@@ -115,11 +116,11 @@ export function Home() {
       </Section>
 
       {/* Early access */}
-      <Section className="bg-ink text-bg">
+      <Section className="bg-surface">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-gold">{t("home.early.eyebrow")}</p>
+          <p className={eyebrow}>{t("home.early.eyebrow")}</p>
           <h2 className="mt-4 text-3xl font-extrabold leading-tight md:text-5xl">{t("home.early.title")}</h2>
-          <p className="mx-auto mt-5 max-w-[52ch] leading-relaxed opacity-70">{t("home.early.body")}</p>
+          <p className="mx-auto mt-5 max-w-[52ch] leading-relaxed text-muted">{t("home.early.body")}</p>
           <div className="mt-8">
             <PrimaryCta />
           </div>
@@ -186,22 +187,23 @@ export function Home() {
       {/* Footer CTA */}
       <Section className="bg-clay text-on-clay">
         <div className="mx-auto max-w-xl text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.14em] opacity-70">{t("home.footerCta.eyebrow")}</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em]">{t("home.footerCta.eyebrow")}</p>
           <h2 className="mt-4 text-4xl font-extrabold leading-tight md:text-6xl">
             {t("home.footerCta.title1")}
             <br />
             {t("home.footerCta.title2")}
           </h2>
-          <p className="mx-auto mt-5 max-w-[46ch] leading-relaxed opacity-80">{t("home.footerCta.sub")}</p>
+          <p className="mx-auto mt-5 max-w-[46ch] leading-relaxed">{t("home.footerCta.sub")}</p>
           <div className="mt-8 flex justify-center">
             <PrimaryCta className="!bg-on-clay !text-clay" />
           </div>
-          <p className="mt-3 text-sm opacity-70">{t("home.footerCta.micro")}</p>
+          <p className="mt-3 text-sm">{t("home.footerCta.micro")}</p>
         </div>
       </Section>
+      </main>
 
       {/* Footer */}
-      <footer className="flex flex-wrap items-center justify-between gap-4 bg-ink px-5 py-8 text-bg/70 md:px-12">
+      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-line bg-surface px-5 py-8 text-muted md:px-12">
         <span className="text-sm font-bold">{t("home.footer.rights")}</span>
         <div className="flex gap-5 text-sm">
           <span>{t("home.footer.privacy")}</span>
