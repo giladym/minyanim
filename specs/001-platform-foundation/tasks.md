@@ -86,10 +86,10 @@ TDD for every unit.
 - [x] T034 [US2] Sign-in/Register UI (Google button + email/password forms + "shared device" checkbox) in `apps/frontend/src/routes/auth/`
 - [x] T035 [P] [US2] Email-verification + password-reset UI flows in `apps/frontend/src/routes/auth/`
 - [x] T036 [US2] Protected-route guard + redirect-after-login (validated relative path) in `apps/frontend/src/lib/auth.ts`
-- [ ] T037 [US2] Verify Google + email/password server flows + account-linking by verified email in `apps/backend/src/auth.ts`
-- [ ] T038 [P] [US2] Apply rate-limit to sign-in / register / reset endpoints
-- [ ] T039 [P] [US2] Backend tests (vitest-pool-workers): register/verify/reset, 30d vs shared-device session, account linking, no account enumeration
-- [ ] T040 [P] [US2] e2e (test-auth path): sign-in→dashboard + reset flow; axe on auth pages
+- [x] T037 [US2] Verify Google + email/password server flows + account-linking by verified email in `apps/backend/src/auth.ts`
+- [x] T038 [P] [US2] Apply rate-limit to sign-in / register / reset endpoints
+- [x] T039 [P] [US2] Backend tests (vitest-pool-workers): register/verify/reset, 30d vs shared-device session, account linking, no account enumeration
+- [x] T040 [P] [US2] e2e (test-auth path): sign-in→dashboard + reset flow; axe on auth pages
 
 **Checkpoint**: users can authenticate (both methods) and reach a protected dashboard.
 

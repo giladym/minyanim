@@ -13,6 +13,8 @@ application design"** on claude.ai/design.
     globe). Copy in [`HOMEPAGE-COPY.md`](./HOMEPAGE-COPY.md); brief in
     [`HOMEPAGE-BRIEF.md`](./HOMEPAGE-BRIEF.md).
   - `Theme Explorer.dc.html` — three explored theme directions (A/B/C)
+  - `email-verification.html` / `email-password-reset.html` — branded transactional email
+    templates (ported to `apps/backend/src/lib/email-templates.ts`)
 
 > **Open decision — brand wordmark**: the design mixes `מניין` (singular) and `מניינים`
 > (plural). Pick one canonical wordmark (English: *Minyanim*) and apply everywhere. Tracked

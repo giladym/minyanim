@@ -9,4 +9,6 @@ export interface Env {
   APP_BASE_URL?: string;
   /** Cloudflare Rate Limiting binding (optional — present in deployed/configured envs). */
   RATE_LIMITER?: { limit(opts: { key: string }): Promise<{ success: boolean }> };
+  /** "false" disables email-verification gating (tests/dev test-auth path). Default: required. */
+  REQUIRE_EMAIL_VERIFICATION?: string;
 }

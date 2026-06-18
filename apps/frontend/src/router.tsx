@@ -1,6 +1,6 @@
 import { createRootRoute, createRoute, createRouter, Outlet, redirect } from "@tanstack/react-router";
 import { Home } from "./routes/home";
-import { SignIn, Register, ForgotPassword, ResetPassword, StaysPlaceholder } from "./features/auth/AuthScreens";
+import { SignIn, Register, ForgotPassword, ResetPassword, VerifyEmail, StaysPlaceholder } from "./features/auth/AuthScreens";
 import { authClient } from "./lib/auth-client";
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -18,6 +18,7 @@ const signInRoute = createRoute({
 const registerRoute = createRoute({ getParentRoute: () => rootRoute, path: "/register", component: Register });
 const forgotRoute = createRoute({ getParentRoute: () => rootRoute, path: "/forgot-password", component: ForgotPassword });
 const resetRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
+const verifyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 
 // Protected: requires a session, else redirect to sign-in with a return path (T036).
 const staysRoute = createRoute({
@@ -36,6 +37,7 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   forgotRoute,
   resetRoute,
+  verifyRoute,
   staysRoute,
 ]);
 

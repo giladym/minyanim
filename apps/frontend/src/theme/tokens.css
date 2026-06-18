@@ -24,6 +24,7 @@
   --gold: #825916;
   --gold-soft: #f4e3c6;
   --chip: #efe6d3;
+  --auth-grad-top: #f0e7d4;
 }
 
 [data-theme="dark"] {
@@ -46,6 +47,7 @@
   --gold: #dcad57;
   --gold-soft: #342a17;
   --chip: #2c2519;
+  --auth-grad-top: #241f19;
 }
 
 /* Expose tokens to Tailwind utilities (bg-bg, text-ink, bg-clay, font-sans, …). */

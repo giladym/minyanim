@@ -9,19 +9,69 @@ function safeRedirect(): string {
   if (!p || !p.startsWith("/") || p.startsWith("//")) return "/stays";
   return p;
 }
+const queryParam = (k: string) => new URLSearchParams(window.location.search).get(k) ?? "";
 
-const input = "w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-ink";
-const primary = "w-full rounded-xl bg-clay px-4 py-3 font-extrabold text-on-clay disabled:opacity-60";
-const ghost = "w-full rounded-xl border border-line bg-surface px-4 py-3 font-extrabold text-ink";
-
+// ── Reusable primitives (match the design system) ──────────────────────────
 function AuthCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg p-6 font-sans text-ink">
+    <main
+      dir="rtl"
+      className="flex min-h-screen flex-col items-center justify-center px-6 py-12 font-sans text-ink"
+      style={{ background: "linear-gradient(180deg,var(--auth-grad-top),var(--bg) 30%)" }}
+    >
       <div className="w-full max-w-sm">
-        <h1 className="mb-6 text-center text-2xl font-extrabold">{title}</h1>
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[20px] bg-clay text-[34px] font-extrabold text-on-clay shadow-xl">
+          מ
+        </div>
+        <h1 className="mb-6 text-center text-[28px] font-extrabold">{title}</h1>
         {children}
       </div>
     </main>
+  );
+}
+
+function TextField(props: {
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+  autoComplete?: string;
+  minLength?: number;
+}) {
+  const { label, type = "text", value, onChange, error, autoComplete, minLength } = props;
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-bold text-ink">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        aria-invalid={!!error}
+        autoComplete={autoComplete}
+        minLength={minLength}
+        required
+        className={
+          "w-full rounded-xl border bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay " +
+          (error ? "border-clay-ink" : "border-line2")
+        }
+      />
+      {error && <span className="mt-1 block text-sm font-semibold text-clay-ink">{error}</span>}
+    </label>
+  );
+}
+
+function PrimaryButton({ children, loading, ...rest }: { children: ReactNode; loading?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const { t } = useTranslation();
+  return (
+    <button
+      {...rest}
+      disabled={loading || rest.disabled}
+      className="w-full rounded-[14px] bg-clay px-4 py-[15px] font-extrabold text-on-clay transition disabled:opacity-60"
+    >
+      {loading ? t("auth.submitting") : children}
+    </button>
   );
 }
 
@@ -29,14 +79,20 @@ function GoogleButton() {
   const { t } = useTranslation();
   return (
     <button
-      className={ghost}
       onClick={() => void authClient.signIn.social({ provider: "google", callbackURL: safeRedirect() })}
+      className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-line2 bg-surface px-4 py-[15px] font-extrabold text-ink"
     >
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-clay text-sm font-extrabold text-on-clay">G</span>
       {t("auth.google")}
     </button>
   );
 }
 
+function ErrorText({ msg }: { msg: string }) {
+  return msg ? <p role="alert" className="text-sm font-bold text-clay-ink">{msg}</p> : null;
+}
+
+// ── Screens ─────────────────────────────────────────────────────────────────
 export function SignIn() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -59,16 +115,16 @@ export function SignIn() {
   return (
     <AuthCard title={t("auth.signInTitle")}>
       <GoogleButton />
-      <div className="my-4 text-center text-sm text-faint">{t("auth.or")}</div>
-      <form onSubmit={submit} className="flex flex-col gap-3">
-        <input className={input} type="email" aria-label={t("auth.email")} placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className={input} type="password" aria-label={t("auth.password")} placeholder={t("auth.password")} value={password} onChange={(e) => setPassword(e.target.value)} required />
+      <div className="my-4 text-center text-sm text-faint">— {t("auth.or")} —</div>
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <TextField label={t("auth.email")} type="email" value={email} onChange={setEmail} autoComplete="email" />
+        <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} autoComplete="current-password" />
         <label className="flex items-center gap-2 text-sm text-muted">
           <input type="checkbox" checked={shared} onChange={(e) => setShared(e.target.checked)} />
           {t("auth.sharedDevice")}
         </label>
-        {err && <p className="text-sm font-bold text-clay-ink">{err}</p>}
-        <button className={primary} disabled={busy} type="submit">{t("auth.signInSubmit")}</button>
+        <ErrorText msg={err} />
+        <PrimaryButton loading={busy} type="submit">{t("auth.signInSubmit")}</PrimaryButton>
       </form>
       <div className="mt-4 flex justify-between text-sm">
         <a href="/forgot-password" className="font-bold text-clay">{t("auth.forgot")}</a>
@@ -83,13 +139,20 @@ export function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [sent, setSent] = useState(false);
+  const [confirm, setConfirm] = useState("");
   const [err, setErr] = useState("");
+  const [fieldErr, setFieldErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
+    setFieldErr("");
+    if (password !== confirm) {
+      setFieldErr(t("auth.passwordMismatch"));
+      return;
+    }
     setBusy(true);
     const { error } = await authClient.signUp.email({ name, email, password });
     setBusy(false);
@@ -99,7 +162,7 @@ export function Register() {
 
   if (sent) {
     return (
-      <AuthCard title={t("auth.registerTitle")}>
+      <AuthCard title={t("auth.checkInbox")}>
         <p className="text-center leading-relaxed text-muted">{t("auth.verifySent")}</p>
       </AuthCard>
     );
@@ -108,13 +171,14 @@ export function Register() {
   return (
     <AuthCard title={t("auth.registerTitle")}>
       <GoogleButton />
-      <div className="my-4 text-center text-sm text-faint">{t("auth.or")}</div>
-      <form onSubmit={submit} className="flex flex-col gap-3">
-        <input className={input} aria-label={t("auth.name")} placeholder={t("auth.name")} value={name} onChange={(e) => setName(e.target.value)} required />
-        <input className={input} type="email" aria-label={t("auth.email")} placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className={input} type="password" aria-label={t("auth.password")} placeholder={t("auth.password")} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
-        {err && <p className="text-sm font-bold text-clay-ink">{err}</p>}
-        <button className={primary} disabled={busy} type="submit">{t("auth.registerSubmit")}</button>
+      <div className="my-4 text-center text-sm text-faint">— {t("auth.or")} —</div>
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <TextField label={t("auth.name")} value={name} onChange={setName} autoComplete="name" />
+        <TextField label={t("auth.email")} type="email" value={email} onChange={setEmail} autoComplete="email" />
+        <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} autoComplete="new-password" minLength={8} />
+        <TextField label={t("auth.confirmPassword")} type="password" value={confirm} onChange={setConfirm} error={fieldErr} autoComplete="new-password" minLength={8} />
+        <ErrorText msg={err} />
+        <PrimaryButton loading={busy} type="submit">{t("auth.registerSubmit")}</PrimaryButton>
       </form>
       <div className="mt-4 text-center text-sm">
         <span className="text-muted">{t("auth.haveAccount")} </span>
@@ -128,11 +192,14 @@ export function ForgotPassword() {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setBusy(true);
     // Always show the same message regardless of whether the account exists (no enumeration).
     await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" });
+    setBusy(false);
     setSent(true);
   }
 
@@ -141,9 +208,9 @@ export function ForgotPassword() {
       {sent ? (
         <p className="text-center leading-relaxed text-muted">{t("auth.forgotSent")}</p>
       ) : (
-        <form onSubmit={submit} className="flex flex-col gap-3">
-          <input className={input} type="email" aria-label={t("auth.email")} placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <button className={primary} type="submit">{t("auth.forgotSubmit")}</button>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <TextField label={t("auth.email")} type="email" value={email} onChange={setEmail} autoComplete="email" />
+          <PrimaryButton loading={busy} type="submit">{t("auth.forgotSubmit")}</PrimaryButton>
         </form>
       )}
     </AuthCard>
@@ -153,14 +220,24 @@ export function ForgotPassword() {
 export function ResetPassword() {
   const { t } = useTranslation();
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
-  const token = new URLSearchParams(window.location.search).get("token") ?? "";
+  const [fieldErr, setFieldErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const token = queryParam("token");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
+    setFieldErr("");
+    if (password !== confirm) {
+      setFieldErr(t("auth.passwordMismatch"));
+      return;
+    }
+    setBusy(true);
     const { error } = await authClient.resetPassword({ newPassword: password, token });
+    setBusy(false);
     if (error) setErr(t("auth.error"));
     else setDone(true);
   }
@@ -172,12 +249,32 @@ export function ResetPassword() {
           {t("auth.resetDone")} <a href="/sign-in" className="font-bold text-clay">{t("auth.toSignIn")}</a>
         </p>
       ) : (
-        <form onSubmit={submit} className="flex flex-col gap-3">
-          <input className={input} type="password" aria-label={t("auth.password")} placeholder={t("auth.password")} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
-          {err && <p className="text-sm font-bold text-clay-ink">{err}</p>}
-          <button className={primary} type="submit">{t("auth.resetSubmit")}</button>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} autoComplete="new-password" minLength={8} />
+          <TextField label={t("auth.confirmPassword")} type="password" value={confirm} onChange={setConfirm} error={fieldErr} autoComplete="new-password" minLength={8} />
+          <ErrorText msg={err} />
+          <PrimaryButton loading={busy} type="submit">{t("auth.resetSubmit")}</PrimaryButton>
         </form>
       )}
+    </AuthCard>
+  );
+}
+
+/** Verification landing: success (after the email link verifies) or "check your inbox". */
+export function VerifyEmail() {
+  const { t } = useTranslation();
+  const success = queryParam("status") === "success";
+  return (
+    <AuthCard title={success ? t("auth.verifySuccessTitle") : t("auth.checkInbox")}>
+      <p className="text-center leading-relaxed text-muted">
+        {success ? (
+          <>
+            {t("auth.verifySuccess")} <a href="/sign-in" className="font-bold text-clay">{t("auth.toSignIn")}</a>
+          </>
+        ) : (
+          t("auth.verifySent")
+        )}
+      </p>
     </AuthCard>
   );
 }
@@ -189,7 +286,10 @@ export function StaysPlaceholder() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg p-6 text-center font-sans text-ink">
       <h1 className="text-3xl font-extrabold">{t("stays.title")}</h1>
       <p className="text-muted">{t("stays.placeholder")}</p>
-      <button className="rounded-lg border border-line px-4 py-2 text-sm font-bold" onClick={() => void authClient.signOut().then(() => (window.location.href = "/"))}>
+      <button
+        className="rounded-lg border border-line px-4 py-2 text-sm font-bold"
+        onClick={() => void authClient.signOut().then(() => (window.location.href = "/"))}
+      >
         {t("auth.signInTitle")} ⏏
       </button>
     </main>

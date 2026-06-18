@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createDb } from "./db/client";
 import * as schema from "./db/schema";
 import { sendEmail } from "./lib/email";
+import { verificationEmail, resetPasswordEmail } from "./lib/email-templates";
 import type { Env } from "./env";
 
 const THIRTY_DAYS = 60 * 60 * 24 * 30;
@@ -19,23 +20,17 @@ export function createAuth(env: Env) {
 
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      requireEmailVerification: env.REQUIRE_EMAIL_VERIFICATION !== "false",
       sendResetPassword: async ({ user, url }) => {
-        await sendEmail(env, {
-          to: user.email,
-          subject: "איפוס סיסמה · Minyanim",
-          html: `<p>לאיפוס הסיסמה: <a href="${url}">${url}</a></p>`,
-        });
+        const { subject, html } = resetPasswordEmail(url);
+        await sendEmail(env, { to: user.email, subject, html });
       },
     },
     emailVerification: {
       sendOnSignUp: true,
       sendVerificationEmail: async ({ user, url }) => {
-        await sendEmail(env, {
-          to: user.email,
-          subject: "אימות כתובת אימייל · Minyanim",
-          html: `<p>לאימות הכתובת: <a href="${url}">${url}</a></p>`,
-        });
+        const { subject, html } = verificationEmail(url);
+        await sendEmail(env, { to: user.email, subject, html });
       },
     },
     socialProviders: {
