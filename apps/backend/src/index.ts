@@ -3,6 +3,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { secureHeaders } from "hono/secure-headers";
 import { createAuth } from "./auth";
 import { me } from "./routes/me";
+import { calendar } from "./routes/calendar";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -35,6 +36,8 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => createAuth(c.env).handler(c.req.ra
 
 // Profile (GET/PATCH /api/me) — auth-guarded, layered route→service→repository.
 app.route("/", me);
+// Hebrew calendar (public): current Hebrew date + upcoming holiday, computed server-side.
+app.route("/", calendar);
 
 // Liveness/readiness incl. D1 connectivity. (T027)
 app.get("/api/health", async (c) => {

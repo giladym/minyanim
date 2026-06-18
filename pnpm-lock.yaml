@@ -47,6 +47,9 @@ importers:
       hono:
         specifier: ^4.6.12
         version: 4.12.25
+      kosher-zmanim:
+        specifier: ^0.9.0
+        version: 0.9.0
       resend:
         specifier: ^6.14.0
         version: 6.14.0
@@ -2114,6 +2117,9 @@ packages:
       zod:
         optional: true
 
+  big.js@6.2.2:
+    resolution: {integrity: sha512-y/ie+Faknx7sZA5MfGA2xKlu0GDv8RWrXGsmlteyJQ2lvoKv9GBK/fpRMc2qlSoBAgNxrixICFCBefIq8WCQpQ==}
+
   birpc@0.2.14:
     resolution: {integrity: sha512-37FHE8rqsYM5JEKCnXFyHpBCzvgHEExwVVTq+nUmloInU7l8ezD1TpOhKpS8oe1DTYFqEK27rFZVKG43oTqXRA==}
 
@@ -2622,6 +2628,9 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
+  kosher-zmanim@0.9.0:
+    resolution: {integrity: sha512-Ya/QYPNTgOAKDbLla1M7RyzFiwFpjbKq4wGnL62p+AYA7ZPPpnxQ2O3qNsi6zzrphhkx1ymAg66lYNJOzFOodA==}
+
   kysely@0.29.2:
     resolution: {integrity: sha512-s6WVJyEZrbm6jhBpiKHsGHyePMrVQKJ85wZCFCr9W4QHv6WTjWIrdvTmO9hDEA3bNK0xkrE2DqrHsXMLWuZpQg==}
     engines: {node: '>=22.0.0'}
@@ -2716,6 +2725,9 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  luxon@1.28.1:
+    resolution: {integrity: sha512-gYHAa180mKrNIUJCbwpmD0aTu9kV0dREDrwNnuyFAsO1Wt0EVYSZelPnJlbj9HplzXX/YWXHFTL45kvZ53M0pw==}
 
   magic-string@0.25.9:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
@@ -4732,6 +4744,8 @@ snapshots:
     optionalDependencies:
       zod: 4.4.3
 
+  big.js@6.2.2: {}
+
   birpc@0.2.14: {}
 
   blake3-wasm@2.1.5: {}
@@ -5235,6 +5249,11 @@ snapshots:
 
   kleur@4.1.5: {}
 
+  kosher-zmanim@0.9.0:
+    dependencies:
+      big.js: 6.2.2
+      luxon: 1.28.1
+
   kysely@0.29.2: {}
 
   levn@0.4.1:
@@ -5306,6 +5325,8 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  luxon@1.28.1: {}
 
   magic-string@0.25.9:
     dependencies:

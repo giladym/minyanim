@@ -12,6 +12,7 @@ export const en = {
       profile: "Profile",
     },
     a11y: { skipToContent: "Skip to content", myProfile: "My profile" },
+    calendar: { inDays: "in {{n}} days" },
     cta: { google: "Sign in with Google", myStays: "Go to My Stays" },
     theme: { toggle: "Theme" },
     lang: { toggle: "Language" },

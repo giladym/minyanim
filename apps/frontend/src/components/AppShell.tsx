@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme, type Theme } from "../theme/ThemeProvider";
 import { getProfile, patchProfile } from "../lib/profile";
 import { RouteAnnouncer } from "./RouteAnnouncer";
+import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 
 const NAV = [
   { href: "/discovery", key: "nav.discovery" },
@@ -53,7 +54,7 @@ export function AppShell() {
           <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-clay text-lg font-extrabold text-on-clay">מ</span>
           <span className="text-xl font-extrabold">{t("app.name")}</span>
         </a>
-        {/* Hebrew-date + holiday chip slot is filled by US4 (T047). */}
+        <HeaderCalendar />
         <div className="flex items-center gap-2">
           <button className={pill} onClick={toggleTheme}>{t("theme.toggle")}</button>
           <button className={pill} onClick={toggleLang}>{i18n.resolvedLanguage === "he" ? "EN" : "עב"}</button>

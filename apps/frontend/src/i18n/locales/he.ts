@@ -12,6 +12,7 @@ export const he = {
       profile: "פרופיל",
     },
     a11y: { skipToContent: "דלגו לתוכן", myProfile: "הפרופיל שלי" },
+    calendar: { inDays: "עוד {{n}} ימים" },
     cta: { google: "התחברו עם Google", myStays: "למסך השהיות שלי" },
     theme: { toggle: "מצב תצוגה" },
     lang: { toggle: "שפה" },

@@ -14,6 +14,7 @@ test("authenticated shell renders with header + nav, no WCAG AA violations", asy
   await page.goto("/stays");
   await expect(page.getByRole("heading", { name: /השהיות|My Stays/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /גילוי|Discovery/ })).toBeVisible();
+  await expect(page.getByTestId("hebrew-date")).toBeAttached(); // Hebrew calendar widget (US4)
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(results.violations).toEqual([]);
 });

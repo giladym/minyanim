@@ -115,9 +115,9 @@ TDD for every unit.
 **Goal**: header shows the current Hebrew date + upcoming holiday, rolling at local nightfall.
 **Independent test**: header shows today's Hebrew date matching an authoritative source incl. nightfall rollover.
 
-- [ ] T046 [US4] Server calendar (kosher-zmanim, **server-only**) → `GET /api/calendar/today` returning keyed holiday + `monthKey` in `apps/backend/src/lib/calendar.ts` + route
-- [ ] T047 [P] [US4] Header calendar widget (localized names, nightfall rollover, graceful degrade) in `apps/frontend/src/features/header-calendar/`
-- [ ] T048 [P] [US4] Tests: calendar correctness vs known dates + cache/expiry; widget render
+- [x] T046 [US4] Server calendar (kosher-zmanim, **server-only**) → `GET /api/calendar/today` returning keyed holiday + `monthKey` in `apps/backend/src/lib/calendar.ts` + route
+- [x] T047 [P] [US4] Header calendar widget (localized names, nightfall rollover, graceful degrade) in `apps/frontend/src/features/header-calendar/`
+- [x] T048 [P] [US4] Tests: calendar correctness vs known dates + cache/expiry; widget render
 
 **Checkpoint**: Hebrew date + holiday visible across the app.
 
