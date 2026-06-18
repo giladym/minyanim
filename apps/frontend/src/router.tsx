@@ -1,6 +1,7 @@
 import { createRootRoute, createRoute, createRouter, Outlet, redirect } from "@tanstack/react-router";
 import { Home } from "./routes/home";
 import { SignIn, Register, ForgotPassword, ResetPassword, VerifyEmail, StaysPlaceholder } from "./features/auth/AuthScreens";
+import { AppShell } from "./components/AppShell";
 import { authClient } from "./lib/auth-client";
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -20,16 +21,18 @@ const forgotRoute = createRoute({ getParentRoute: () => rootRoute, path: "/forgo
 const resetRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
 const verifyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
 
-// Protected: requires a session, else redirect to sign-in with a return path (T036).
-const staysRoute = createRoute({
+// Authenticated layout: guard (redirect to sign-in if no session) + app shell (T036/T041).
+const authedLayout = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/stays",
-  beforeLoad: async () => {
+  id: "authed",
+  beforeLoad: async ({ location }) => {
     const { data } = await authClient.getSession();
-    if (!data) throw redirect({ to: "/sign-in", search: { redirect: "/stays" } });
+    if (!data) throw redirect({ to: "/sign-in", search: { redirect: location.pathname } });
   },
-  component: StaysPlaceholder,
+  component: AppShell,
 });
+
+const staysRoute = createRoute({ getParentRoute: () => authedLayout, path: "/stays", component: StaysPlaceholder });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -38,7 +41,7 @@ const routeTree = rootRoute.addChildren([
   forgotRoute,
   resetRoute,
   verifyRoute,
-  staysRoute,
+  authedLayout.addChildren([staysRoute]),
 ]);
 
 export const router = createRouter({ routeTree });

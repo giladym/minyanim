@@ -279,19 +279,13 @@ export function VerifyEmail() {
   );
 }
 
-/** Protected placeholder (real My Stays is feature 002). */
+/** Protected placeholder, rendered inside the app shell (real My Stays is feature 002). */
 export function StaysPlaceholder() {
   const { t } = useTranslation();
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg p-6 text-center font-sans text-ink">
+    <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
       <h1 className="text-3xl font-extrabold">{t("stays.title")}</h1>
       <p className="text-muted">{t("stays.placeholder")}</p>
-      <button
-        className="rounded-lg border border-line px-4 py-2 text-sm font-bold"
-        onClick={() => void authClient.signOut().then(() => (window.location.href = "/"))}
-      >
-        {t("auth.signInTitle")} ⏏
-      </button>
-    </main>
+    </div>
   );
 }

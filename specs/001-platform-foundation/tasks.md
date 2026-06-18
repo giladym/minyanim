@@ -100,11 +100,11 @@ TDD for every unit.
 **Goal**: consistent RTL shell, theme toggle, language switcher, accessible navigation.
 **Independent test**: navigate the authed shell on 375px + keyboard; theme/lang persist across reload + devices.
 
-- [ ] T041 [US3] App shell — header (logo, Hebrew-date slot, theme toggle, lang switcher, avatar) + bottom nav, RTL, in `apps/frontend/src/components/AppShell.tsx`
-- [ ] T042 [P] [US3] Theme toggle (light/dark/system) persists to profile + localStorage in `apps/frontend/src/theme/`
-- [ ] T043 [P] [US3] Language switcher (he/en) flips `dir`/`lang`, persists to profile
-- [ ] T044 [P] [US3] SPA a11y — route-change live-region announcements, focus management, skip-to-content link (research D15)
-- [ ] T045 [P] [US3] e2e + axe — shell at 375px, keyboard nav, theme/lang persistence
+- [x] T041 [US3] App shell — header (logo, Hebrew-date slot, theme toggle, lang switcher, avatar) + bottom nav, RTL, in `apps/frontend/src/components/AppShell.tsx`
+- [x] T042 [P] [US3] Theme toggle (light/dark/system) persists to profile + localStorage in `apps/frontend/src/theme/`
+- [x] T043 [P] [US3] Language switcher (he/en) flips `dir`/`lang`, persists to profile
+- [x] T044 [P] [US3] SPA a11y — route-change live-region announcements, focus management, skip-to-content link (research D15)
+- [x] T045 [P] [US3] e2e + axe — shell at 375px, keyboard nav, theme/lang persistence
 
 **Checkpoint**: the authenticated app shell is usable, themeable, bilingual, and accessible.
 

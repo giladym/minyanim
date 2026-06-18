@@ -1,7 +1,17 @@
 export const he = {
   translation: {
     app: { name: "מניין" },
-    nav: { how: "כיצד זה עובד", testimonials: "מהקהילה", signIn: "התחברות" },
+    nav: {
+      how: "כיצד זה עובד",
+      testimonials: "מהקהילה",
+      signIn: "התחברות",
+      discovery: "גילוי",
+      stays: "השהיות",
+      add: "הוספה",
+      notifications: "התראות",
+      profile: "פרופיל",
+    },
+    a11y: { skipToContent: "דלגו לתוכן", myProfile: "הפרופיל שלי" },
     cta: { google: "התחברו עם Google", myStays: "למסך השהיות שלי" },
     theme: { toggle: "מצב תצוגה" },
     lang: { toggle: "שפה" },

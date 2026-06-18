@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
 import { secureHeaders } from "hono/secure-headers";
 import { createAuth } from "./auth";
+import { me } from "./routes/me";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -31,6 +32,9 @@ app.onError((err, c) => {
 // Rate-limit auth endpoints, then hand off to better-auth (Google + email/password). (T019/T020)
 app.use("/api/auth/*", rateLimit());
 app.on(["GET", "POST"], "/api/auth/*", (c) => createAuth(c.env).handler(c.req.raw));
+
+// Profile (GET/PATCH /api/me) — auth-guarded, layered route→service→repository.
+app.route("/", me);
 
 // Liveness/readiness incl. D1 connectivity. (T027)
 app.get("/api/health", async (c) => {

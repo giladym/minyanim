@@ -1,7 +1,17 @@
 export const en = {
   translation: {
     app: { name: "Minyanim" },
-    nav: { how: "How it works", testimonials: "From the community", signIn: "Sign in" },
+    nav: {
+      how: "How it works",
+      testimonials: "From the community",
+      signIn: "Sign in",
+      discovery: "Discovery",
+      stays: "Stays",
+      add: "Add",
+      notifications: "Notifications",
+      profile: "Profile",
+    },
+    a11y: { skipToContent: "Skip to content", myProfile: "My profile" },
     cta: { google: "Sign in with Google", myStays: "Go to My Stays" },
     theme: { toggle: "Theme" },
     lang: { toggle: "Language" },

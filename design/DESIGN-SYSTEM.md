@@ -25,7 +25,7 @@ The prototype themes via CSS variables on a container; dark mode swaps the same 
 | `--header` | `#f1e8d6` | header background |
 | `--surface` | `#fffdf8` | cards / surfaces |
 | `--ink` | `#2b2620` | primary text |
-| `--muted` | `#6f695d` | secondary text (AA-corrected from `#7d7669`) |
+| `--muted` | `#676156` | secondary text (AA-corrected; clears 4.5:1 on bg/surface AND `--header`) |
 | `--faint` | `#776c57` | tertiary / inactive (AA-corrected from `#a89a7e`) |
 | `--line` | `#ece2cf` | hairline borders |
 | `--line2` | `#e7dcc6` | stronger borders |

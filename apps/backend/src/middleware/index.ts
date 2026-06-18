@@ -23,7 +23,7 @@ export const requestContext = createMiddleware<{ Bindings: Env; Variables: Vars 
 export function rateLimit(keyFn?: (c: { req: Request }) => string) {
   return createMiddleware<{ Bindings: Env; Variables: Vars }>(async (c, next) => {
     const limiter = c.env.RATE_LIMITER;
-    if (limiter) {
+    if (limiter && c.env.RATE_LIMIT_DISABLED !== "true") {
       const key = keyFn?.({ req: c.req.raw }) ?? c.req.header("cf-connecting-ip") ?? "anon";
       const { success } = await limiter.limit({ key });
       if (!success) throw RateLimited();
