@@ -122,6 +122,11 @@ export const en = {
       remove: "Remove",
       invalidPhone: "Enter a number in international format (+...).",
       signOut: "Sign out",
+      deleteTitle: "Delete account",
+      deleteWarn: "This permanently deletes your account and all your data. It cannot be undone.",
+      deleteButton: "Delete my account",
+      deleteConfirm: "Yes, delete everything",
+      cancel: "Cancel",
     },
   },
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Profile, Language } from "@minyanim/shared";
-import { getProfile, patchProfile, addPhone, deletePhone } from "../../lib/profile";
+import { getProfile, patchProfile, addPhone, deletePhone, deleteAccount } from "../../lib/profile";
 import { useTheme, type Theme } from "../../theme/ThemeProvider";
 import { authClient } from "../../lib/auth-client";
 
@@ -18,6 +18,7 @@ export function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [label, setLabel] = useState("");
   const [phoneErr, setPhoneErr] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   function load() {
     getProfile().then((pr) => { setP(pr); setName(pr.name); }).catch(() => {});
@@ -106,6 +107,28 @@ export function ProfilePage() {
       >
         {t("profile.signOut")}
       </button>
+
+      <section className={card + " border-clay-soft"}>
+        <h2 className="mb-2 text-sm font-bold text-clay-ink">{t("profile.deleteTitle")}</h2>
+        <p className="mb-3 text-sm text-muted">{t("profile.deleteWarn")}</p>
+        {confirmingDelete ? (
+          <div className="flex gap-2">
+            <button
+              className="rounded-lg bg-clay-ink px-4 py-2 text-sm font-extrabold text-on-clay"
+              onClick={() => void deleteAccount().then(() => (window.location.href = "/"))}
+            >
+              {t("profile.deleteConfirm")}
+            </button>
+            <button className="rounded-lg border border-line px-4 py-2 text-sm font-bold" onClick={() => setConfirmingDelete(false)}>
+              {t("profile.cancel")}
+            </button>
+          </div>
+        ) : (
+          <button className="rounded-lg border border-clay-ink px-4 py-2 text-sm font-bold text-clay-ink" onClick={() => setConfirmingDelete(true)}>
+            {t("profile.deleteButton")}
+          </button>
+        )}
+      </section>
     </div>
   );
 }

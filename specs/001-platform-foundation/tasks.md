@@ -141,9 +141,9 @@ TDD for every unit.
 **Goal**: self-service account deletion that cascade-removes all owned data.
 **Independent test**: delete account → signed out → former data unretrievable; zero orphans.
 
-- [ ] T052 [US6] `DELETE /api/me` — explicit confirm → better-auth `deleteUser` + cascade our tables in `apps/backend/src/routes/me.ts`
-- [ ] T053 [US6] Delete-account UI with explicit confirmation in `apps/frontend/src/routes/profile/`
-- [ ] T054 [US6] **Integration test** (vitest-pool-workers): create user + children → delete → assert **zero orphans** (verifies D1 FK cascade) + session invalidated (FR-008/SC-007)
+- [x] T052 [US6] `DELETE /api/me` — explicit confirm → better-auth `deleteUser` + cascade our tables in `apps/backend/src/routes/me.ts`
+- [x] T053 [US6] Delete-account UI with explicit confirmation in `apps/frontend/src/routes/profile/`
+- [x] T054 [US6] **Integration test** (vitest-pool-workers): create user + children → delete → assert **zero orphans** (verifies D1 FK cascade) + session invalidated (FR-008/SC-007)
 
 **Checkpoint**: GDPR-grade deletion verified.
 

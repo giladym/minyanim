@@ -1,6 +1,6 @@
 import type { AddPhoneInput, Profile, UpdateProfileInput } from "@minyanim/shared";
 import type { Db } from "../db/client";
-import { findUser, updateUser, listPhones, addPhone, deletePhone } from "../repositories/userRepository";
+import { findUser, updateUser, listPhones, addPhone, deletePhone, deleteUserCascade } from "../repositories/userRepository";
 
 /** Business logic for the user profile (framework-agnostic). */
 export async function getProfile(db: Db, userId: string): Promise<Profile | null> {
@@ -28,4 +28,8 @@ export function addUserPhone(db: Db, userId: string, input: AddPhoneInput) {
 
 export function removeUserPhone(db: Db, userId: string, id: string) {
   return deletePhone(db, userId, id);
+}
+
+export function deleteAccount(db: Db, userId: string) {
+  return deleteUserCascade(db, userId);
 }

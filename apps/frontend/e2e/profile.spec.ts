@@ -20,3 +20,14 @@ test("profile page: renders, adds a phone, axe AA clean", async ({ page }) => {
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(results.violations).toEqual([]);
 });
+
+test("delete account: confirm → signed out, access removed", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/profile");
+  await page.getByRole("button", { name: /מחיקת החשבון שלי|Delete my account/ }).click();
+  await page.getByRole("button", { name: /כן, מחקו|Yes, delete/ }).click();
+  await page.waitForURL(/\/$/);
+  // Session gone → protected route bounces to sign-in.
+  await page.goto("/stays");
+  await expect(page).toHaveURL(/\/sign-in/);
+});

@@ -2,8 +2,9 @@ import { Hono } from "hono";
 import { updateProfileSchema, addPhoneSchema } from "@minyanim/shared";
 import { createAuth } from "../auth";
 import { createDb } from "../db/client";
-import { getProfile, updateProfile, addUserPhone, removeUserPhone } from "../services/profileService";
-import { Unauthorized, NotFound } from "../lib/errors";
+import { getProfile, updateProfile, addUserPhone, removeUserPhone, deleteAccount } from "../services/profileService";
+import { AppError, Unauthorized, NotFound } from "../lib/errors";
+import { ERROR_CODES } from "@minyanim/shared";
 import type { Env } from "../env";
 
 export const me = new Hono<{ Bindings: Env }>();
@@ -53,4 +54,13 @@ me.delete("/api/me/phones/:id", async (c) => {
   const ok = await removeUserPhone(createDb(c.env.DB), userId, c.req.param("id"));
   if (!ok) throw NotFound();
   return c.body(null, 204);
+});
+
+// Permanently delete the account + all owned data (cascade). Requires explicit confirmation.
+me.delete("/api/me", async (c) => {
+  const userId = await requireUserId(c);
+  const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };
+  if (body.confirm !== true) throw new AppError(400, ERROR_CODES.SERVER_ERROR, "confirm");
+  await deleteAccount(createDb(c.env.DB), userId);
+  return c.json({ ok: true });
 });

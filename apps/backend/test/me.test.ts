@@ -1,4 +1,4 @@
-import { SELF } from "cloudflare:test";
+import { SELF, env } from "cloudflare:test";
 import { describe, it, expect } from "vitest";
 
 const J = { "content-type": "application/json" };
@@ -50,5 +50,33 @@ describe("/api/me/phones", () => {
     expect(del.status).toBe(204);
     const del2 = await SELF.fetch("https://x/api/me/phones/nope", { method: "DELETE", headers: { cookie } });
     expect(del2.status).toBe(404);
+  });
+});
+
+describe("DELETE /api/me (account deletion + cascade)", () => {
+  it("requires explicit confirmation", async () => {
+    const cookie = await signIn();
+    const res = await SELF.fetch("https://x/api/me", { method: "DELETE", headers: { ...J, cookie }, body: JSON.stringify({}) });
+    expect(res.status).toBe(400);
+  });
+
+  it("removes the user + ALL owned rows (zero orphans) and invalidates the session", async () => {
+    const cookie = await signIn();
+    const id = (await (await SELF.fetch("https://x/api/me", { headers: { cookie } })).json()).id as string;
+    await SELF.fetch("https://x/api/me/phones", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify({ e164: "+972500000000" }) });
+
+    const del = await SELF.fetch("https://x/api/me", { method: "DELETE", headers: { ...J, cookie }, body: JSON.stringify({ confirm: true }) });
+    expect(del.status).toBe(200);
+
+    // Session invalidated.
+    expect((await SELF.fetch("https://x/api/me", { headers: { cookie } })).status).toBe(401);
+
+    // Zero orphans across owned tables (FR-008/SC-007).
+    for (const table of ["phone_number", "account", "session"]) {
+      const row = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE user_id = ?`).bind(id).first()) as { n: number };
+      expect(row.n).toBe(0);
+    }
+    const u = (await env.DB.prepare("SELECT COUNT(*) AS n FROM user WHERE id = ?").bind(id).first()) as { n: number };
+    expect(u.n).toBe(0);
   });
 });

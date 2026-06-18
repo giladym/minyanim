@@ -122,6 +122,11 @@ export const he = {
       remove: "הסרה",
       invalidPhone: "יש להזין מספר בפורמט בינלאומי (‎+...).",
       signOut: "התנתקות",
+      deleteTitle: "מחיקת חשבון",
+      deleteWarn: "פעולה זו תמחק לצמיתות את החשבון וכל הנתונים שלכם. לא ניתן לשחזר.",
+      deleteButton: "מחיקת החשבון שלי",
+      deleteConfirm: "כן, מחקו את הכול",
+      cancel: "ביטול",
     },
   },
 };
