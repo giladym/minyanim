@@ -3,6 +3,7 @@ import { Outlet } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useTheme, type Theme } from "../theme/ThemeProvider";
 import { getProfile, patchProfile } from "../lib/profile";
+import { authClient } from "../lib/auth-client";
 import { RouteAnnouncer } from "./RouteAnnouncer";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 
@@ -17,7 +18,9 @@ const NAV = [
 export function AppShell() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const { data: session } = authClient.useSession();
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  const initial = (session?.user?.name || session?.user?.email || "").trim().charAt(0).toUpperCase() || "•";
 
   // Cross-device sync: hydrate language + theme from the saved profile (US3 / FR-004/FR-009).
   useEffect(() => {
@@ -58,7 +61,7 @@ export function AppShell() {
           <button className={pill} onClick={toggleTheme}>{t("theme.toggle")}</button>
           <button className={pill} onClick={toggleLang}>{i18n.resolvedLanguage === "he" ? "EN" : "עב"}</button>
           <a href="/profile" aria-label={t("a11y.myProfile")} className="flex h-8 w-8 items-center justify-center rounded-full bg-teal font-bold text-on-teal">
-            א
+            {initial}
           </a>
         </div>
       </header>

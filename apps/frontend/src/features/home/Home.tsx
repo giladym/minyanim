@@ -30,9 +30,15 @@ function PrimaryCta({ className = "" }: { className?: string }) {
   );
 }
 
+/** First letter of the user's name/email for the avatar, uppercased; "•" as a safe fallback. */
+function userInitial(user?: { name?: string | null; email?: string | null }): string {
+  return (user?.name || user?.email || "").trim().charAt(0).toUpperCase() || "•";
+}
+
 function Nav() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const { data: session } = authClient.useSession();
   const pill = "rounded-full border border-line px-3 py-1.5 text-xs font-bold text-muted";
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-line bg-bg/90 px-5 py-3.5 backdrop-blur md:px-12">
@@ -54,6 +60,19 @@ function Nav() {
         >
           {i18n.resolvedLanguage === "he" ? "EN" : "עב"}
         </button>
+        {session?.user ? (
+          <a
+            href="/profile"
+            aria-label={t("a11y.myProfile")}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-teal font-bold text-on-teal"
+          >
+            {userInitial(session.user)}
+          </a>
+        ) : (
+          <a href="/sign-in" className={pill}>
+            {t("nav.signIn")}
+          </a>
+        )}
       </div>
     </nav>
   );
