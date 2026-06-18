@@ -1,9 +1,11 @@
-import { createRootRoute, createRoute, createRouter, Outlet, redirect } from "@tanstack/react-router";
+import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Outlet, redirect } from "@tanstack/react-router";
 import { Home } from "./routes/home";
-import { SignIn, Register, ForgotPassword, ResetPassword, VerifyEmail, StaysPlaceholder } from "./features/auth/AuthScreens";
-import { AppShell } from "./components/AppShell";
-import { ProfilePage } from "./features/profile/Profile";
 import { authClient } from "./lib/auth-client";
+
+// Homepage is eager (prerendered entry); auth/shell/profile are code-split into their own
+// chunks so they don't bloat the initial homepage download (T056).
+const lazyAuth = (name: "SignIn" | "Register" | "ForgotPassword" | "ResetPassword" | "VerifyEmail" | "StaysPlaceholder") =>
+  lazyRouteComponent(() => import("./features/auth/AuthScreens"), name);
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
 
@@ -12,17 +14,15 @@ const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", com
 const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sign-in",
-  validateSearch: (s): { redirect?: string } => ({
-    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
-  }),
-  component: SignIn,
+  validateSearch: (s): { redirect?: string } => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
+  component: lazyAuth("SignIn"),
 });
-const registerRoute = createRoute({ getParentRoute: () => rootRoute, path: "/register", component: Register });
-const forgotRoute = createRoute({ getParentRoute: () => rootRoute, path: "/forgot-password", component: ForgotPassword });
-const resetRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: ResetPassword });
-const verifyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: VerifyEmail });
+const registerRoute = createRoute({ getParentRoute: () => rootRoute, path: "/register", component: lazyAuth("Register") });
+const forgotRoute = createRoute({ getParentRoute: () => rootRoute, path: "/forgot-password", component: lazyAuth("ForgotPassword") });
+const resetRoute = createRoute({ getParentRoute: () => rootRoute, path: "/reset-password", component: lazyAuth("ResetPassword") });
+const verifyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/verify-email", component: lazyAuth("VerifyEmail") });
 
-// Authenticated layout: guard (redirect to sign-in if no session) + app shell (T036/T041).
+// Authenticated layout: guard + app shell (both code-split).
 const authedLayout = createRoute({
   getParentRoute: () => rootRoute,
   id: "authed",
@@ -30,11 +30,11 @@ const authedLayout = createRoute({
     const { data } = await authClient.getSession();
     if (!data) throw redirect({ to: "/sign-in", search: { redirect: location.pathname } });
   },
-  component: AppShell,
+  component: lazyRouteComponent(() => import("./components/AppShell"), "AppShell"),
 });
 
-const staysRoute = createRoute({ getParentRoute: () => authedLayout, path: "/stays", component: StaysPlaceholder });
-const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/profile", component: ProfilePage });
+const staysRoute = createRoute({ getParentRoute: () => authedLayout, path: "/stays", component: lazyAuth("StaysPlaceholder") });
+const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/profile", component: lazyRouteComponent(() => import("./features/profile/Profile"), "ProfilePage") });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,

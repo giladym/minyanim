@@ -152,9 +152,9 @@ TDD for every unit.
 ## Final Phase: Polish & Cross-Cutting
 
 - [ ] T055 [P] Manual a11y pass (keyboard + screen reader) across all pages; fix findings
-- [ ] T056 [P] Performance — route code-splitting, font/asset cache headers, bundle check (p95 < 200 ms API)
-- [ ] T057 [P] Audit: no hard-coded strings (i18n he/en complete), no hard-coded colors (tokens only)
-- [ ] T058 Run `quickstart.md` validation scenarios end-to-end
+- [x] T056 [P] Performance — route code-splitting, font/asset cache headers, bundle check (p95 < 200 ms API)
+- [x] T057 [P] Audit: no hard-coded strings (i18n he/en complete), no hard-coded colors (tokens only)
+- [x] T058 Run `quickstart.md` validation scenarios end-to-end
 - [ ] T059 Deploy to **dev** via Wrangler (frontend + backend); smoke test (per-env D1/secrets, research D14)
 - [ ] T060 Connect Git (Workers Builds) per ADR-0006 — `main`→prod gated, previews on branches
 - [ ] T061 Pre-ship gate checklist: legal sign-off (kosher-zmanim), email provider + sending domain (SPF/DKIM/DMARC), brand wordmark decision, English/LTR homepage variant

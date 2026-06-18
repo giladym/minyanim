@@ -12,4 +12,11 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
   },
+  {
+    // Node scripts (e.g. prerender) — provide Node/runtime globals.
+    files: ["**/*.mjs"],
+    languageOptions: {
+      globals: { URL: "readonly", console: "readonly", process: "readonly", setTimeout: "readonly" },
+    },
+  },
 );

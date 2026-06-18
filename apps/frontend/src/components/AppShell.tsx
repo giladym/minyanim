@@ -27,7 +27,6 @@ export function AppShell() {
         if (p.language !== i18n.resolvedLanguage) void i18n.changeLanguage(p.language);
       })
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function toggleTheme() {

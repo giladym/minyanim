@@ -16,6 +16,13 @@ export default {
     if (url.pathname.startsWith("/api/")) {
       return env.BACKEND.fetch(request);
     }
+    // Self-hosted fonts are content-stable → long immutable cache.
+    if (url.pathname.startsWith("/fonts/")) {
+      const res = await env.ASSETS.fetch(request);
+      const cached = new Response(res.body, res);
+      cached.headers.set("cache-control", "public, max-age=31536000, immutable");
+      return cached;
+    }
     return env.ASSETS.fetch(request);
   },
 };
