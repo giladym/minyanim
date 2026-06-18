@@ -3,6 +3,13 @@
 /* Dark theme keyed on [data-theme="dark"] (set by the no-flash script / ThemeProvider). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Tailwind v4's Preflight no longer sets cursor:pointer on buttons — restore it for enabled
+   interactive controls so they read as clickable. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 /* Jerusalem Stone — AA-corrected tokens (source of truth: design/DESIGN-SYSTEM.md). */
 :root {
   --bg: #f6f1e7;

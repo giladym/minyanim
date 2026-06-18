@@ -102,6 +102,7 @@ export const en = {
       verifySuccess: "Your email is verified. You can sign in now.",
       submitting: "One moment…",
     },
+    notFound: { title: "Page not found", body: "The page you're looking for doesn't exist or has moved.", home: "Back to home" },
     stays: { title: "My Stays", placeholder: "Your stays will appear here (feature 002)." },
     profile: {
       title: "My profile",

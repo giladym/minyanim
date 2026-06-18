@@ -102,6 +102,7 @@ export const he = {
       verifySuccess: "כתובת האימייל אומתה. אפשר להתחבר.",
       submitting: "רגע…",
     },
+    notFound: { title: "הדף לא נמצא", body: "הדף שחיפשתם אינו קיים או הועבר.", home: "חזרה לעמוד הבית" },
     stays: { title: "השהיות שלי", placeholder: "כאן יופיעו השהיות שלכם (פיצ׳ר 002)." },
     profile: {
       title: "הפרופיל שלי",

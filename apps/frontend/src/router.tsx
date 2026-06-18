@@ -1,6 +1,20 @@
-import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Outlet, redirect } from "@tanstack/react-router";
+import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Link, Outlet, redirect } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Home } from "./routes/home";
 import { authClient } from "./lib/auth-client";
+
+/** Shown for any unmatched route (TanStack's default is bare "Not Found" text). */
+function NotFound() {
+  const { t } = useTranslation();
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center font-sans text-ink">
+      <h1 className="text-2xl font-extrabold">{t("notFound.title")}</h1>
+      <p className="text-muted">{t("notFound.body")}</p>
+      <code dir="ltr" className="rounded-lg bg-chip px-3 py-1.5 text-sm">{window.location.pathname}</code>
+      <Link to="/" className="font-bold text-clay">{t("notFound.home")}</Link>
+    </main>
+  );
+}
 
 // Homepage is eager (prerendered entry); auth/shell/profile are code-split into their own
 // chunks so they don't bloat the initial homepage download (T056).
@@ -46,7 +60,7 @@ const routeTree = rootRoute.addChildren([
   authedLayout.addChildren([staysRoute, profileRoute]),
 ]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });
 
 declare module "@tanstack/react-router" {
   interface Register {
