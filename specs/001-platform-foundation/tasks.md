@@ -68,9 +68,9 @@ TDD for every unit.
 **Independent test**: an unfamiliar visitor reads it and can explain the product; renders on desktop + 375px.
 
 - [ ] T028 [US1] Port the homepage from the design (Jerusalem Stone) to prerendered static HTML/React in `apps/frontend/src/routes/index.tsx` + prerender build step
-- [ ] T029 [P] [US1] Animated globe component (canvas, honors `prefers-reduced-motion`, `aria-hidden`) in `apps/frontend/src/components/Globe.tsx`
-- [ ] T030 [P] [US1] Homepage sections (hero, early-access, how-it-works, mission, testimonials, footer CTA) using tokens + i18n strings in `apps/frontend/src/features/home/`
-- [ ] T031 [US1] Wire CTAs to auth; authenticated-state CTA ("Go to My Stays")
+- [x] T029 [P] [US1] Animated globe component (canvas, honors `prefers-reduced-motion`, `aria-hidden`) in `apps/frontend/src/components/Globe.tsx`
+- [x] T030 [P] [US1] Homepage sections (hero, early-access, how-it-works, mission, testimonials, footer CTA) using tokens + i18n strings in `apps/frontend/src/features/home/`
+- [x] T031 [US1] Wire CTAs to auth; authenticated-state CTA ("Go to My Stays")
 - [ ] T032 [P] [US1] e2e + axe test (mobile/desktop, reduced-motion) in `tests/e2e/homepage.spec.ts`
 
 **Checkpoint**: homepage live and accessible (no auth required).

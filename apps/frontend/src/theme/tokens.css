@@ -57,12 +57,18 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-line: var(--line);
+  --color-line2: var(--line2);
   --color-clay: var(--clay);
   --color-clay-soft: var(--clay-soft);
   --color-clay-ink: var(--clay-ink);
   --color-on-clay: var(--on-clay);
   --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-teal-ink: var(--teal-ink);
+  --color-on-teal: var(--on-teal);
   --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-chip: var(--chip);
   --font-sans: "Assistant", system-ui, sans-serif;
 }
 

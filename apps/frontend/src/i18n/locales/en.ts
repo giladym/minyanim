@@ -1,0 +1,63 @@
+export const en = {
+  translation: {
+    app: { name: "Minyanim" },
+    nav: { how: "How it works", testimonials: "From the community", signIn: "Sign in" },
+    cta: { google: "Sign in with Google", myStays: "Go to My Stays" },
+    theme: { toggle: "Theme" },
+    lang: { toggle: "Language" },
+    home: {
+      hero: {
+        eyebrow: "For observant Jewish travelers",
+        title1: "A minyan,",
+        title2: "everywhere",
+        title3: "you travel.",
+        subhead:
+          "Record where you'll be and when, and see who's gathering there for the same Shabbat. Host a minyan at a precise spot — and others join. Everything that used to live in emails, spreadsheets, and WhatsApp groups, now in one simple place.",
+        trust: "Completely free · No ads · Your data stays yours",
+      },
+      globe: { caption: "Illustrative globe · visualization only" },
+      early: {
+        eyebrow: "Early access",
+        title: "Be among the first to form a minyan on your next trip",
+        body: "The product is still in early access. Join now and help shape it — every piece of feedback from real travelers turns directly into a feature.",
+        cta: "Join early access",
+      },
+      how: {
+        eyebrow: "How it works",
+        title: "Three steps to a minyan wherever you travel",
+        s1Title: "Register a stay",
+        s1Body: "Pick a city on the map, set your arrival and departure dates, how many men are in your group, and whether you're bringing a Sefer Torah.",
+        s2Title: "Discover who's around",
+        s2Body: "See on the map how many men are gathering in the same city for the same Shabbat, and where a minyan is already hosted.",
+        s3Title: "Host and complete a minyan",
+        s3Body: "Set a precise point and time, gather ten men, a Sefer Torah and a Ba'al Korei — and get confirmation the minyan is ready.",
+      },
+      mission: {
+        eyebrow: "The story behind Minyanim",
+        title: "A Shabbat minyan shouldn't be the biggest worry of your trip.",
+        p1: "Until now, a minyan while traveling ran through a group email, a spreadsheet nobody updates, and a few WhatsApp groups nobody manages. One posts, two miss it, and the minyan scatters.",
+        p2: "Minyanim turns the chaos into one simple question: who's here, and where do we gather. Once the people and the place are known — the platform connects them.",
+      },
+      testimonials: {
+        eyebrow: "From the community",
+        title: "What travelers say",
+        disclaimer: "Sample quotes · to be replaced with real testimonials at launch",
+        t1: "Before Minyanim I spent every Friday searching. Now I register a stay and know a week ahead that there's Shacharit.",
+        t1Loc: "London",
+        t2: "I hosted my first-ever minyan. Three clicks, and a WhatsApp group simply wasn't needed.",
+        t2Loc: "Toronto",
+        t3: "Ten men, a Sefer Torah and a Ba'al Korei — in a foreign city, without a single message.",
+        t3Loc: "New York",
+        traveler: "Traveler",
+      },
+      footerCta: {
+        eyebrow: "Ready to try?",
+        title1: "One minyan",
+        title2: "to get it.",
+        sub: "Join, register your next stay, and discover who else is gathering there for the same Shabbat.",
+        micro: "Free · No ads · No credit card",
+      },
+      footer: { rights: "© 2026 Minyanim · All rights reserved", privacy: "Privacy", terms: "Terms", contact: "Contact" },
+    },
+  },
+};

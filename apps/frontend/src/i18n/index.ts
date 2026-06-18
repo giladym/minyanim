@@ -1,29 +1,13 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { he } from "./locales/he";
+import { en } from "./locales/en";
 
 export const SUPPORTED = ["he", "en"] as const;
 export type Lang = (typeof SUPPORTED)[number];
 
-// Minimal bootstrap resources; feature strings are added per story (no hard-coded UI strings).
-const resources = {
-  he: {
-    translation: {
-      app: { name: "מניין" },
-      home: { ready: "בסיס הפלטפורמה מוכן", subtitle: "בונים את התכונות הבאות." },
-      theme: { toggle: "מצב תצוגה" },
-      lang: { toggle: "שפה" },
-    },
-  },
-  en: {
-    translation: {
-      app: { name: "Minyanim" },
-      home: { ready: "Foundation ready", subtitle: "Building features next." },
-      theme: { toggle: "Theme" },
-      lang: { toggle: "Language" },
-    },
-  },
-};
+const resources = { he, en };
 
 void i18n
   .use(LanguageDetector)
