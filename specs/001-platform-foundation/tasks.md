@@ -51,10 +51,10 @@ TDD for every unit.
 - [x] T019 Hono app + middleware chain (request-id, **security headers/CSP w/ script nonce**, **rate-limit binding**, centralized error handler, auth) in `apps/backend/src/index.ts` + `apps/backend/src/middleware/`
 - [x] T020 Mount better-auth at `/api/auth/*` + **open-redirect validation** of the `redirect` param
 - [x] T021 [P] `@hono/zod-openapi` + `@hono/swagger-ui` (OpenAPI doc + `/docs`) in `apps/backend/src/openapi/`
-- [ ] T022 Frontend Worker entry proxying `/api/*` to backend via Service Binding (`apps/frontend/src/worker.ts`) + local multi-worker dev config
-- [ ] T023 [P] Frontend bootstrap — TanStack Router + Query providers, root layout, react-i18next (he/en), `dir`/`lang` sync in `apps/frontend/src/main.tsx` + `src/i18n/`
-- [ ] T024 [P] Theme infra — `ThemeProvider` + no-flash inline script (reads `localStorage['minyanim_theme']`, OS fallback) in `apps/frontend/src/theme/`
-- [ ] T025 [P] Typed API client + auth client (TanStack Query) in `apps/frontend/src/lib/`
+- [x] T022 Frontend Worker entry proxying `/api/*` to backend via Service Binding (`apps/frontend/src/worker.ts`) + local multi-worker dev config
+- [x] T023 [P] Frontend bootstrap — TanStack Router + Query providers, root layout, react-i18next (he/en), `dir`/`lang` sync in `apps/frontend/src/main.tsx` + `src/i18n/`
+- [x] T024 [P] Theme infra — `ThemeProvider` + no-flash inline script (reads `localStorage['minyanim_theme']`, OS fallback) in `apps/frontend/src/theme/`
+- [x] T025 [P] Typed API client + auth client (TanStack Query) in `apps/frontend/src/lib/`
 - [x] T026 [P] CI gate — GitHub Actions (typecheck, lint, vitest, axe) in `.github/workflows/ci.yml` (research D12)
 - [x] T027 [P] `GET /api/health` (incl. D1 check) in `apps/backend/src/routes/health.ts`
 

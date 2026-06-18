@@ -1,11 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "minyanim-frontend",
+  "main": "src/worker.ts",
   "compatibility_date": "2025-06-01",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
-  }
-  // T022 adds: "main" (worker entry) + "services" Service Binding → minyanim-backend,
-  // so the browser hits one origin and /api/* is proxied to the backend (ADR-0005).
+  },
+  // Private backend reached via Service Binding (ADR-0005). The browser only hits this origin;
+  // src/worker.ts proxies /api/* to BACKEND.
+  "services": [{ "binding": "BACKEND", "service": "minyanim-backend" }]
 }
