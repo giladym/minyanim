@@ -77,14 +77,33 @@ function PrimaryButton({ children, loading, ...rest }: { children: ReactNode; lo
 
 function GoogleButton() {
   const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function start() {
+    setErr("");
+    setBusy(true);
+    // On success the browser is redirected to Google, so control only returns here on failure.
+    const { error } = await authClient.signIn.social({ provider: "google", callbackURL: safeRedirect() });
+    if (error) {
+      setBusy(false);
+      setErr(t("auth.error"));
+    }
+  }
+
   return (
-    <button
-      onClick={() => void authClient.signIn.social({ provider: "google", callbackURL: safeRedirect() })}
-      className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-line2 bg-surface px-4 py-[15px] font-extrabold text-ink"
-    >
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-clay text-sm font-extrabold text-on-clay">G</span>
-      {t("auth.google")}
-    </button>
+    <div>
+      <button
+        type="button"
+        onClick={() => void start()}
+        disabled={busy}
+        className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-line2 bg-surface px-4 py-[15px] font-extrabold text-ink transition disabled:opacity-60"
+      >
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-clay text-sm font-extrabold text-on-clay">G</span>
+        {busy ? t("auth.submitting") : t("auth.google")}
+      </button>
+      <ErrorText msg={err} />
+    </div>
   );
 }
 
