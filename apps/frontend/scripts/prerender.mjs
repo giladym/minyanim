@@ -6,8 +6,20 @@ import { preview } from "vite";
 import { writeFileSync } from "node:fs";
 
 const PORT = 4179;
+
+// Chromium may be absent in CI build containers (e.g. Cloudflare Workers Builds). In that case
+// skip prerendering and ship the plain vite-built SPA shell — the homepage still renders
+// client-side; only the static SEO snapshot is skipped. Run `pnpm build:prerender` locally
+// (with Chromium installed) to refresh dist/index.html before relying on the snapshot.
+let browser;
+try {
+  browser = await chromium.launch();
+} catch (err) {
+  console.warn(`⚠ Skipping prerender — Chromium unavailable: ${err instanceof Error ? err.message : err}`);
+  process.exit(0);
+}
+
 const server = await preview({ preview: { port: PORT } });
-const browser = await chromium.launch();
 try {
   const page = await browser.newPage();
   await page.goto(`http://localhost:${PORT}/`, { waitUntil: "networkidle" });

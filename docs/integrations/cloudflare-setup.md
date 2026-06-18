@@ -92,6 +92,46 @@ CI/CD via **Cloudflare Workers Builds** connected to the GitHub repo:
 - **Guardrail**: `main` is gated behind PR review; production is never auto-deployed without it.
   Runtime secrets via `wrangler secret` / dashboard — never in the repo or build config.
 
+### Connecting Workers Builds — step by step (T060)
+
+Done once, in the dashboard, by the account owner (needs interactive GitHub OAuth). Create
+**two** Builds connections on the **same repo** (`giladym/minyanim`), one per Worker.
+
+> **Branch mapping — read first.** ADR-0006 targets `main` = production, but production is gated
+> on the T061 pre-ship checklist (legal sign-off, email domain) and we currently run a *single*
+> Worker as **dev**, deployed from `develop`. Until per-environment Workers exist (research D14),
+> set the **production branch to `develop`** so pushes to `develop` auto-deploy the dev Worker.
+> Switch to `main` = production only after T061 clears and per-env config is set up. Feature
+> branches still get preview URLs — but OAuth won't work on them (their `*.workers.dev` host
+> isn't in Google's authorized redirect URIs); use the stable dev URL for auth testing.
+
+For each Worker: **Workers & Pages → (the Worker) → Settings → Builds → Connect / Set up builds**,
+authorize GitHub, pick `giladym/minyanim`, then enter:
+
+**`minyanim-backend`**
+- **Root directory**: `apps/backend`
+- **Build command**: *(leave empty — Wrangler bundles `src/` on deploy)*
+- **Deploy command**:
+  `npx wrangler deploy --var APP_BASE_URL:https://minyanim-frontend.count-game.workers.dev --var REQUIRE_EMAIL_VERIFICATION:false`
+  (the `--var`s replicate the manual dev deploy; drop `REQUIRE_EMAIL_VERIFICATION` and change the
+  URL for a real production target. Secrets set via `wrangler secret` persist — Builds never
+  touches them.)
+- **Production branch**: `develop` (see note above)
+
+**`minyanim-frontend`**
+- **Root directory**: `apps/frontend`
+- **Build command**: `pnpm build:prerender`
+  (prerender self-skips when Chromium is absent in the build container — see
+  `scripts/prerender.mjs` — so the SPA still ships; the static SEO snapshot is just skipped)
+- **Deploy command**: `npx wrangler deploy`
+- **Production branch**: `develop`
+
+Notes:
+- pnpm is auto-detected from the root `package.json` `packageManager` field (Corepack); the
+  workspace `@minyanim/shared` resolves from source, so no separate build step is needed.
+- Deploy **backend first** on the initial connect so the frontend's `BACKEND` Service Binding
+  resolves (ADR-0005).
+
 ## Create the resources
 
 ```bash
