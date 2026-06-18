@@ -23,16 +23,16 @@ TDD for every unit.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Create pnpm + Turborepo monorepo skeleton (`pnpm-workspace.yaml`, `turbo.json`, root `package.json`, `tsconfig.base.json`) at repo root
-- [ ] T002 [P] Configure ESLint + Prettier + TS strict + a no-hardcoded-color lint rule at root (`eslint.config.js`, `.prettierrc`)
-- [ ] T003 [P] Create `packages/shared` (package.json, tsconfig, `src/index.ts`) for Zod schemas / types / error codes / constants
-- [ ] T004 Scaffold `apps/backend` (Hono) + `apps/backend/wrangler.jsonc` (`compatibility_date` ≥2024-09-23, `compatibility_flags:["nodejs_compat"]`, `observability.enabled`, `workers_dev:false`, D1 binding)
-- [ ] T005 Scaffold `apps/frontend` (Vite + React + TanStack Router/Query) + `apps/frontend/wrangler.jsonc` (`assets` SPA fallback, Service Binding → backend) + `vite.config.ts` (`@cloudflare/vite-plugin`)
-- [ ] T006 [P] Add Tailwind v4 + AA-corrected Jerusalem Stone tokens as CSS vars in `apps/frontend/src/theme/tokens.css`; define `dark` `@custom-variant`
-- [ ] T007 [P] Self-host Assistant font (woff2) in `apps/frontend/public/fonts/` + `@font-face` (research D11 / GDPR)
-- [ ] T008 [P] Create `apps/backend/.dev.vars.example` (GOOGLE_CLIENT_ID/SECRET, BETTER_AUTH_SECRET, RESEND_API_KEY)
-- [ ] T009 Configure `drizzle.config.ts` + `apps/backend/src/db/client.ts` (D1)
-- [ ] T010 Create D1 database (`wrangler d1 create minyanim`) and bind it in `apps/backend/wrangler.jsonc`
+- [x] T001 Create pnpm + Turborepo monorepo skeleton (`pnpm-workspace.yaml`, `turbo.json`, root `package.json`, `tsconfig.base.json`) at repo root
+- [x] T002 [P] Configure ESLint + Prettier + TS strict + a no-hardcoded-color lint rule at root (`eslint.config.js`, `.prettierrc`)
+- [x] T003 [P] Create `packages/shared` (package.json, tsconfig, `src/index.ts`) for Zod schemas / types / error codes / constants
+- [x] T004 Scaffold `apps/backend` (Hono) + `apps/backend/wrangler.jsonc` (`compatibility_date` ≥2024-09-23, `compatibility_flags:["nodejs_compat"]`, `observability.enabled`, `workers_dev:false`, D1 binding)
+- [x] T005 Scaffold `apps/frontend` (Vite + React + TanStack Router/Query) + `apps/frontend/wrangler.jsonc` (`assets` SPA fallback, Service Binding → backend) + `vite.config.ts` (`@cloudflare/vite-plugin`)
+- [x] T006 [P] Add Tailwind v4 + AA-corrected Jerusalem Stone tokens as CSS vars in `apps/frontend/src/theme/tokens.css`; define `dark` `@custom-variant`
+- [x] T007 [P] Self-host Assistant font (woff2) in `apps/frontend/public/fonts/` + `@font-face` (research D11 / GDPR)
+- [x] T008 [P] Create `apps/backend/.dev.vars.example` (GOOGLE_CLIENT_ID/SECRET, BETTER_AUTH_SECRET, RESEND_API_KEY)
+- [x] T009 Configure `drizzle.config.ts` + `apps/backend/src/db/client.ts` (D1)
+- [x] T010 Create D1 database (`wrangler d1 create minyanim`) and bind it in `apps/backend/wrangler.jsonc`
 
 ---
 

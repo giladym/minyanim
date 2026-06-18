@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "minyanim-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "minyanim",
+      "database_id": "e07c357a-7d4b-4130-ad24-0ad70dea7c0f",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
