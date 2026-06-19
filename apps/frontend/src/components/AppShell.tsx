@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Outlet } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useTheme, type Theme } from "../theme/ThemeProvider";
@@ -22,10 +22,16 @@ export function AppShell() {
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
   const initial = (session?.user?.name || session?.user?.email || "").trim().charAt(0).toUpperCase() || "•";
 
+  // A manual theme/lang change must win over a late-arriving profile sync, otherwise the
+  // async hydration below can clobber a choice the user just made (race).
+  const touched = useRef(false);
+
   // Cross-device sync: hydrate language + theme from the saved profile (US3 / FR-004/FR-009).
+  // Skip if the user has already interacted this session.
   useEffect(() => {
     getProfile()
       .then((p) => {
+        if (touched.current) return;
         setTheme(p.theme as Theme);
         if (p.language !== i18n.resolvedLanguage) void i18n.changeLanguage(p.language);
       })
@@ -33,11 +39,13 @@ export function AppShell() {
   }, []);
 
   function toggleTheme() {
+    touched.current = true;
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     void patchProfile({ theme: next }).catch(() => {});
   }
   function toggleLang() {
+    touched.current = true;
     const next = i18n.resolvedLanguage === "he" ? "en" : "he";
     void i18n.changeLanguage(next);
     void patchProfile({ language: next }).catch(() => {});
