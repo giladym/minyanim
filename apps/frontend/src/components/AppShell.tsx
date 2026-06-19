@@ -82,7 +82,7 @@ export function AppShell() {
         {NAV.slice(0, 2).map((n) => (
           <NavItem key={n.href} href={n.href} label={t(n.key)} active={path === n.href} />
         ))}
-        <a href="/add" aria-label={t("nav.add")} className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-clay text-2xl font-light text-on-clay shadow-lg">
+        <a href="/stays/new" aria-label={t("nav.add")} className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-clay text-2xl font-light text-on-clay shadow-lg">
           +
         </a>
         {NAV.slice(2).map((n) => (

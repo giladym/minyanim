@@ -18,7 +18,7 @@ function NotFound() {
 
 // Homepage is eager (prerendered entry); auth/shell/profile are code-split into their own
 // chunks so they don't bloat the initial homepage download (T056).
-const lazyAuth = (name: "SignIn" | "Register" | "ForgotPassword" | "ResetPassword" | "VerifyEmail" | "StaysPlaceholder") =>
+const lazyAuth = (name: "SignIn" | "Register" | "ForgotPassword" | "ResetPassword" | "VerifyEmail") =>
   lazyRouteComponent(() => import("./features/auth/AuthScreens"), name);
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -47,7 +47,28 @@ const authedLayout = createRoute({
   component: lazyRouteComponent(() => import("./components/AppShell"), "AppShell"),
 });
 
-const staysRoute = createRoute({ getParentRoute: () => authedLayout, path: "/stays", component: lazyAuth("StaysPlaceholder") });
+// Stays (feature 002): dashboard + create + edit, all under the authed layout.
+const staysRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/stays",
+  // The dashboard reads `highlight` (just-saved card id) and `flash` ("saved"|"updated") to
+  // briefly surface a confirmation after a create/edit redirect (FR-012).
+  validateSearch: (s): { highlight?: string; flash?: "saved" | "updated" } => ({
+    highlight: typeof s.highlight === "string" ? s.highlight : undefined,
+    flash: s.flash === "saved" || s.flash === "updated" ? s.flash : undefined,
+  }),
+  component: lazyRouteComponent(() => import("./features/stays/StaysDashboard"), "StaysDashboard"),
+});
+const staysNewRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/stays/new",
+  component: lazyRouteComponent(() => import("./features/stays/AddEditStayForm"), "AddStayPage"),
+});
+const staysEditRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/stays/$id/edit",
+  component: lazyRouteComponent(() => import("./features/stays/AddEditStayForm"), "EditStayPage"),
+});
 const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/profile", component: lazyRouteComponent(() => import("./features/profile/Profile"), "ProfilePage") });
 
 const routeTree = rootRoute.addChildren([
@@ -57,7 +78,7 @@ const routeTree = rootRoute.addChildren([
   forgotRoute,
   resetRoute,
   verifyRoute,
-  authedLayout.addChildren([staysRoute, profileRoute]),
+  authedLayout.addChildren([staysRoute, staysNewRoute, staysEditRoute, profileRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });
