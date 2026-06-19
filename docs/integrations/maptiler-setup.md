@@ -38,14 +38,19 @@ confirmation only.
      send a matching `User-Agent` header (e.g. `Minyanim-Server/1.0`). This is the only practical
      lock for a server-side key; the primary protection remains keeping it secret + the
      server-side cache/rate-limit.
-4. **Create a second key** named e.g. `minyanim-tiles` (public, used by the browser map):
-   - **Allowed HTTP Origins** → restrict to your frontend hosts (this is the main protection for
-     a key that ships in tile URLs). Enter **bare hostnames, no `https://` scheme or path**
-     (MapTiler rejects full URLs as "Invalid origin restriction"); one per line:
-     - `minyanim-frontend.count-game.workers.dev` (and any custom domain; `*.example.com` for
-       subdomains)
-     - `localhost` (add `localhost:5173` too if the port is required)
-   - **Allowed User-Agent** → leave **empty** (real visitors' browsers send many UAs).
+4. **Create the tile key(s)** (public, used by the browser map). Use **two** because MapTiler
+   rejects `localhost` (non-FQDN) and public-suffix wildcards in origin restrictions:
+   - **`minyanim-tiles-prod`** — Allowed HTTP Origins (bare hostnames, **no `https://`**, no
+     wildcard on `workers.dev`):
+     - `minyanim-frontend.count-game.workers.dev` (+ any custom domain)
+     → used as the deployed `VITE_MAPTILER_TILE_KEY`.
+   - **`minyanim-tiles-dev`** — Allowed HTTP Origins **empty** (MapTiler rejects `localhost`).
+     → used in `apps/frontend/.env.local`. Low-risk: it only loads tiles, only on dev machines.
+   - **Allowed User-Agent** → leave **empty** on both (real visitors' browsers send many UAs).
+
+   > Gotchas: a full URL (`https://host`) → "Invalid origin restriction" (use the bare host);
+   > `localhost` and `*.<public-suffix>` (e.g. `*.count-game.workers.dev`) are rejected — hence
+   > the separate unrestricted dev key.
 5. Note the **Flex tier** (~$25/mo) is generally needed at launch for commercial-style use and
    higher quotas; the free tier is non-commercial. Geocoding is **cached** server-side (Cache API,
    ~24h) and **rate-limited** to control quota — see contracts `/api/geo/search`.
@@ -72,15 +77,16 @@ Add an empty `MAPTILER_API_KEY=` line to the tracked `apps/backend/.dev.vars.exa
 **Frontend (public tile key)**
 
 The tile key is public and injected at build time via Vite. Local — `apps/frontend/.env.local`
-(git-ignored):
+(git-ignored), use the **unrestricted dev** key:
 
 ```ini
-VITE_MAPTILER_TILE_KEY=your_referrer_restricted_tile_key
+VITE_MAPTILER_TILE_KEY=your_dev_tile_key   # minyanim-tiles-dev (origins empty)
 ```
 
-For deployed builds it is a non-secret build var (e.g. Workers Builds env var / frontend
-`wrangler.jsonc` `vars`), since it is referrer-restricted and exposed in tile URLs regardless.
-Add `VITE_MAPTILER_TILE_KEY=` to a tracked `apps/frontend/.env.example`.
+For deployed builds use the **origin-restricted prod** key (`minyanim-tiles-prod`) as a non-secret
+build var (e.g. Workers Builds env var / frontend `wrangler.jsonc` `vars`) — it is referrer-locked
+and exposed in tile URLs regardless. Add `VITE_MAPTILER_TILE_KEY=` to a tracked
+`apps/frontend/.env.example`.
 
 ## Notes
 
