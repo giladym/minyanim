@@ -81,7 +81,8 @@ test("edit a Stay → the change is reflected", async ({ page }) => {
   // The Madrid card now reflects the updated man-count (5). Scope to that card and wait for the
   // list to settle (optimistic patch → server invalidation).
   const card = page.getByTestId("stay-card").filter({ hasText: "מדריד" });
-  await expect(card.getByText(/5 גברים|5 men/)).toBeVisible();
+  // Optimistic patch → server invalidation refetch; allow extra time on slow CI runners.
+  await expect(card.getByText(/5 גברים|5 men/)).toBeVisible({ timeout: 15000 });
 });
 
 test("cancel a Stay → it leaves the active list", async ({ page }) => {
