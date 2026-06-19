@@ -103,6 +103,14 @@ export const he = {
       submitting: "רגע…",
     },
     notFound: { title: "הדף לא נמצא", body: "הדף שחיפשתם אינו קיים או הועבר.", home: "חזרה לעמוד הבית" },
+    errors: {
+      "location.required": "יש להזין עיר ומדינה.",
+      "date.in_past": "תאריך ההגעה כבר עבר ביעד.",
+      "date.range_invalid": "תאריך העזיבה חייב להיות בתאריך ההגעה או אחריו.",
+      "num_men.too_low": "יש להזין לפחות גבר אחד.",
+      "confirm.required": "נדרש אישור מפורש.",
+      "geo.unavailable": "שירות איתור המיקום אינו זמין כעת. אפשר להזין עיר ומדינה ידנית.",
+    },
     stays: { title: "השהיות שלי", placeholder: "כאן יופיעו השהיות שלכם (פיצ׳ר 002)." },
     profile: {
       title: "הפרופיל שלי",

@@ -1,4 +1,5 @@
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
+import type { PrayerNeeds } from "@minyanim/shared";
 
 // better-auth-owned tables (user/session/account/verification) + our phone_number.
 // Field KEYS match better-auth's model fields; DB column names are snake_case.
@@ -77,4 +78,40 @@ export const phoneNumber = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
   (t) => [index("phone_user_idx").on(t.userId)],
+);
+
+// A user's presence at a place over a date range (002). Owned by a user; cascades on user delete.
+// Dates are stored as date-only epoch-ms at UTC midnight of the civil date (D4); compared via the
+// destination-tz civil-date algorithm (D3), never numerically.
+export const stay = sqliteTable(
+  "stay",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    city: text("city").notNull(),
+    country: text("country").notNull(),
+    lat: real("lat"),
+    lng: real("lng"),
+    addressPrivate: text("address_private"),
+    arrivalDate: integer("arrival_date", { mode: "timestamp" }).notNull(),
+    departureDate: integer("departure_date", { mode: "timestamp" }).notNull(),
+    numMen: integer("num_men").notNull(),
+    bringsSeferTorah: integer("brings_sefer_torah", { mode: "boolean" }).notNull().default(false),
+    prayerNeeds: text("prayer_needs", { mode: "json" }).$type<PrayerNeeds>().notNull(),
+    status: text("status").notNull().default("active"),
+    contactName: text("contact_name"),
+    contactPhone: text("contact_phone"),
+    contactEmail: text("contact_email"),
+    groupMembers: text("group_members"),
+    notes: text("notes"),
+    folderId: text("folder_id"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("stay_user_idx").on(t.userId),
+    index("stay_user_arrival_idx").on(t.userId, t.arrivalDate),
+  ],
 );
