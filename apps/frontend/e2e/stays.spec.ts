@@ -32,6 +32,8 @@ async function createStay(
   if (opts.numMen != null) {
     const men = page.getByLabel(/כמה גברים בקבוצה|How many men/);
     await men.fill(String(opts.numMen));
+    // Controlled number input: confirm the value settled before submitting.
+    await expect(men).toHaveValue(String(opts.numMen));
   }
   await page.getByRole("button", { name: /שמירת שהייה|Save stay/ }).click();
   await page.waitForURL(/\/stays(\?|$)/);
@@ -76,6 +78,9 @@ test("edit a Stay → the change is reflected", async ({ page }) => {
   // Wait for the async getStay() seed (2) to land before editing, so the fill isn't overwritten.
   await expect(men).toHaveValue("2");
   await men.fill("5");
+  // Confirm the controlled input committed to 5 before submitting (avoids a fill/re-render race
+  // where the PATCH would otherwise send the stale seeded value).
+  await expect(men).toHaveValue("5");
   await page.getByRole("button", { name: /שמירת שינויים|Save changes/ }).click();
   await page.waitForURL(/\/stays(\?|$)/);
   // The Madrid card now reflects the updated man-count (5). Scope to that card and wait for the

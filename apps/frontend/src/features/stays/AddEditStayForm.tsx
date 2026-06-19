@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
@@ -111,9 +111,13 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
       .catch(() => {});
   }, [isEdit]);
 
-  // Edit: seed the form from the existing Stay.
+  // Edit: seed the form from the existing Stay — exactly ONCE. Guard with a ref so a later
+  // re-render that re-runs this effect (e.g. `t` changing identity on a language switch) can't
+  // re-fetch and clobber edits the user has already made.
+  const seeded = useRef(false);
   useEffect(() => {
-    if (!stayId) return;
+    if (!stayId || seeded.current) return;
+    seeded.current = true;
     getStay(stayId)
       .then((s) => {
         setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
