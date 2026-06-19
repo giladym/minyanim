@@ -40,9 +40,11 @@ confirmation only.
      server-side cache/rate-limit.
 4. **Create a second key** named e.g. `minyanim-tiles` (public, used by the browser map):
    - **Allowed HTTP Origins** → restrict to your frontend hosts (this is the main protection for
-     a key that ships in tile URLs):
-     - Local dev: `http://localhost:5173`
-     - Dev/Staging/Prod: `https://minyanim-frontend.count-game.workers.dev` (and any custom domain)
+     a key that ships in tile URLs). Enter **bare hostnames, no `https://` scheme or path**
+     (MapTiler rejects full URLs as "Invalid origin restriction"); one per line:
+     - `minyanim-frontend.count-game.workers.dev` (and any custom domain; `*.example.com` for
+       subdomains)
+     - `localhost` (add `localhost:5173` too if the port is required)
    - **Allowed User-Agent** → leave **empty** (real visitors' browsers send many UAs).
 5. Note the **Flex tier** (~$25/mo) is generally needed at launch for commercial-style use and
    higher quotas; the free tier is non-commercial. Geocoding is **cached** server-side (Cache API,
