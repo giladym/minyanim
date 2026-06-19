@@ -39,9 +39,9 @@ migration pipeline (`drizzle-kit generate` → `wrangler d1 migrations apply`).
 **Testing**: vitest-pool-workers (backend: service/repository + cascade-orphan integration;
 temporal tests via `vi.setSystemTime` + real tz-lookup with date-line coords; injectable geo
 provider). Playwright + axe-core (e2e + WCAG 2.1 AA on form/map/dashboard); geocoding mocked via a
-backend `GEO_MODE=mock` env (Playwright can't intercept a server-side fetch). NOTE: `apps/frontend`
-currently has **only Playwright** — form/dashboard behavior is covered in e2e; adding Vitest +
-Testing Library is an optional setup task, not assumed.
+backend `GEO_MODE=mock` env (Playwright can't intercept a server-side fetch). A setup task **adds
+Vitest + Testing Library + jsdom** to `apps/frontend` (currently Playwright-only) for
+form-validation/dashboard unit tests; Playwright still covers the full flows.
 
 **Target Platform**: Cloudflare Workers (frontend Static Assets + backend via Service Binding).
 

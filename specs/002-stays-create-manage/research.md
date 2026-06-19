@@ -223,9 +223,11 @@ with matching `errors.*` i18n keys in `he.ts` + `en.ts`.
   **`GEO_MODE=mock`** env (returns canned results) for e2e, mirroring how 001's e2e backend uses
   `REQUIRE_EMAIL_VERIFICATION=false`/`RATE_LIMIT_DISABLED=true` vars.
 - **Frontend unit tooling**: `apps/frontend` currently has **only Playwright** (no Vitest /
-  Testing Library / jsdom). For 002, cover form-validation + dashboard behavior in **Playwright
-  e2e** (what's wired). Adding `vitest` + `@testing-library/react` is an **optional** setup task,
-  not assumed to exist.
+  Testing Library / jsdom). 002 **adds** `vitest` + `@testing-library/react` +
+  `@testing-library/user-event` + `jsdom` + a `vitest.config.ts` as a setup task, used for
+  form-validation and dashboard-rendering unit tests (fast feedback on the shared-Zod form
+  validation + error-code rendering). Playwright e2e still covers the full create→list→edit→cancel
+  flows + axe.
 
 ## D15. Forward seam for Feature 003 (geospatial)
 
