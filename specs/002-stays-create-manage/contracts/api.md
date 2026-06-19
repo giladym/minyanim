@@ -11,6 +11,18 @@ Conventions inherited from [001 contracts](../001-platform-foundation/contracts/
 
 All Stay routes are **owner-scoped** to the session user.
 
+**Routing reality (D13)**: routes are plain Hono + manual `safeParse` (Zod message = error code),
+DTOs enforced via `OwnerStayDTO.parse()` before `c.json()`; service-layer temporal errors throw
+`AppError(400, code, field)`. The OpenAPI doc is not auto-generated from these routes — shared Zod
+is still the single validation SSOT for FE + BE.
+
+**Error-envelope rule**: **field/validation** errors → `{ errors: [{ field, code, params? }] }`;
+**operational/auth** errors → bare `{ code }`.
+
+**Client timezone**: create/edit requests send an **`X-Client-Timezone`** header
+(`Intl.DateTimeFormat().resolvedOptions().timeZone`) used for the temporal check when a Stay has
+no coordinates (D3).
+
 ---
 
 ## Stays
@@ -61,8 +73,9 @@ Create a Stay. Body = `CreateStayInput` (shared Zod):
 }
 ```
 Validation: structural via shared Zod (`departure ≥ arrival`, `numMen ≥ 1`, fields well-formed);
-**temporal** server-side (`arrivalDate` not before destination-local today, resolved from
-`lat`/`lng`; manual-entry fallback ±1 day). → `201` `OwnerStayDTO`.
+**temporal** server-side (`arrivalDate` not before destination-local today — tz from `lat`/`lng`
+via `@photostructure/tz-lookup`, else the `X-Client-Timezone` header, else ±1-day; civil-date
+string compare). → `201` `OwnerStayDTO`.
 `400` field codes: `location.required`, `date.in_past`, `date.range_invalid`, `num_men.too_low`.
 
 ### `GET /api/stays/{id}`
@@ -90,8 +103,14 @@ Keeps the provider key server-side and normalizes provider output to one interna
 
 ### `GET /api/geo/search?q={text}&lang={he|en}`
 
-Forward-geocoding / autocomplete via **MapTiler** (Google Places fallback). Authenticated
-(session required — abuse control). The key is a `wrangler secret`, never sent to the client.
+Forward-geocoding / autocomplete via **MapTiler**. Authenticated (session required). The
+geocoding key is a `wrangler secret`, never sent to the client. Results are **cached** (Cache API
+`caches.default`, normalized `q+lang`, ~24h) and the route is **rate-limited** via 001's
+`RATE_LIMITER` binding/middleware (+ client debounce) — cost/abuse control. Only the city search
+box is sent to the provider; the **private address is never geocoded**. In tests the provider is
+injected/mocked; e2e uses a backend `GEO_MODE=mock` env (Playwright can't intercept a server-side
+fetch). Google Places is a documented revert option (needs a `place_id` schema), not a hot
+fallback.
 → `200`
 ```json
 {

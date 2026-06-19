@@ -42,10 +42,15 @@ A user's presence at a place over a date range. Owned by a user; cascade-deleted
   - `prayer_needs` matches `PrayerNeedsSchema`; `status` matches the Zod enum.
   - `address_private`, `notes`, `group_members`, contact fields: length-bounded, optional.
 - **Temporal (service layer, server-side)** — needs the destination timezone (D3):
-  - `arrival_date` not before the **destination-local** today (IANA tz from `lat`/`lng` via
-    `tz-lookup`); manual-entry/no-coords fallback = client date ±1 day.
+  - `arrival_date` not before the **destination-local** today. IANA tz resolved from `lat`/`lng`
+    via **`@photostructure/tz-lookup`** (offline, workerd-safe); when coords are absent, the tz
+    comes from the **`X-Client-Timezone`** request header, falling back to ±1-day only if that is
+    missing too. Comparison is **civil-date string equality** (`Intl.DateTimeFormat("en-CA",
+    {timeZone})` → `YYYY-MM-DD`, lexicographic compare) — never epoch subtraction (D3/D4).
   - Same rule re-applied on **edit**; an in-progress Stay (arrival past, departure future) may
     edit departure/details but no date may move into the past.
+- **`prayer_needs`** is validated with `PrayerNeedsSchema.parse()` on **write and read** (Drizzle
+  JSON round-trip is not schema-checked); missing weekday booleans default-filled server-side.
 - Error codes (keyed, frontend localizes): `location.required`, `date.in_past`,
   `date.range_invalid`, `num_men.too_low` (+ generic field codes from 001).
 
@@ -92,3 +97,12 @@ owned data (FR-008/SC-007). The cascade MUST be verified by an integration test 
   Zod schema on read/write — the SSOT, not ad-hoc parsing.
 - **Cascade-orphan integration test** (vitest-pool-workers): create user + stays → `deleteUser`
   → assert zero orphan `stay` rows (extends the 001 test; do NOT assume D1 cascade).
+- **Forward seam (003, D15)**: `lat`/`lng` are first-class columns so Feature 003 can do
+  cross-user "potential aggregation" by bounding-box (`(status, arrival_date)` index + lat/lng
+  range predicate + app-side haversine — D1 has no geospatial type). Not indexed in 002.
+  Null-coords (manual-entry) Stays are not plottable in 003 until geocoded.
+- **Privacy egress**: `address_private` is **never** sent to the geocoder — only the city search
+  box is. (D1.)
+- **004 note**: adding the `folder_id` FK in 004 is a SQLite **table-rebuild** migration, not an
+  `ALTER` (D9). **"attended"** (004 history) is a separate column/dimension, not a `status` value
+  (D5).

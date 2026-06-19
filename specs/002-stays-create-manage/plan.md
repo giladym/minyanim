@@ -12,30 +12,36 @@
 Add the **Stay** entity and its full CRUD on top of the 001 foundation: a search-first
 Add-Stay form (server-side geocoding), a nearest-first "My Stays" dashboard (replacing the 001
 placeholder), and edit/soft-cancel. The Stay is the product's core data unit and the dependency
-for Features 003–005. Technical spine is unchanged from 001 — shared Zod contracts drive both
-the Hono OpenAPI backend (router→controller→service→repository) and the TanStack frontend; D1 +
-Drizzle for storage; RTL/Hebrew-first Tailwind v4. Two 002-specific technical decisions: (1)
-timezone-correct "not in the past" validation resolved **server-side** from the destination's
-coordinates, with only structural rules in shared Zod; (2) **MapTiler-primary / Google-fallback**
-geocoding executed **server-side** behind `/api/geo/*` (key as a secret), with map tiles loaded
-client-side and an always-available manual-entry fallback.
+for Features 003–005. Technical spine is unchanged from 001 — shared Zod contracts are the single
+validation source for both the layered Hono backend (router→controller→service→repository) and the
+TanStack frontend; D1 + Drizzle for storage; RTL/Hebrew-first Tailwind v4. Two 002-specific
+technical decisions: (1) timezone-correct "not in the past" validation resolved **server-side**
+from the destination's coordinates (or the client-timezone header when none), with only structural
+rules in shared Zod; (2) **MapTiler** geocoding executed **server-side** behind `/api/geo/*`
+(geocoding key a backend secret; the public map-tile key is referrer-restricted client-side), with
+an always-available manual-entry fallback.
 
 ## Technical Context
 
 **Language/Version**: TypeScript (ES2022), Node ≥ 22 (Wrangler v4) — unchanged from 001.
 
-**Primary Dependencies**: Hono + `@hono/zod-openapi`, Drizzle ORM + drizzle-kit, Zod v4,
+**Primary Dependencies**: Hono (plain routes + manual Zod `safeParse`, matching real 001 code —
+D13; `@hono/zod-openapi` only for the app shell/Swagger), Drizzle ORM + drizzle-kit, Zod v4,
 better-auth (session/ownership), TanStack Router + Query, react-i18next, Tailwind v4. **New**:
-MapTiler Geocoding REST (server-side) with Google Places as fallback; `tz-lookup` (offline
-coords→IANA timezone resolution on the Worker — no network call); a client map/tiles renderer
-(MapLibre GL JS, OSS, no API-key lock-in) for the confirmation map.
+MapTiler Geocoding REST (server-side, Cache-API cached + rate-limited; Google Places a documented
+revert, not a hot fallback); **`@photostructure/tz-lookup`** (offline, workerd-safe coords→IANA
+tz — no network); **MapLibre GL JS** (OSS, no key lock-in) for the confirmation map (lazy-loaded;
+import `maplibre-gl/dist/maplibre-gl.css`).
 
 **Storage**: Cloudflare D1 (SQLite) via Drizzle. New `stay` table; reuses 001's single
 migration pipeline (`drizzle-kit generate` → `wrangler d1 migrations apply`).
 
-**Testing**: vitest-pool-workers (backend: service/repository + cascade-orphan integration),
-Vitest + Testing Library (form/dashboard units), Playwright + axe-core (e2e + WCAG 2.1 AA on the
-form/map/dashboard). Geocoding is mocked in tests (no live provider calls in CI).
+**Testing**: vitest-pool-workers (backend: service/repository + cascade-orphan integration;
+temporal tests via `vi.setSystemTime` + real tz-lookup with date-line coords; injectable geo
+provider). Playwright + axe-core (e2e + WCAG 2.1 AA on form/map/dashboard); geocoding mocked via a
+backend `GEO_MODE=mock` env (Playwright can't intercept a server-side fetch). NOTE: `apps/frontend`
+currently has **only Playwright** — form/dashboard behavior is covered in e2e; adding Vitest +
+Testing Library is an optional setup task, not assumed.
 
 **Target Platform**: Cloudflare Workers (frontend Static Assets + backend via Service Binding).
 
@@ -45,9 +51,11 @@ form/map/dashboard). Geocoding is mocked in tests (no live provider calls in CI)
 index); first-Stay creation < 90 s end-to-end (SC-001); saved Stay visible < 2 s (SC-002/003).
 
 **Constraints**: RTL/Hebrew-first, WCAG 2.1 AA; i18n-only strings (keyed error codes); tokens-only
-colors; secrets via env bindings only (MapTiler key never client-side); D1 has no interactive
-transactions (use `db.batch`); geocoding provider ToS must permit persisting coordinates
-(MapTiler does — verify at integration).
+colors; secrets via env bindings only — the **geocoding** MapTiler key is a backend secret (never
+client-side), the **tile** key is public + referrer-restricted (build-time Vite var); D1 has no
+interactive transactions (002 writes are single-row); geocoding provider ToS must permit
+persisting coordinates (MapTiler does — verify at integration); private address is never
+geocoded.
 
 **Scale/Scope**: single-user feature; tens of Stays per user (no pagination in v1). 3 user
 stories (create / view+sort / edit+cancel), ~5 API endpoints + geo proxy, 1 new table, 1 new
