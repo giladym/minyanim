@@ -45,7 +45,10 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
 6. **Notifications: email + in-app in v1; web push in v2.** Triggered on quorum
    thresholds ("quorum reached", "N more needed").
 7. **Hebrew-first, RTL primary; English secondary.** Per the project constitution.
-8. **Google SSO only** for v1; 30-day persistent sessions.
+8. **Google SSO + email/password** for v1 (email verification + password reset, account
+   linking by verified email — per 001 clarification); 30-day persistent sessions with a
+   shared-device short-session option. Features are auth-method-agnostic — no flow may assume a
+   Google identity.
 9. **Contact-info visibility:** a Stay/Minyan participant's name is visible to other
    participants of the same Minyan; phone/email and specific address are visible only to
    confirmed participants of the same Minyan, never to the public.
@@ -106,6 +109,8 @@ After 001 + 002 the product is usable single-player; 003 adds the multiplayer qu
 - Full prayer-role management beyond Ba'al Tefila / Ba'al Korei (gabbai, role scheduling/rota).
 - Recurring synagogue fixed schedules.
 - Native iOS / Android apps (v1 is web; PWA candidate).
+- **Recurring / repeat Stays** (a "duplicate stay" quick action is a candidate v1 fast-follow;
+  true recurrence is v2).
 - **Real-time** Chabad.org sync (v1 does a one-time seed import + admin curation).
 - Full admin analytics dashboard (v1 admin ships moderation, curation, and basic counts only).
 
@@ -116,7 +121,9 @@ After 001 + 002 the product is usable single-player; 003 adds the multiplayer qu
 
 ## Open items to resolve during planning
 
-- Geocoding / map provider and its cost/rate-limits at the Cloudflare edge.
+- Geocoding / map provider — **decided (002 clarification): MapTiler primary, Google Places
+  fallback, geocoding server-side**; pending account/key + ToS confirmation (cost ~$25/mo Flex
+  at launch).
 - **Chabad.org data licensing/ToS** — MUST be verified and permission obtained before any
   import; falls back to manual admin curation if not permitted.
 - Spam / abuse mitigation given open Google sign-in (no verification in v1) — Feature 006 moderation.
