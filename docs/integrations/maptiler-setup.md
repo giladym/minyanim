@@ -28,13 +28,22 @@ confirmation only.
    plan — this is the reason MapTiler was chosen over Google. Re-check before go-live; if it ever
    changes, the documented revert is Google Places (requires a `place_id` schema — see research
    D1).
-3. **Account → Keys → Create a new key** named e.g. `minyanim-geocoding` (this is the **secret**
-   geocoding key). Leave it unrestricted by referrer (server-side calls have no `Referer`), or
-   restrict by your Worker's outbound if supported.
-4. **Create a second key** named e.g. `minyanim-tiles` and set **Allowed origins / HTTP referrers**
-   to your frontend hosts:
-   - Local dev: `http://localhost:5173`
-   - Dev/Staging/Prod: `https://minyanim-frontend.count-game.workers.dev` (and any custom domain)
+3. **Account → Keys → Create a new key** named e.g. `minyanim-geocoding` (the **secret**
+   geocoding key, used server-side):
+   - **Allowed HTTP Origins** → leave **empty**. The Worker's server-side `fetch` sends no
+     `Origin`/`Referer`, so MapTiler treats it as "unknown"; if *any* origin is listed, unknown
+     requests are rejected (you'd have to add the `?` placeholder to allow them). Empty = allowed.
+   - **Allowed User-Agent** → set a substring (e.g. `Minyanim-Server`) — MapTiler matches it
+     case-sensitively as a substring of the request UA. The geocoding `fetch` in the Worker MUST
+     send a matching `User-Agent` header (e.g. `Minyanim-Server/1.0`). This is the only practical
+     lock for a server-side key; the primary protection remains keeping it secret + the
+     server-side cache/rate-limit.
+4. **Create a second key** named e.g. `minyanim-tiles` (public, used by the browser map):
+   - **Allowed HTTP Origins** → restrict to your frontend hosts (this is the main protection for
+     a key that ships in tile URLs):
+     - Local dev: `http://localhost:5173`
+     - Dev/Staging/Prod: `https://minyanim-frontend.count-game.workers.dev` (and any custom domain)
+   - **Allowed User-Agent** → leave **empty** (real visitors' browsers send many UAs).
 5. Note the **Flex tier** (~$25/mo) is generally needed at launch for commercial-style use and
    higher quotas; the free tier is non-commercial. Geocoding is **cached** server-side (Cache API,
    ~24h) and **rate-limited** to control quota — see contracts `/api/geo/search`.
