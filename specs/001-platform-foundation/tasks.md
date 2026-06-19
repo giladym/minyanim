@@ -156,7 +156,7 @@ TDD for every unit.
 - [x] T057 [P] Audit: no hard-coded strings (i18n he/en complete), no hard-coded colors (tokens only)
 - [x] T058 Run `quickstart.md` validation scenarios end-to-end
 - [x] T059 Deploy to **dev** via Wrangler (frontend + backend); smoke test — DONE 2026-06-19: backend `minyanim-backend` (private, Service Binding) + frontend `minyanim-frontend.count-game.workers.dev`, remote D1 migrated, health/Google-SSO/email-password all verified. Fixed live: `run_worker_first` for `/api/*` (ADR-0005), button cursor, not-found page, homepage account control. Per-env D1/secrets split (research D14) still deferred — single env treated as dev.
-- [ ] T060 Connect Git (Workers Builds) per ADR-0006 — `main`→prod gated, previews on branches
+- [x] T060 Connect Git (Workers Builds) per ADR-0006 — DONE 2026-06-19: both Workers connected to `giladym/minyanim`, deploy branch `develop` (→ the dev Worker; `main`=prod deferred to post-T061 + per-env D14). Verified: push → auto build+deploy on both Workers (deploy source `Unknown (deployment)`, not `Upload`), backend deploy command keeps `--var APP_BASE_URL`, live app healthy. Prerender self-skips without Chromium in the Builds container. Settings runbook in docs/integrations/cloudflare-setup.md.
 - [ ] T061 Pre-ship gate checklist: legal sign-off (kosher-zmanim), email provider + sending domain (SPF/DKIM/DMARC), brand wordmark decision, English/LTR homepage variant
 
 ---
