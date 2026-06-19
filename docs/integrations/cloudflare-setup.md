@@ -132,6 +132,14 @@ Notes:
 - Deploy **backend first** on the initial connect so the frontend's `BACKEND` Service Binding
   resolves (ADR-0005).
 
+**Build watch paths** (avoid rebuilding on unrelated commits): in each Worker's
+**Settings → Builds → Build configuration → Build watch paths**, set *include* globs so that
+`docs/`, `specs/`, and the other app don't trigger a build+deploy:
+- `minyanim-backend` → include `apps/backend/**`, `packages/shared/**`
+- `minyanim-frontend` → include `apps/frontend/**`, `packages/shared/**`
+
+Without this, every push (including docs-only changes) rebuilds and redeploys **both** Workers.
+
 ## Create the resources
 
 ```bash
