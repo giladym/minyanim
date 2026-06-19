@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GeoResult } from "@minyanim/shared";
 import { searchPlaces } from "../../lib/geo";
+import { ApiError } from "../../lib/api";
 
 /** The location subset of a Stay the picker resolves. lat/lng are null in manual mode. */
 export interface LocationValue {
@@ -38,6 +39,7 @@ export function LocationPicker({
   const [attribution, setAttribution] = useState("");
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const lang = i18n.resolvedLanguage === "en" ? "en" : "he";
 
   // Debounced geocoding search (~300ms). Only the city box is sent (never the address, D1).
@@ -45,23 +47,31 @@ export function LocationPicker({
     if (manual || query.trim().length < 2) {
       setResults([]);
       setSearched(false);
+      setSearchError("");
       return;
     }
     setSearching(true);
+    setSearchError("");
     const handle = setTimeout(() => {
       searchPlaces(query.trim(), lang)
         .then((r) => {
           setResults(r.results);
           setAttribution(r.attribution);
         })
-        .catch(() => setResults([]))
+        .catch((err: unknown) => {
+          setResults([]);
+          // Surface a provider outage explicitly; other errors fall back to the no-results hint.
+          if (err instanceof ApiError && err.body.errors.some((e) => e.code === "geo.unavailable")) {
+            setSearchError(t("errors.geo.unavailable"));
+          }
+        })
         .finally(() => {
           setSearching(false);
           setSearched(true);
         });
     }, 300);
     return () => clearTimeout(handle);
-  }, [query, lang, manual]);
+  }, [query, lang, manual, t]);
 
   function pick(r: GeoResult) {
     onChange({ city: r.city, country: r.country, lat: r.lat, lng: r.lng });
@@ -133,7 +143,11 @@ export function LocationPicker({
             </ul>
           )}
 
-          {!searching && searched && results.length === 0 && (
+          {searchError && (
+            <p role="alert" className="text-sm font-semibold text-clay-ink">{searchError}</p>
+          )}
+
+          {!searching && searched && !searchError && results.length === 0 && (
             <p className="text-sm text-muted">{t("stays.location.noResults")}</p>
           )}
 

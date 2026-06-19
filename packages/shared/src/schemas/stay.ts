@@ -6,11 +6,13 @@ import { z } from "zod";
  * on both write and read.
  */
 export const PrayerNeedsSchema = z.object({
-  weekday: z.object({
-    shacharit: z.boolean().default(false),
-    mincha: z.boolean().default(false),
-    maariv: z.boolean().default(false),
-  }),
+  weekday: z
+    .object({
+      shacharit: z.boolean().default(false),
+      mincha: z.boolean().default(false),
+      maariv: z.boolean().default(false),
+    })
+    .default({ shacharit: false, mincha: false, maariv: false }),
 });
 export type PrayerNeeds = z.infer<typeof PrayerNeedsSchema>;
 

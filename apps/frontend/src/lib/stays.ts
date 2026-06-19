@@ -9,15 +9,15 @@ import { api } from "./api";
 /** Query key for the caller's Stay list (the single cache the dashboard reads). */
 export const STAYS_KEY = ["stays"] as const;
 
-/** The device IANA timezone, sent on create/edit so the server can run the temporal check
- * for Stays that have no coordinates (D3). */
+/** The device IANA timezone, sent on read/create/edit so the server can run the temporal check
+ * (and derive `isPast`) for Stays that have no coordinates (D3). */
 function clientTimezoneHeader(): Record<string, string> {
   return { "X-Client-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone };
 }
 
 /** GET /api/stays — caller's Stays, server-sorted nearest-first (active + past, no cancelled). */
 export const listStays = () =>
-  api<{ stays: OwnerStayDTO[] }>("/stays").then((r) => r.stays);
+  api<{ stays: OwnerStayDTO[] }>("/stays", { headers: clientTimezoneHeader() }).then((r) => r.stays);
 
 /** POST /api/stays — create a Stay. */
 export const createStay = (input: CreateStayInputType) =>
@@ -36,7 +36,8 @@ export const updateStay = (id: string, input: UpdateStayInputType) =>
   });
 
 /** GET /api/stays/{id} — fetch one owned Stay (used to seed the edit form). */
-export const getStay = (id: string) => api<OwnerStayDTO>(`/stays/${id}`);
+export const getStay = (id: string) =>
+  api<OwnerStayDTO>(`/stays/${id}`, { headers: clientTimezoneHeader() });
 
 /** POST /api/stays/{id}/cancel — soft-cancel (requires explicit confirmation). */
 export const cancelStay = (id: string) =>

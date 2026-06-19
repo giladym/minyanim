@@ -62,7 +62,7 @@ function normalize(feature: MapTilerFeature): GeoResult | null {
  *
  * @param env Worker env (provides MAPTILER_API_KEY + GEO_MODE).
  * @param q Free-text search (only the city box is ever sent — never the private address; D1).
- * @param lang UI language for result bias ("he" | "en").
+ * @param lang UI language ("he" | "en"); "he" biases results to Israel, others stay global.
  * @param deps Optional injectable `fetch` (tests stub the provider).
  * @returns Normalized results + the required attribution string.
  */
@@ -76,6 +76,7 @@ export async function searchPlaces(
 
   const doFetch = deps.fetch ?? (globalThis.fetch.bind(globalThis) as FetchFn);
   const language = lang === "en" ? "en" : "he";
+  // Normalize once: the SAME query string drives the provider request and the cache key.
   const normalizedQ = q.trim().toLowerCase();
 
   // Cache key: a stable synthetic URL from q+lang (cache is per-account, not per-real-URL).
@@ -84,9 +85,11 @@ export async function searchPlaces(
   const cached = await cache.match(cacheKey);
   if (cached) return (await cached.json()) as GeoSearchResponse;
 
+  // Bias to Israel only for Hebrew UI; non-Hebrew searches stay global (D1).
+  const countryBias = language === "he" ? "&country=il" : "";
   const url =
-    `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json` +
-    `?key=${env.MAPTILER_API_KEY}&language=${language}&country=il&limit=5&types=municipality,municipal_district,locality,place`;
+    `https://api.maptiler.com/geocoding/${encodeURIComponent(normalizedQ)}.json` +
+    `?key=${env.MAPTILER_API_KEY}&language=${language}${countryBias}&limit=5&types=municipality,municipal_district,locality,place`;
 
   let providerResponse: Response;
   try {

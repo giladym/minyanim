@@ -34,27 +34,36 @@ function resolveTz(lat: number | null | undefined, lng: number | null | undefine
 }
 
 /**
- * Reject an arrival date that is before the destination-local today (D3). When no timezone is
- * resolvable, allow with a ±1-day tolerance (compare against yesterday-UTC) rather than rejecting.
+ * Reject a date that is before the destination-local today (D3). When no timezone is resolvable,
+ * allow with a ±1-day tolerance (compare against yesterday-UTC) rather than rejecting.
+ *
+ * @param date The UTC-midnight date under test.
+ * @param tz The resolved destination timezone, or null when none is available.
+ * @param field The field name attached to the thrown `DATE_IN_PAST` error.
  */
-function assertArrivalNotPast(arrival: Date, tz: string | null): void {
-  const arrivalCivil = civilDate(arrival, "UTC");
+function assertNotPast(date: Date, tz: string | null, field: string): void {
+  const dateCivil = civilDate(date, "UTC");
   if (tz) {
-    if (arrivalCivil < todayCivil(tz)) {
-      throw new AppError(400, ERROR_CODES.DATE_IN_PAST, "arrivalDate");
+    if (dateCivil < todayCivil(tz)) {
+      throw new AppError(400, ERROR_CODES.DATE_IN_PAST, field);
     }
     return;
   }
   // No tz available: ±1-day tolerance — only reject if before yesterday (UTC).
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  if (arrivalCivil < civilDate(yesterday, "UTC")) {
-    throw new AppError(400, ERROR_CODES.DATE_IN_PAST, "arrivalDate");
+  if (dateCivil < civilDate(yesterday, "UTC")) {
+    throw new AppError(400, ERROR_CODES.DATE_IN_PAST, field);
   }
 }
 
-/** Map a stored row to the owner DTO, computing derived `isPast` / `coversShabbat` (D5/D7). */
-function toOwnerDTO(row: StayRow): OwnerStayDTO {
-  const tz = resolveTz(row.lat, row.lng) ?? "UTC";
+/**
+ * Map a stored row to the owner DTO, computing derived `isPast` / `coversShabbat` (D5/D7).
+ *
+ * @param clientTz The viewer's `X-Client-Timezone`, used for `isPast` when the stay has no
+ *   coordinates (manual entry) so the read-path matches the create-path check.
+ */
+function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
+  const tz = resolveTz(row.lat, row.lng, clientTz) ?? "UTC";
   const departureCivil = civilDate(row.departureDate, "UTC");
   return {
     id: row.id,
@@ -97,7 +106,7 @@ export async function createStay(
   const arrival = toUtcMidnight(input.arrivalDate);
   const departure = toUtcMidnight(input.departureDate);
   const tz = resolveTz(input.lat, input.lng, clientTz);
-  assertArrivalNotPast(arrival, tz);
+  assertNotPast(arrival, tz, "arrivalDate");
 
   const now = new Date();
   const row = await repoCreate(db, {
@@ -126,21 +135,40 @@ export async function createStay(
   return toOwnerDTO(row);
 }
 
-/** Fetch one owned stay as an owner DTO, or null if missing/not owned. */
-export async function getStay(db: Db, userId: string, id: string): Promise<OwnerStayDTO | null> {
+/**
+ * Fetch one owned stay as an owner DTO, or null if missing/not owned.
+ *
+ * @param clientTz The viewer's `X-Client-Timezone`, threaded into `isPast` for coordless stays.
+ */
+export async function getStay(
+  db: Db,
+  userId: string,
+  id: string,
+  clientTz?: string,
+): Promise<OwnerStayDTO | null> {
   const row = await repoGet(db, userId, id);
-  return row ? toOwnerDTO(row) : null;
-}
-
-/** List the user's active stays, nearest-first, as owner DTOs. */
-export async function listStays(db: Db, userId: string): Promise<OwnerStayDTO[]> {
-  const rows = await repoList(db, userId);
-  return rows.map(toOwnerDTO);
+  return row ? toOwnerDTO(row, clientTz) : null;
 }
 
 /**
- * Partially update an owned stay. Re-applies the temporal rule (no date may move into the past)
- * using the effective arrival + coords (patched or existing). Returns null if not owned.
+ * List the user's active stays, nearest-first, as owner DTOs.
+ *
+ * @param clientTz The viewer's `X-Client-Timezone`, threaded into `isPast` for coordless stays.
+ */
+export async function listStays(
+  db: Db,
+  userId: string,
+  clientTz?: string,
+): Promise<OwnerStayDTO[]> {
+  const rows = await repoList(db, userId);
+  return rows.map((row) => toOwnerDTO(row, clientTz));
+}
+
+/**
+ * Partially update an owned stay. Re-applies the temporal rules on the EFFECTIVE (patched-or-
+ * existing) pair: departure must not precede arrival, and no patched date may move into the
+ * destination-local past. The shared Zod range refine only fires when both dates are present in
+ * the body, so a single-field PATCH is re-checked here. Returns null if not owned.
  */
 export async function updateStay(
   db: Db,
@@ -159,10 +187,16 @@ export async function updateStay(
   const departure =
     input.departureDate !== undefined ? toUtcMidnight(input.departureDate) : existing.departureDate;
 
-  // Re-validate the temporal rule on any date change.
+  // Re-validate the temporal rules on any date change, against the effective pair.
   if (input.arrivalDate !== undefined || input.departureDate !== undefined) {
     const tz = resolveTz(lat, lng, clientTz);
-    assertArrivalNotPast(arrival, tz);
+    // Range rule on the effective pair (the Zod refine only fires when both are patched).
+    if (departure < arrival) {
+      throw new AppError(400, ERROR_CODES.DATE_RANGE_INVALID, "departureDate");
+    }
+    // No patched date may move into the destination-local past (Clarification).
+    if (input.arrivalDate !== undefined) assertNotPast(arrival, tz, "arrivalDate");
+    if (input.departureDate !== undefined) assertNotPast(departure, tz, "departureDate");
   }
 
   const fields: Partial<StayRow> = { updatedAt: new Date() };

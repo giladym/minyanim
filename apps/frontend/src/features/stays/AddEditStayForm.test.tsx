@@ -88,6 +88,24 @@ describe("AddEditStayForm — validation (create)", () => {
     );
     expect(navigate).toHaveBeenCalledWith({ to: "/stays", search: { highlight: "stay_new", flash: "saved" } });
   });
+
+  // M1 — the picked civil date must convert to UTC-midnight epoch (NOT local midnight), so a user
+  // in a far-positive timezone picking "today" is not rejected as past by the server.
+  it("converts the picked civil date to UTC-midnight epoch (M1)", async () => {
+    createMutate.mockResolvedValue({ id: "stay_new" });
+    const user = userEvent.setup();
+    render(<AddEditStayForm />);
+    await fillLocationManually(user, "לונדון", "בריטניה");
+    await fillDates(user, "2099-07-01", "2099-07-03");
+    await user.click(submitButton());
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        arrivalDate: Date.UTC(2099, 6, 1),
+        departureDate: Date.UTC(2099, 6, 3),
+      }),
+    );
+  });
 });
 
 describe("AddEditStayForm — smart defaults & disclosure", () => {

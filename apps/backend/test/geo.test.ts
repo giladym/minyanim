@@ -46,6 +46,21 @@ describe("geoService.searchPlaces (injected provider)", () => {
     expect(out.results[0]).toEqual({ city: "London", country: "United Kingdom", lat: 51.5074, lng: -0.1278, label: "London, United Kingdom" });
   });
 
+  it("biases to Israel only for Hebrew and uses the normalized query in the request URL (m13)", async () => {
+    const urls: string[] = [];
+    const fetchStub = async (url: string) => {
+      urls.push(url);
+      return new Response(JSON.stringify(mapTilerBody()), { status: 200, headers: J });
+    };
+    const heQ = `יפו-${crypto.randomUUID()}`;
+    await searchPlaces(liveEnv, `  ${heQ.toUpperCase()}  `, "he", { fetch: fetchStub });
+    await searchPlaces(liveEnv, `Paris-${crypto.randomUUID()}`, "en", { fetch: fetchStub });
+    expect(urls[0]).toContain("&country=il");
+    // The request path uses the trimmed/lowercased query (same string as the cache key).
+    expect(urls[0]).toContain(encodeURIComponent(heQ.toLowerCase()));
+    expect(urls[1]).not.toContain("country=il");
+  });
+
   it("throws 502 geo.unavailable on a provider non-2xx", async () => {
     const fetchStub = async () => new Response("nope", { status: 500 });
     await expect(searchPlaces(liveEnv, `down-${crypto.randomUUID()}`, "en", { fetch: fetchStub })).rejects.toMatchObject({ status: 502 });

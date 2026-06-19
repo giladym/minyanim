@@ -203,9 +203,11 @@ verified to render as `{ errors: [{ field, code }] }`. The OpenAPI doc is **not*
 from routes today (only the app shell uses `OpenAPIHono` + Swagger) — do **not** claim otherwise;
 shared Zod still guarantees one validation SSOT for FE+BE.
 
-**Error-envelope rule** (state once, inherited by 003+): **field/validation** errors use the
-`{ errors: [{ field, code, params? }] }` envelope; **operational/auth** errors use bare
-`{ code }` (e.g. `auth.required`, `rate.limited`, `geo.unavailable`).
+**Error-envelope rule** (state once, inherited by 003+): ALL errors use the
+`{ errors: [{ field, code, params? }] }` envelope; `field` is null for non-field/operational
+errors (e.g. `auth.required`, `rate.limited`, `geo.unavailable`). (Reconciled to the
+implementation during validation — the FE always reads `body.errors`, so operational errors
+carry the same envelope with `field: null` rather than a bare `{ code }`.)
 
 **New error codes** added to `packages/shared/src/errors.ts` (currently 5 codes): `location.required`,
 `date.in_past`, `date.range_invalid`, `num_men.too_low`, `confirm.required`, `geo.unavailable` —

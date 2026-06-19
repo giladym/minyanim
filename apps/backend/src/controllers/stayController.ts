@@ -44,8 +44,8 @@ function toOwnerResponse(dto: OwnerStayDTO): OwnerStayDTO {
 }
 
 /** List the user's active stays (nearest-first). */
-export async function listStaysController(db: Db, userId: string) {
-  const stays = await svcList(db, userId);
+export async function listStaysController(db: Db, userId: string, clientTz?: string) {
+  const stays = await svcList(db, userId, clientTz);
   return { stays: stays.map(toOwnerResponse) };
 }
 
@@ -61,8 +61,8 @@ export async function createStayController(
 }
 
 /** Fetch one owned stay (404 if missing/not owned). */
-export async function getStayController(db: Db, userId: string, id: string) {
-  const dto = await svcGet(db, userId, id);
+export async function getStayController(db: Db, userId: string, id: string, clientTz?: string) {
+  const dto = await svcGet(db, userId, id, clientTz);
   if (!dto) throw NotFound();
   return toOwnerResponse(dto);
 }

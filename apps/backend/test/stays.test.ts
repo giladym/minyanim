@@ -241,4 +241,75 @@ describe("temporal validation (destination-local 'today', real tz-lookup)", () =
       svcUpdate(db, userId, created.id, { arrivalDate: dayOffset(now, -9) }),
     ).rejects.toMatchObject({ status: 400, errors: [{ code: "date.in_past", field: "arrivalDate" }] });
   });
+
+  // M1 — a far-positive client tz (UTC+14) picking "today" in that tz must NOT be rejected as past,
+  // while a clearly-past date IS rejected. Manual-entry (null coords) so X-Client-Timezone drives.
+  it("accepts a coordless stay for 'today' in a far-positive client tz (Pacific/Kiritimati)", async () => {
+    const db = createDb(env.DB);
+    const userId = await seedUser();
+    // 23:00 UTC: Kiritimati (UTC+14) is already on the NEXT civil date. "Today" there = base+1.
+    const now = anchorNow(23);
+    vi.setSystemTime(now);
+    const kiritimatiToday = dayOffset(now, 1);
+    const dto = await svcCreate(
+      db,
+      userId,
+      { ...baseStay, lat: null, lng: null, arrivalDate: kiritimatiToday, departureDate: kiritimatiToday },
+      "Pacific/Kiritimati",
+    );
+    expect(dto.id).toBeTruthy();
+    expect(dto.isPast).toBe(false);
+  });
+
+  it("rejects a clearly-past coordless stay in a far-positive client tz", async () => {
+    const db = createDb(env.DB);
+    const userId = await seedUser();
+    const now = anchorNow(23);
+    vi.setSystemTime(now);
+    await expect(
+      svcCreate(
+        db,
+        userId,
+        { ...baseStay, lat: null, lng: null, arrivalDate: dayOffset(now, -5), departureDate: dayOffset(now, -5) },
+        "Pacific/Kiritimati",
+      ),
+    ).rejects.toMatchObject({ status: 400, errors: [{ code: "date.in_past", field: "arrivalDate" }] });
+  });
+
+  // M2 — single-field departure PATCH must re-validate the EFFECTIVE pair (the Zod refine only
+  // fires when both dates are in the body), and must block moving departure into the past.
+  it("rejects a departure-only PATCH that precedes the existing arrival (date.range_invalid)", async () => {
+    const db = createDb(env.DB);
+    const userId = await seedUser();
+    const now = anchorNow(12);
+    vi.setSystemTime(now);
+    const created = await svcCreate(db, userId, { ...baseStay, ...NY, arrivalDate: dayOffset(now, 10), departureDate: dayOffset(now, 12) });
+    await expect(
+      svcUpdate(db, userId, created.id, { departureDate: dayOffset(now, 9) }),
+    ).rejects.toMatchObject({ status: 400, errors: [{ code: "date.range_invalid", field: "departureDate" }] });
+  });
+
+  it("rejects a departure-only PATCH moved into the past (date.in_past on departureDate)", async () => {
+    const db = createDb(env.DB);
+    const userId = await seedUser();
+    // Create while the dates are still valid, then advance "now" so the stay started in the past.
+    const created = await svcCreate(db, userId, { ...baseStay, ...NY, arrivalDate: dayOffset(anchorNow(12), 0), departureDate: dayOffset(anchorNow(12), 12) });
+    // Jump 30 days ahead: the existing arrival is now in the past (untouched, so not re-checked).
+    const later = new Date(anchorNow(12).getTime() + 30 * 86_400_000);
+    vi.setSystemTime(later);
+    // Patch departure to a date that is ≥ arrival (avoids range_invalid) but before today.
+    await expect(
+      svcUpdate(db, userId, created.id, { departureDate: dayOffset(anchorNow(12), 5) }),
+    ).rejects.toMatchObject({ status: 400, errors: [{ code: "date.in_past", field: "departureDate" }] });
+  });
+
+  it("accepts a valid departure-only PATCH", async () => {
+    const db = createDb(env.DB);
+    const userId = await seedUser();
+    const now = anchorNow(12);
+    vi.setSystemTime(now);
+    const created = await svcCreate(db, userId, { ...baseStay, ...NY, arrivalDate: dayOffset(now, 10), departureDate: dayOffset(now, 12) });
+    const updated = await svcUpdate(db, userId, created.id, { departureDate: dayOffset(now, 20) });
+    expect(updated?.departureDate).toBe(dayOffset(now, 20));
+  });
 });

@@ -28,7 +28,7 @@ function clientTz(c: { req: { header(name: string): string | undefined } }): str
 
 stays.get("/api/stays", async (c) => {
   const userId = await requireUserId(c);
-  return c.json(await listStaysController(createDb(c.env.DB), userId));
+  return c.json(await listStaysController(createDb(c.env.DB), userId, clientTz(c)));
 });
 
 stays.post("/api/stays", async (c) => {
@@ -46,7 +46,7 @@ stays.post("/api/stays", async (c) => {
 
 stays.get("/api/stays/:id", async (c) => {
   const userId = await requireUserId(c);
-  return c.json(await getStayController(createDb(c.env.DB), userId, c.req.param("id")));
+  return c.json(await getStayController(createDb(c.env.DB), userId, c.req.param("id"), clientTz(c)));
 });
 
 stays.patch("/api/stays/:id", async (c) => {

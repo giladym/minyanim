@@ -30,6 +30,23 @@ function epochToDateInput(epoch: number): string {
   return new Date(epoch).toISOString().slice(0, 10);
 }
 
+/**
+ * Whether the civil-date range ["YYYY-MM-DD", "YYYY-MM-DD"] overlaps a Friday or Saturday — the
+ * client-side mirror of the server's coversShabbat heuristic (D7). Dates are treated as civil and
+ * parsed at UTC midnight, so `getUTCDay() ∈ {5, 6}` is the civil weekday. Returns false until
+ * both dates are valid and ordered. */
+function rangeCoversShabbat(arrival: string, departure: string): boolean {
+  const start = dateInputToEpoch(arrival);
+  const end = dateInputToEpoch(departure);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return false;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  for (let t = start; t <= end; t += DAY_MS) {
+    const day = new Date(t).getUTCDay();
+    if (day === 5 || day === 6) return true;
+  }
+  return false;
+}
+
 const emptyPrayerNeeds: PrayerNeedsValue = {
   weekday: { shacharit: false, mincha: false, maariv: false },
 };
@@ -76,6 +93,12 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
   const create = useCreateStay();
   const update = useUpdateStay();
   const busy = create.isPending || update.isPending;
+
+  // Date-driven Shabbat affordance: show the note only when the range covers a Fri/Sat (FR-009).
+  const coversShabbat = useMemo(
+    () => rangeCoversShabbat(arrival, departure),
+    [arrival, departure],
+  );
 
   // Smart defaults: pre-fill contact (name + first phone) from the profile (D12). Create only.
   useEffect(() => {
@@ -242,7 +265,7 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
         </Card>
 
         <Card>
-          <PrayerNeeds value={prayerNeeds} onChange={setPrayerNeeds} />
+          <PrayerNeeds value={prayerNeeds} onChange={setPrayerNeeds} coversShabbat={coversShabbat} />
           <label className="mt-4 flex min-h-[44px] items-center gap-3 text-ink">
             <input
               type="checkbox"

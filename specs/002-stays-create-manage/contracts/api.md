@@ -16,8 +16,10 @@ DTOs enforced via `OwnerStayDTO.parse()` before `c.json()`; service-layer tempor
 `AppError(400, code, field)`. The OpenAPI doc is not auto-generated from these routes — shared Zod
 is still the single validation SSOT for FE + BE.
 
-**Error-envelope rule**: **field/validation** errors → `{ errors: [{ field, code, params? }] }`;
-**operational/auth** errors → bare `{ code }`.
+**Error-envelope rule**: ALL errors use the `{ errors: [{ field, code, params? }] }` envelope;
+`field` is null for non-field/operational errors (e.g. `auth.required`, `rate.limited`,
+`geo.unavailable`). (Reconciled to the implementation during validation: the FE always reads
+`body.errors`, so operational errors carry the same envelope with `field: null`.)
 
 **Client timezone**: create/edit requests send an **`X-Client-Timezone`** header
 (`Intl.DateTimeFormat().resolvedOptions().timeZone`) used for the temporal check when a Stay has
