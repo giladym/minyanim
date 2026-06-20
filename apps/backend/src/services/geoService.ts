@@ -55,14 +55,58 @@ function normalize(feature: MapTilerFeature): GeoResult | null {
   return parsed.success ? parsed.data : null;
 }
 
+/** Place types we ask MapTiler for — city-level granularity (never street/POI; D1). */
+const PLACE_TYPES = "municipality,municipal_district,locality,place";
+
+/** Fetch features from a MapTiler geocoding URL, mapping any failure to `502 geo.unavailable`. */
+async function fetchFeatures(doFetch: FetchFn, url: string): Promise<MapTilerFeature[]> {
+  let providerResponse: Response;
+  try {
+    providerResponse = await doFetch(url, { headers: { "User-Agent": USER_AGENT } });
+  } catch {
+    throw new AppError(502, ERROR_CODES.GEO_UNAVAILABLE);
+  }
+  if (!providerResponse.ok) {
+    throw new AppError(502, ERROR_CODES.GEO_UNAVAILABLE);
+  }
+  try {
+    const body = (await providerResponse.json()) as { features?: MapTilerFeature[] };
+    return body.features ?? [];
+  } catch {
+    throw new AppError(502, ERROR_CODES.GEO_UNAVAILABLE);
+  }
+}
+
+/** Read a cached GeoSearchResponse, or write one (best-effort — cache errors never fail the request). */
+async function readCache(key: Request): Promise<GeoSearchResponse | undefined> {
+  const cached = await caches.default.match(key);
+  return cached ? ((await cached.json()) as GeoSearchResponse) : undefined;
+}
+async function writeCache(key: Request, response: GeoSearchResponse): Promise<void> {
+  try {
+    await caches.default.put(
+      key,
+      new Response(JSON.stringify(response), {
+        headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CACHE_TTL_SECONDS}` },
+      }),
+    );
+  } catch {
+    // ignore cache write failures
+  }
+}
+
 /**
  * Forward-geocode a free-text place query via MapTiler (server-side; D1). Caches successful
  * responses in the Cloudflare Cache API (~24h, keyed by normalized q+lang) and throws
  * `502 geo.unavailable` on provider failure so the UI can degrade to manual entry.
  *
+ * Search is global in every UI language — the `language` param only localizes the returned
+ * place labels, it does not restrict which places are searchable. (Minyanim is a travel product;
+ * Hebrew-speaking users overwhelmingly search for destinations *outside* Israel.)
+ *
  * @param env Worker env (provides MAPTILER_API_KEY + GEO_MODE).
  * @param q Free-text search (only the city box is ever sent — never the private address; D1).
- * @param lang UI language ("he" | "en"); "he" biases results to Israel, others stay global.
+ * @param lang UI language ("he" | "en"); localizes result labels only.
  * @param deps Optional injectable `fetch` (tests stub the provider).
  * @returns Normalized results + the required attribution string.
  */
@@ -81,49 +125,63 @@ export async function searchPlaces(
 
   // Cache key: a stable synthetic URL from q+lang (cache is per-account, not per-real-URL).
   const cacheKey = new Request(`https://geo.cache/search?q=${encodeURIComponent(normalizedQ)}&lang=${language}`);
-  const cache = caches.default;
-  const cached = await cache.match(cacheKey);
-  if (cached) return (await cached.json()) as GeoSearchResponse;
+  const cached = await readCache(cacheKey);
+  if (cached) return cached;
 
-  // Bias to Israel only for Hebrew UI; non-Hebrew searches stay global (D1).
-  const countryBias = language === "he" ? "&country=il" : "";
   const url =
     `https://api.maptiler.com/geocoding/${encodeURIComponent(normalizedQ)}.json` +
-    `?key=${env.MAPTILER_API_KEY}&language=${language}${countryBias}&limit=5&types=municipality,municipal_district,locality,place`;
+    `?key=${env.MAPTILER_API_KEY}&language=${language}&limit=5&types=${PLACE_TYPES}`;
 
-  let providerResponse: Response;
-  try {
-    providerResponse = await doFetch(url, { headers: { "User-Agent": USER_AGENT } });
-  } catch {
-    throw new AppError(502, ERROR_CODES.GEO_UNAVAILABLE);
-  }
-  if (!providerResponse.ok) {
-    throw new AppError(502, ERROR_CODES.GEO_UNAVAILABLE);
-  }
-
-  let body: { features?: MapTilerFeature[] };
-  try {
-    body = (await providerResponse.json()) as { features?: MapTilerFeature[] };
-  } catch {
-    throw new AppError(502, ERROR_CODES.GEO_UNAVAILABLE);
-  }
-
-  const results = (body.features ?? [])
+  const results = (await fetchFeatures(doFetch, url))
     .map(normalize)
     .filter((r): r is GeoResult => r !== null);
   const response: GeoSearchResponse = { results, attribution: ATTRIBUTION };
 
-  // Cache the normalized response (best-effort; never fail the request on a cache error).
-  try {
-    await cache.put(
-      cacheKey,
-      new Response(JSON.stringify(response), {
-        headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CACHE_TTL_SECONDS}` },
-      }),
-    );
-  } catch {
-    // ignore cache write failures
-  }
+  await writeCache(cacheKey, response);
+  return response;
+}
 
+/**
+ * Reverse-geocode map coordinates to the nearest city-level place via MapTiler (server-side; D1).
+ * Powers click-to-pick on the confirmation map. Returns 0–1 results (the most relevant locality);
+ * an empty list is valid and the UI prompts the user to pick another point or enter manually.
+ * Same caching/failure contract as {@link searchPlaces}.
+ *
+ * @param env Worker env (provides MAPTILER_API_KEY + GEO_MODE).
+ * @param lat Latitude of the picked point.
+ * @param lng Longitude of the picked point.
+ * @param lang UI language ("he" | "en"); localizes result labels only.
+ * @param deps Optional injectable `fetch` (tests stub the provider).
+ */
+export async function reverseGeocode(
+  env: Env,
+  lat: number,
+  lng: number,
+  lang: string,
+  deps: SearchDeps = {},
+): Promise<GeoSearchResponse> {
+  if (env.GEO_MODE === "mock") return mockResponse();
+
+  const doFetch = deps.fetch ?? (globalThis.fetch.bind(globalThis) as FetchFn);
+  const language = lang === "en" ? "en" : "he";
+  // Round to ~5 decimals (≈1m) so near-identical clicks share a cache entry.
+  const rLat = lat.toFixed(5);
+  const rLng = lng.toFixed(5);
+
+  const cacheKey = new Request(`https://geo.cache/reverse?lat=${rLat}&lng=${rLng}&lang=${language}`);
+  const cached = await readCache(cacheKey);
+  if (cached) return cached;
+
+  // MapTiler reverse geocoding takes `{lng},{lat}`; limit=1 keeps the single best locality.
+  const url =
+    `https://api.maptiler.com/geocoding/${rLng},${rLat}.json` +
+    `?key=${env.MAPTILER_API_KEY}&language=${language}&limit=1&types=${PLACE_TYPES}`;
+
+  const results = (await fetchFeatures(doFetch, url))
+    .map(normalize)
+    .filter((r): r is GeoResult => r !== null);
+  const response: GeoSearchResponse = { results, attribution: ATTRIBUTION };
+
+  await writeCache(cacheKey, response);
   return response;
 }

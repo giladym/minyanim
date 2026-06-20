@@ -19,7 +19,10 @@ technical decisions: (1) timezone-correct "not in the past" validation resolved 
 from the destination's coordinates (or the client-timezone header when none), with only structural
 rules in shared Zod; (2) **MapTiler** geocoding executed **server-side** behind `/api/geo/*`
 (geocoding key a backend secret; the public map-tile key is referrer-restricted client-side), with
-an always-available manual-entry fallback.
+an always-available manual-entry fallback. Geocoding is **global in every language** (the language
+param localizes labels only — no country filter) and the `/api/geo/*` proxy exposes both forward
+**search** and **reverse** geocoding, the latter powering map **click-to-pick** (post-launch
+reconciliation 2026-06-20; see research D1/D2).
 
 ## Technical Context
 
@@ -30,7 +33,7 @@ D13; `@hono/zod-openapi` only for the app shell/Swagger), Drizzle ORM + drizzle-
 better-auth (session/ownership), TanStack Router + Query, react-i18next, Tailwind v4. **New**:
 MapTiler Geocoding REST (server-side, Cache-API cached + rate-limited; Google Places a documented
 revert, not a hot fallback); **`@photostructure/tz-lookup`** (offline, workerd-safe coords→IANA
-tz — no network); **MapLibre GL JS** (OSS, no key lock-in) for the confirmation map (lazy-loaded;
+tz — no network); **MapLibre GL JS** (OSS, no key lock-in) for the interactive confirm/pick map (lazy-loaded;
 import `maplibre-gl/dist/maplibre-gl.css`).
 
 **Storage**: Cloudflare D1 (SQLite) via Drizzle. New `stay` table; reuses 001's single
@@ -58,8 +61,8 @@ persisting coordinates (MapTiler does — verify at integration); private addres
 geocoded.
 
 **Scale/Scope**: single-user feature; tens of Stays per user (no pagination in v1). 3 user
-stories (create / view+sort / edit+cancel), ~5 API endpoints + geo proxy, 1 new table, 1 new
-frontend feature module replacing the Stays placeholder.
+stories (create / view+sort / edit+cancel), ~5 API endpoints + geo proxy (`/api/geo/search` +
+`/api/geo/reverse`), 1 new table, 1 new frontend feature module replacing the Stays placeholder.
 
 ## Constitution Check
 
@@ -105,10 +108,10 @@ packages/shared/src/
 apps/backend/src/
 ├── db/schema.ts               # + stay table (FK user(id) ON DELETE CASCADE, indexes)
 ├── routes/stays.ts            # OpenAPI route defs (list/create/get/update/cancel)
-├── routes/geo.ts              # /api/geo/search proxy (server-side geocoding)
+├── routes/geo.ts              # /api/geo/search + /api/geo/reverse proxy (server-side geocoding)
 ├── controllers/stayController.ts
 ├── services/stayService.ts    # TZ-aware validation, Shabbat heuristic, DTO selection
-├── services/geoService.ts     # MapTiler client + Google fallback, normalization
+├── services/geoService.ts     # MapTiler client (forward + reverse), normalization, caching
 ├── repositories/stayRepository.ts  # Drizzle queries (incl. nearest-first), db.batch writes
 └── lib/timezone.ts            # coords → IANA tz (tz-lookup) + destination-local date helpers
 └── migrations/                # new generated migration for `stay`
@@ -118,7 +121,7 @@ apps/frontend/src/
 │   ├── StaysDashboard.tsx     # replaces 001 StaysPlaceholder; empty state + nearest-first list
 │   ├── StayCard.tsx
 │   ├── AddEditStayForm.tsx    # search-first location, smart defaults, progressive disclosure
-│   ├── LocationPicker.tsx     # search box + MapLibre confirmation map + manual fallback
+│   ├── LocationPicker.tsx     # search box + interactive MapLibre map (confirm + click-to-pick) + manual fallback
 │   └── PrayerNeeds.tsx
 ├── lib/stays.ts               # typed API client (TanStack Query hooks)
 └── router.tsx                 # wire /stays (list) + /stays/new + /stays/:id/edit

@@ -1,6 +1,6 @@
 import { SELF, env } from "cloudflare:test";
 import { describe, it, expect } from "vitest";
-import { searchPlaces } from "../src/services/geoService";
+import { reverseGeocode, searchPlaces } from "../src/services/geoService";
 import type { Env } from "../src/env";
 
 const J = { "content-type": "application/json" };
@@ -46,19 +46,37 @@ describe("geoService.searchPlaces (injected provider)", () => {
     expect(out.results[0]).toEqual({ city: "London", country: "United Kingdom", lat: 51.5074, lng: -0.1278, label: "London, United Kingdom" });
   });
 
-  it("biases to Israel only for Hebrew and uses the normalized query in the request URL (m13)", async () => {
+  it("searches globally in every language (never restricts by country) and uses the normalized query (m13)", async () => {
     const urls: string[] = [];
     const fetchStub = async (url: string) => {
       urls.push(url);
       return new Response(JSON.stringify(mapTilerBody()), { status: 200, headers: J });
     };
-    const heQ = `יפו-${crypto.randomUUID()}`;
+    const heQ = `לונדון-${crypto.randomUUID()}`;
     await searchPlaces(liveEnv, `  ${heQ.toUpperCase()}  `, "he", { fetch: fetchStub });
     await searchPlaces(liveEnv, `Paris-${crypto.randomUUID()}`, "en", { fetch: fetchStub });
-    expect(urls[0]).toContain("&country=il");
+    // Travel product: a Hebrew search must reach places outside Israel — no country filter, ever.
+    expect(urls[0]).not.toContain("country=il");
+    expect(urls[0]).toContain("language=he");
+    expect(urls[1]).not.toContain("country=il");
+    expect(urls[1]).toContain("language=en");
     // The request path uses the trimmed/lowercased query (same string as the cache key).
     expect(urls[0]).toContain(encodeURIComponent(heQ.toLowerCase()));
-    expect(urls[1]).not.toContain("country=il");
+  });
+
+  it("reverse-geocodes coordinates to the nearest place (lng,lat order, rounded, no country filter)", async () => {
+    const urls: string[] = [];
+    const fetchStub = async (url: string) => {
+      urls.push(url);
+      return new Response(JSON.stringify(mapTilerBody()), { status: 200, headers: J });
+    };
+    // A unique lng (5dp) per run keeps the Cache API from returning a prior reverse result.
+    const lng = -0.1 - parseInt(crypto.randomUUID().slice(0, 4), 16) / 1e6;
+    const out = await reverseGeocode(liveEnv, 51.5074, lng, "he", { fetch: fetchStub });
+    expect(out.results[0].city).toBe("London");
+    // MapTiler reverse takes `{lng},{lat}` (rounded to 5dp) — lng before lat in the path.
+    expect(urls[0]).toContain(`/geocoding/${lng.toFixed(5)},51.50740.json`);
+    expect(urls[0]).not.toContain("country=il");
   });
 
   it("throws 502 geo.unavailable on a provider non-2xx", async () => {
@@ -98,6 +116,29 @@ describe("GET /api/geo/search (route)", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.attribution).toContain("MapTiler");
+    expect(body.results[0].city).toBe("London");
+  });
+});
+
+describe("GET /api/geo/reverse (route)", () => {
+  it("401 without a session", async () => {
+    const res = await SELF.fetch("https://x/api/geo/reverse?lat=51.5&lng=-0.12");
+    expect(res.status).toBe(401);
+  });
+
+  it("400 geo.invalid_coords for out-of-range coordinates", async () => {
+    const cookie = await signIn();
+    const res = await SELF.fetch("https://x/api/geo/reverse?lat=999&lng=-0.12", { headers: { cookie } });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.errors[0].code).toBe("geo.invalid_coords");
+  });
+
+  it("returns canned results for an authed user with valid coordinates", async () => {
+    const cookie = await signIn();
+    const res = await SELF.fetch("https://x/api/geo/reverse?lat=51.5074&lng=-0.1278&lang=en", { headers: { cookie } });
+    expect(res.status).toBe(200);
+    const body = await res.json();
     expect(body.results[0].city).toBe("London");
   });
 });

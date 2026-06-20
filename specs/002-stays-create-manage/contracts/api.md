@@ -127,8 +127,22 @@ Empty `results` is valid (UI offers manual city/country entry). `429 rate.limite
 `502 geo.unavailable` if the provider is down → UI degrades to manual entry. The client renders
 the required `attribution` wherever results/map appear.
 
-> Map **tiles** for the confirmation map load client-side from MapTiler using a separate
-> public-scoped tile key (not the geocoding secret). Tiles failing to load never blocks the flow.
+> **Search is global in every language.** `lang` only localizes the returned `label`/`city`; it
+> does **not** restrict which places are searchable. (Minyanim is a travel product — Hebrew users
+> overwhelmingly search for destinations *outside* Israel; no `country` filter is applied.)
+
+### `GET /api/geo/reverse?lat={lat}&lng={lng}&lang={he|en}`
+
+Reverse-geocoding via **MapTiler** — powers **click-to-pick** on the map (click a point → the
+nearest city-level place resolves). Same auth, secret-handling, caching (keyed on rounded
+`lat,lng,lang`), rate-limit, and `502 geo.unavailable` contract as `/search`. Returns the same
+`{ results, attribution }` shape with **0–1** results; empty `results` means no locality was found
+at that point (UI prompts to pick again or enter manually). `400 geo.invalid_coords` for
+non-finite or out-of-range coordinates (`|lat|>90`, `|lng|>180`).
+
+> Map **tiles** for the map load client-side from MapTiler using a separate public-scoped tile key
+> (not the geocoding secret). Tiles failing to load never blocks the flow — search + manual entry
+> remain; click-to-pick is simply unavailable without the map.
 
 ---
 

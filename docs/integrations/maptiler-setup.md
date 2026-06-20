@@ -57,8 +57,10 @@ confirmation only.
    > domain exists.
 5. Note the **Flex tier** (~$25/mo) is generally needed at launch for commercial-style use and
    higher quotas; the free tier is non-commercial. Geocoding is **cached** server-side (Cache API,
-   ~24h) and **rate-limited** to control quota — see contracts `/api/geo/search`.
-6. Hebrew is supported via the geocoding `language=he` + `country=il` bias (used server-side).
+   ~24h) and **rate-limited** to control quota — see contracts `/api/geo/search` + `/api/geo/reverse`.
+6. Hebrew is supported via the geocoding `language=he` param, which localizes result labels.
+   Search is **global in every language** — no `country` filter (this is a travel product; users
+   search worldwide). The reverse-geocoding endpoint (map click-to-pick) uses the same key.
 
 ## Where to put them
 

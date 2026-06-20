@@ -54,6 +54,17 @@ const emptyPrayerNeeds: PrayerNeedsValue = {
 /** Field-keyed validation errors (code strings rendered via t(`errors.${code}`)). */
 type FieldErrors = Record<string, string>;
 
+/** Error keys that live behind the "more details" disclosure — used to auto-expand it on a failed
+ * submit so the flagged field is actually visible (and focusable). */
+const DETAIL_ERROR_FIELDS = new Set([
+  "addressPrivate",
+  "groupMembers",
+  "notes",
+  "contactName",
+  "contactPhone",
+  "contactEmail",
+]);
+
 /**
  * Create/Edit Stay form (FR-001/FR-006). Required fields: location (via LocationPicker),
  * arrival/departure dates, number of men. Smart defaults pre-fill contact from the profile and
@@ -89,6 +100,23 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
   const [showDetails, setShowDetails] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState("");
+  // Bumped on every failed submit so the focus effect re-runs even if the same fields are still
+  // invalid (the errors object can be referentially equal across two failed attempts).
+  const [failedAttempt, setFailedAttempt] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const errorCount = Object.keys(errors).length;
+
+  // After a failed submit, move focus to the first invalid field (and scroll it into view) so the
+  // user is taken straight to what needs fixing — keeps the always-enabled submit button usable
+  // while making the validation errors impossible to miss.
+  useEffect(() => {
+    if (failedAttempt === 0) return;
+    const first = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    if (first) {
+      first.focus();
+      first.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    }
+  }, [failedAttempt]);
 
   const create = useCreateStay();
   const update = useUpdateStay();
@@ -164,6 +192,8 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
       const next: FieldErrors = {};
       for (const e of err.body.errors) if (e.field) next[e.field] = e.code;
       setErrors((prev) => ({ ...prev, ...next }));
+      if (Object.keys(next).some((k) => DETAIL_ERROR_FIELDS.has(k))) setShowDetails(true);
+      if (Object.keys(next).length > 0) setFailedAttempt((n) => n + 1);
       if (err.body.errors.some((e) => !e.field)) setSubmitError(t("auth.error"));
     } else {
       setSubmitError(t("auth.error"));
@@ -181,6 +211,9 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
         next[issue.path.join(".") || "form"] = issue.message;
       }
       setErrors(next);
+      // Reveal the disclosure if a hidden field is at fault, then drive focus to the first error.
+      if (Object.keys(next).some((k) => DETAIL_ERROR_FIELDS.has(k))) setShowDetails(true);
+      setFailedAttempt((n) => n + 1);
       return;
     }
     setErrors({});
@@ -219,9 +252,13 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
         </button>
       </div>
 
-      <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+      <form ref={formRef} onSubmit={submit} className="flex flex-col gap-5" noValidate>
         <Card>
-          <LocationPicker value={location} onChange={setLocation} />
+          <LocationPicker
+            value={location}
+            onChange={setLocation}
+            invalid={!!(errors.city || errors.country)}
+          />
           {fieldError("city")}
           {fieldError("country")}
         </Card>
@@ -340,8 +377,10 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
                   dir="ltr"
                   value={contactPhone}
                   aria-label={t("stays.contactPhone")}
+                  aria-invalid={!!errors.contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
                 />
+                {fieldError("contactPhone")}
               </label>
               <label className="block">
                 <span className={labelCls}>{t("stays.contactEmail")}</span>
@@ -351,8 +390,10 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
                   dir="ltr"
                   value={contactEmail}
                   aria-label={t("stays.contactEmail")}
+                  aria-invalid={!!errors.contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                 />
+                {fieldError("contactEmail")}
               </label>
             </div>
           )}
@@ -362,6 +403,12 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
 
         {submitError && (
           <p role="alert" className="text-sm font-bold text-clay-ink">{submitError}</p>
+        )}
+
+        {errorCount > 0 && (
+          <p role="alert" className="text-sm font-bold text-clay-ink">
+            {t("stays.fixErrors", { count: errorCount })}
+          </p>
         )}
 
         <button

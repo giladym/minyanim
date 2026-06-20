@@ -29,6 +29,9 @@ duplicating them. Implementation details live in `tasks.md` + the code.
   near date boundaries from an Israel clock — must judge "past" at the destination).
 - Departure before arrival → `date.range_invalid`. `numMen = 0` → `num_men.too_low`.
 - Geocoding empty/unreachable → "enter city/country manually" path still completes the Stay.
+- Failed submit UX (FR-012): the "Save stay" button stays enabled; an error summary
+  (`stays.fixErrors`) appears by the button, focus jumps to the first invalid field, and the
+  "פרטים נוספים" disclosure auto-expands if the flagged field lives inside it.
 
 ## Scenario 2 — View & sort (US2)
 

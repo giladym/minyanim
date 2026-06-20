@@ -39,7 +39,7 @@ monorepo `apps/frontend`, `apps/backend`, `packages/shared`. Builds on 001.
 - [x] T008 Drizzle `stay` table in `apps/backend/src/db/schema.ts` (FK `user(id)` ON DELETE CASCADE; columns per data-model; `prayer_needs` `text({mode:'json'}).$type<PrayerNeeds>()`; index `(user_id, arrival_date)` + `user_id`)
 - [x] T009 Generate + apply migration (`drizzle-kit generate`; `wrangler d1 migrations apply minyanim --local`) → `apps/backend/migrations/`
 - [x] T010 [P] `apps/backend/src/lib/timezone.ts`: `tzFromCoords(lat,lng)` (@photostructure/tz-lookup), `civilDate(epoch, tz)` + `todayCivil(tz)` via `Intl.DateTimeFormat("en-CA",{timeZone})`, `coversShabbat(arrival,departure,tz)`; JSDoc. Pure, unit-testable
-- [x] T011 [P] `apps/backend/src/services/geoService.ts`: MapTiler forward-geocoding (injectable `fetch`; sends `User-Agent: Minyanim-Server/1.0`; `language`/`country=il` bias), normalize → `GeoResultSchema`, Cache API (`caches.default`, ~24h), `GEO_MODE=mock` canned path, `geo.unavailable` on provider error
+- [x] T011 [P] `apps/backend/src/services/geoService.ts`: MapTiler forward-geocoding (injectable `fetch`; sends `User-Agent: Minyanim-Server/1.0`; `language` localizes labels only — **no country filter**, search is global, corrected T036), normalize → `GeoResultSchema`, Cache API (`caches.default`, ~24h), `GEO_MODE=mock` canned path, `geo.unavailable` on provider error
 - [x] T012 [P] Stay repository `apps/backend/src/repositories/stayRepository.ts`: create/getById(owned)/listByUser(nearest-first active)/update/cancel; Drizzle queries; `prayer_needs` JSON round-trip
 - [x] T013 Stay service `apps/backend/src/services/stayService.ts`: temporal validation (destination tz from coords → `X-Client-Timezone` → ±1-day; `AppError(400, code, field)`), `coversShabbat` default, contact snapshot, DTO selection (Owner), `PrayerNeedsSchema.parse` on read/write
 - [x] T014 Stay controller + routes `apps/backend/src/controllers/stayController.ts` + `apps/backend/src/routes/stays.ts`: plain Hono + `safeParse`, ownership-404, `OwnerStayDTO.parse()` before `c.json()`; wire endpoints (contracts) + mount in `apps/backend/src/index.ts`
@@ -85,6 +85,16 @@ monorepo `apps/frontend`, `apps/backend`, `packages/shared`. Builds on 001.
 - [x] T032 [P] i18n audit: all new strings keyed (he/en), no hardcoded colors (tokens only)
 - [x] T033 Run `quickstart.md` scenarios end-to-end locally; verify SC-001..SC-004
 - [x] T034 Update OpenAPI/Swagger note + `docs` if needed; ensure `pnpm typecheck && lint && test` green; push (CI + Workers Builds auto-deploy from `002-...` is preview-only — verify on develop after merge)
+- [x] T035 **Submit-error UX (FR-012)**: keep "Save stay" enabled; on failed submit show a `role="alert"` error summary by the button (`stays.fixErrors`, he/en), focus the first invalid field, auto-expand "פרטים נוספים" if a hidden field is flagged. `LocationPicker` accepts an `invalid` prop so the active location input carries `aria-invalid`. Same behavior for server-returned field errors. Unit test in `AddEditStayForm.test.tsx`.
+
+---
+
+## Post-launch reconciliation (2026-06-20)
+
+Surfaced from hands-on use; spec/research/plan updated accordingly (Clarifications Session 2026-06-20).
+
+- [x] T036 **Global place search (bug fix, FR-002/FR-008)**: remove the hard `country=il` filter from `geoService.searchPlaces` — search is global in every language (`language` localizes labels only). Refactor the provider-fetch + Cache-API read/write into shared helpers. Update `apps/backend/test/geo.test.ts` (assert no country filter + correct `language` for he/en).
+- [x] T037 **Map click-to-pick (FR-008a)**: add `reverseGeocode` to `geoService` + `GET /api/geo/reverse` (session-required, rate-limited, `400 geo.invalid_coords` for out-of-range coords) wired in `routes/geo.ts`; new shared error code `geo.invalid_coords` (+ he/en i18n). Frontend: `reverseGeocode` in `lib/geo.ts`; make `LocationPicker`'s `PickableMap` interactive (init-once map, click → reverse-geocode → fill location, imperative marker/center sync), with `mapHint`/`mapPickAlt`/`reverseSearching`/`reverseNoResults` i18n. Backend tests: reverse service (lng,lat order, rounded, no country filter) + route (401/400/200). Update `contracts/api.md`.
 
 ---
 

@@ -110,6 +110,7 @@ export const en = {
       "num_men.too_low": "Please enter at least one man.",
       "confirm.required": "Explicit confirmation is required.",
       "geo.unavailable": "The location lookup service is unavailable right now. You can enter a city and country manually.",
+      "geo.invalid_coords": "That map point is invalid. Please pick another spot.",
     },
     stays: {
       title: "My Stays",
@@ -150,6 +151,7 @@ export const en = {
       contactPhone: "Contact phone",
       contactEmail: "Contact email",
       formPrivacy: "Contact details and the specific address are stored privately and are not exposed to others in this feature.",
+      fixErrors: "Please fix the highlighted fields before saving ({{count}}).",
       bringsSeferTorah: "Bringing a Sefer Torah",
       // Prayer needs
       prayerNeedsTitle: "Prayer needs",
@@ -170,6 +172,10 @@ export const en = {
         city: "City",
         country: "Country",
         mapAlt: "Location confirmation map",
+        mapHint: "Or pick a location by clicking the map",
+        mapPickAlt: "Map — click anywhere to set the location",
+        reverseSearching: "Identifying location…",
+        reverseNoResults: "No place found at that point. Try another spot or enter a city and country manually.",
       },
       // Cancel confirmation
       cancelTitle: "Cancel stay",

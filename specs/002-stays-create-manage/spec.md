@@ -22,6 +22,24 @@ fully record their travel-prayer plans even before the discovery/quorum layer ex
 
 ## Clarifications
 
+### Session 2026-06-20 (post-implementation reconciliation)
+
+Surfaced from hands-on use after 002 shipped; both folded into the requirements below.
+
+- Q: When the UI language is Hebrew, place search returned nothing for destinations outside
+  Israel — is that intended? → A: **No — bug.** The geocoder was being sent a hard `country=il`
+  filter for Hebrew (intended as a "bias," but the provider treats it as an exclusion). Search
+  MUST be **global in every language**; `lang` only localizes the returned labels, never restricts
+  which places are searchable. This is essential — Minyanim is a *travel* product whose primary
+  case is Hebrew-speaking users abroad. The filter was removed (FR-002, FR-008).
+- Q: Can a user set the location by clicking a point on the map, not only by name search? → A:
+  **Yes — added.** Clicking the map **reverse-geocodes** the point to the nearest city-level place
+  (`GET /api/geo/reverse`, same server-side/secret/cache/rate-limit contract as forward search)
+  and fills city/country/coordinates. It complements — does not replace — search-first and manual
+  entry. If no locality resolves at the clicked point, the UI prompts to pick another spot or enter
+  manually. Click-to-pick is unavailable when the map can't load (no tile key / tile failure);
+  search + manual entry remain (FR-002, FR-008a).
+
 ### Session 2026-06-19
 
 Derived from a two-role spec review (PM/UX + Architect) and reconciled into the decisions
@@ -107,10 +125,17 @@ dashboard.
 
 1. **Given** the Add-Stay form, **When** the user searches a place by name on the embedded
    map and selects it, **Then** city, country, and coordinates auto-fill.
+1a. **Given** the Add-Stay form with the map shown, **When** the user clicks a point on the map,
+   **Then** the nearest city-level place is reverse-geocoded and city, country, and coordinates
+   auto-fill (or, if none resolves, the user is prompted to pick another point or enter manually).
+1b. **Given** the UI language is Hebrew, **When** the user searches for a place outside Israel,
+   **Then** matching results are returned (search is global; not restricted to Israel).
 2. **Given** required fields (location, arrival date, departure date, number of men),
    **When** the user submits, **Then** the Stay is saved and appears in the dashboard.
 3. **Given** a missing required field, **When** the user submits, **Then** inline Hebrew
-   validation messages point to each missing field.
+   validation messages point to each missing field, an error summary appears by the submit
+   button, and keyboard focus moves to the first invalid field (revealing the optional-fields
+   disclosure if the flagged field is inside it).
 4. **Given** the user is bringing a Sefer Torah, **When** they toggle "מביא ס״ת",
    **Then** the Stay shows a Sefer Torah badge.
 5. **Given** the user specifies prayer needs, **When** the Stay covers a Friday–Saturday,
@@ -173,6 +198,10 @@ reflected immediately; cancelling removes it from the active list.
 - Departure date before arrival date → rejected with a clear message.
 - Number of men set to 0 or negative → rejected.
 - Map location search returns no result → user can still enter a city/country manually.
+- Map click reverse-geocodes to no locality (open sea, remote point) → user is prompted to pick
+  another point or enter a city/country manually; the prior selection is left unchanged.
+- Map cannot load (no tile key / tile failure) → search-first + manual entry still work;
+  click-to-pick is simply unavailable (never blocks the flow).
 - Specific address entered → stored but never displayed publicly (visibility rules per
   ROADMAP; enforced where the Stay is exposed to others in feature 003).
 
@@ -186,7 +215,9 @@ reflected immediately; cancelling removes it from the active list.
   arrival date, departure date, and number of men, plus optional Sefer Torah flag, prayer
   needs, contact, group members, notes, and folder.
 - **FR-002**: The Add-Stay form MUST provide a map with search-by-name that resolves a
-  selected place to city, country, and coordinates.
+  selected place to city, country, and coordinates. Search MUST be **global in every UI language**
+  — the language selection localizes result labels only and MUST NOT restrict which places are
+  searchable (no country filter). The map MUST also support **click-to-pick** (FR-008a).
 - **FR-003**: The system MUST reject Stays with an arrival date in the past, a departure
   date before arrival, or a non-positive man count, with clear Hebrew messages. "In the past"
   is evaluated against the **destination's local date** (IANA timezone resolved server-side
@@ -211,6 +242,12 @@ reflected immediately; cancelling removes it from the active list.
   Forward-geocoding MUST run **server-side** (provider key held as a secret, never shipped to
   the client). Required attribution for the chosen provider MUST be displayed where results
   appear.
+- **FR-008a**: The map MUST support **click-to-pick**: clicking a point reverse-geocodes it to the
+  nearest city-level place and fills city, country, and coordinates. Reverse-geocoding MUST run
+  **server-side** under the same secret/cache/rate-limit/attribution contract as forward search,
+  and MUST reject out-of-range coordinates. Click-to-pick complements — never replaces —
+  search-first and manual entry; when no locality resolves, or when the map cannot load, the user
+  MUST still be able to search by name or enter city/country manually.
 - **FR-009**: A user with zero Stays MUST see an empty state explaining what a Stay is with a
   single prominent "הוסף שהייה" call-to-action. The Add-Stay form MUST minimize effort via
   smart defaults (contact pre-filled from the profile and snapshotted onto the Stay,
@@ -226,7 +263,12 @@ reflected immediately; cancelling removes it from the active list.
 - **FR-012**: The Add-Stay/edit form, date picker, and map/search MUST meet WCAG 2.1 AA, be
   RTL-correct and keyboard-operable, use ≥44px touch targets, and announce Hebrew validation
   messages to assistive technology. After a successful save the user returns to the dashboard
-  with the affected Stay highlighted and a brief success confirmation.
+  with the affected Stay highlighted and a brief success confirmation. The submit control stays
+  enabled (validation runs on submit, not as a disabled-button gate); on a failed submit the form
+  MUST make the errors impossible to miss — surface a top-level error summary (`role="alert"`)
+  near the submit button, move keyboard focus to the first invalid field, and auto-expand the
+  "פרטים נוספים" disclosure when a flagged field lives inside it. The same focus/summary behavior
+  applies to field errors returned by the server.
 
 ### Key Entities
 

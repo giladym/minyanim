@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GeoResult } from "@minyanim/shared";
-import { searchPlaces } from "../../lib/geo";
+import { reverseGeocode, searchPlaces } from "../../lib/geo";
 import { ApiError } from "../../lib/api";
 
 /** The location subset of a Stay the picker resolves. lat/lng are null in manual mode. */
@@ -16,11 +16,16 @@ const fieldCls =
   "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay";
 const labelCls = "mb-1.5 block text-sm font-bold text-ink";
 
+/** World-ish default view when nothing is selected yet — lets the user pan anywhere to pick. */
+const DEFAULT_CENTER: [number, number] = [20, 30];
+const DEFAULT_ZOOM = 1.3;
+
 /**
  * Search-first location picker (FR-008). Type a place → choose from results → city/country/
- * coordinates resolve. A lazy-loaded MapLibre map confirms the pick (optional — never blocks
- * the flow if the tile key is missing or tiles fail). An always-visible manual fallback lets
- * the user type city/country directly (lat/lng null). RTL, keyboard-operable, ≥44px targets.
+ * coordinates resolve. A lazy-loaded MapLibre map both confirms the pick AND lets the user
+ * click anywhere to set the location by reverse-geocoding the point. The map is optional — if
+ * the tile key is missing or tiles fail, search + an always-visible manual fallback still work.
+ * RTL, keyboard-operable, ≥44px targets.
  *
  * @param value Current location selection.
  * @param onChange Called with the updated location whenever it changes.
@@ -28,9 +33,13 @@ const labelCls = "mb-1.5 block text-sm font-bold text-ink";
 export function LocationPicker({
   value,
   onChange,
+  invalid = false,
 }: {
   value: LocationValue;
   onChange: (v: LocationValue) => void;
+  /** When the parent's submit validation flagged the location, mark the active input invalid so
+   * focus-first-error can land on it and screen readers announce the problem. */
+  invalid?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const [manual, setManual] = useState(false);
@@ -40,6 +49,8 @@ export function LocationPicker({
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [picking, setPicking] = useState(false);
+  const [pickMessage, setPickMessage] = useState("");
   const lang = i18n.resolvedLanguage === "en" ? "en" : "he";
 
   // Debounced geocoding search (~300ms). Only the city box is sent (never the address, D1).
@@ -76,7 +87,32 @@ export function LocationPicker({
   function pick(r: GeoResult) {
     onChange({ city: r.city, country: r.country, lat: r.lat, lng: r.lng });
     setResults([]);
+    setPickMessage("");
     setQuery(r.label);
+  }
+
+  // Click-to-pick: reverse-geocode the clicked point and adopt the nearest locality.
+  function handleMapPick(lat: number, lng: number) {
+    setPicking(true);
+    setPickMessage("");
+    reverseGeocode(lat, lng, lang)
+      .then((r) => {
+        const hit = r.results[0];
+        if (hit) {
+          setAttribution(r.attribution);
+          pick(hit);
+        } else {
+          setPickMessage(t("stays.location.reverseNoResults"));
+        }
+      })
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && err.body.errors.some((e) => e.code === "geo.unavailable")) {
+          setPickMessage(t("errors.geo.unavailable"));
+        } else {
+          setPickMessage(t("stays.location.reverseNoResults"));
+        }
+      })
+      .finally(() => setPicking(false));
   }
 
   return (
@@ -91,6 +127,7 @@ export function LocationPicker({
               className={fieldCls}
               value={value.city}
               aria-label={t("stays.location.city")}
+              aria-invalid={invalid || undefined}
               onChange={(e) => onChange({ ...value, city: e.target.value, lat: null, lng: null })}
             />
           </label>
@@ -120,6 +157,7 @@ export function LocationPicker({
               className={fieldCls}
               value={query}
               aria-label={t("stays.location.searchLabel")}
+              aria-invalid={invalid || undefined}
               placeholder={t("stays.location.searchPlaceholder")}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -152,12 +190,20 @@ export function LocationPicker({
           )}
 
           {value.city && value.lat != null && (
-            <>
-              <p className="text-sm font-semibold text-teal-ink">
-                {t("stays.location.selected")}: {value.city}, {value.country}
-              </p>
-              <ConfirmationMap lat={value.lat} lng={value.lng} />
-            </>
+            <p className="text-sm font-semibold text-teal-ink">
+              {t("stays.location.selected")}: {value.city}, {value.country}
+            </p>
+          )}
+
+          <PickableMap
+            lat={value.lat}
+            lng={value.lng}
+            picking={picking}
+            onPick={handleMapPick}
+          />
+
+          {pickMessage && (
+            <p role="alert" className="text-sm font-semibold text-clay-ink">{pickMessage}</p>
           )}
 
           {attribution && <p className="text-xs text-faint" dir="ltr">{attribution}</p>}
@@ -175,49 +221,98 @@ export function LocationPicker({
   );
 }
 
+/** Aliases for the lazily-imported MapLibre module + its instances (avoids a hard import). */
+type MapLib = typeof import("maplibre-gl");
+type MapInstance = InstanceType<MapLib["Map"]>;
+type MarkerInstance = InstanceType<MapLib["Marker"]>;
+
 /**
- * Lazy-loaded MapLibre confirmation map. The map is purely confirmation: if the tile key is
- * absent or tiles fail to load, the component renders nothing and never breaks the flow (D2).
+ * Lazy-loaded MapLibre map that both confirms the current pick and accepts clicks to set a new
+ * one (the click is reverse-geocoded by the parent via {@link onPick}). Purely optional: if the
+ * tile key is absent or tiles fail to load, it renders nothing and never breaks the flow (D2).
+ * The map is created once; the marker/center are updated imperatively as `value` changes so a
+ * click doesn't tear down and rebuild the whole map.
  */
-function ConfirmationMap({ lat, lng }: { lat: number; lng: number | null }) {
+function PickableMap({
+  lat,
+  lng,
+  picking,
+  onPick,
+}: {
+  lat: number | null;
+  lng: number | null;
+  picking: boolean;
+  onPick: (lat: number, lng: number) => void;
+}) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<MapInstance | null>(null);
+  const markerRef = useRef<MarkerInstance | null>(null);
+  const libRef = useRef<MapLib | null>(null);
+  // Keep the latest onPick without re-initializing the map when the callback identity changes.
+  const onPickRef = useRef(onPick);
+  onPickRef.current = onPick;
   const tileKey = import.meta.env.VITE_MAPTILER_TILE_KEY as string | undefined;
 
+  // Initialize the map exactly once (mount). Dynamic import keeps MapLibre out of the initial bundle.
   useEffect(() => {
-    if (!tileKey || !ref.current || lng == null) return;
+    if (!tileKey || !ref.current) return;
     let cancelled = false;
-    let map: { remove: () => void } | undefined;
-    // Dynamic import keeps MapLibre out of the dashboard/initial bundle (KISS, lean bundle).
     void Promise.all([import("maplibre-gl"), import("maplibre-gl/dist/maplibre-gl.css")])
       .then(([mod]) => {
         if (cancelled || !ref.current) return;
-        const maplibregl = mod.default;
-        map = new maplibregl.Map({
+        libRef.current = mod;
+        const map = new mod.Map({
           container: ref.current,
           style: `https://api.maptiler.com/maps/streets/style.json?key=${tileKey}`,
-          center: [lng, lat],
-          zoom: 9,
+          center: lng != null && lat != null ? [lng, lat] : DEFAULT_CENTER,
+          zoom: lng != null && lat != null ? 9 : DEFAULT_ZOOM,
           attributionControl: false,
         });
-        new maplibregl.Marker().setLngLat([lng, lat]).addTo(map as never);
+        map.on("click", (e: { lngLat: { lat: number; lng: number } }) =>
+          onPickRef.current(e.lngLat.lat, e.lngLat.lng),
+        );
+        if (lat != null && lng != null) {
+          markerRef.current = new mod.Marker().setLngLat([lng, lat]).addTo(map);
+        }
+        mapRef.current = map;
       })
       .catch(() => {
-        // Tile/library failure is non-fatal — the map is optional confirmation only.
+        // Tile/library failure is non-fatal — the map is optional confirmation/picking only.
       });
     return () => {
       cancelled = true;
-      map?.remove();
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
     };
-  }, [lat, lng, tileKey]);
+    // Init once (keyed only on tileKey): the marker/center are kept in sync by the effect below.
+  }, [tileKey]);
 
-  if (!tileKey || lng == null) return null;
+  // Sync the marker + recenter when the selected location changes (search pick or map click).
+  useEffect(() => {
+    const map = mapRef.current;
+    const lib = libRef.current;
+    if (!map || !lib || lat == null || lng == null) return;
+    if (markerRef.current) {
+      markerRef.current.setLngLat([lng, lat]);
+    } else {
+      markerRef.current = new lib.Marker().setLngLat([lng, lat]).addTo(map);
+    }
+    map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 9) });
+  }, [lat, lng]);
+
+  if (!tileKey) return null;
   return (
-    <div
-      ref={ref}
-      role="img"
-      aria-label={t("stays.location.mapAlt")}
-      className="h-48 w-full overflow-hidden rounded-xl border border-line"
-    />
+    <div className="flex flex-col gap-1.5">
+      <p className="text-sm text-muted">{t("stays.location.mapHint")}</p>
+      <div
+        ref={ref}
+        role="application"
+        aria-label={t("stays.location.mapPickAlt")}
+        className="h-56 w-full overflow-hidden rounded-xl border border-line"
+      />
+      {picking && <p className="text-sm text-muted">{t("stays.location.reverseSearching")}</p>}
+    </div>
   );
 }

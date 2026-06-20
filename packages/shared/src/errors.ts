@@ -15,6 +15,7 @@ export const ERROR_CODES = {
   NUM_MEN_TOO_LOW: "num_men.too_low",
   CONFIRM_REQUIRED: "confirm.required",
   GEO_UNAVAILABLE: "geo.unavailable",
+  GEO_INVALID_COORDS: "geo.invalid_coords",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;

@@ -110,6 +110,7 @@ export const he = {
       "num_men.too_low": "יש להזין לפחות גבר אחד.",
       "confirm.required": "נדרש אישור מפורש.",
       "geo.unavailable": "שירות איתור המיקום אינו זמין כעת. אפשר להזין עיר ומדינה ידנית.",
+      "geo.invalid_coords": "הנקודה שנבחרה במפה אינה תקינה. אנא בחרו נקודה אחרת.",
     },
     stays: {
       title: "השהיות שלי",
@@ -150,6 +151,7 @@ export const he = {
       contactPhone: "טלפון ליצירת קשר",
       contactEmail: "אימייל ליצירת קשר",
       formPrivacy: "פרטי הקשר והכתובת המדויקת נשמרים באופן פרטי ואינם נחשפים לאחרים בפיצ׳ר זה.",
+      fixErrors: "יש לתקן את השדות המסומנים לפני השמירה ({{count}}).",
       bringsSeferTorah: "מביא/ה ספר תורה",
       // Prayer needs
       prayerNeedsTitle: "צורכי תפילה",
@@ -170,6 +172,10 @@ export const he = {
         city: "עיר",
         country: "מדינה",
         mapAlt: "מפת אישור המיקום",
+        mapHint: "או בחרו מיקום בלחיצה על המפה",
+        mapPickAlt: "מפה — לחצו על כל נקודה כדי לקבוע את המיקום",
+        reverseSearching: "מזהה מיקום…",
+        reverseNoResults: "לא נמצא יישוב בנקודה זו. נסו נקודה אחרת או הזינו עיר ומדינה ידנית.",
       },
       // Cancel confirmation
       cancelTitle: "ביטול שהייה",

@@ -52,6 +52,20 @@ describe("AddEditStayForm — validation (create)", () => {
     expect(createMutate).not.toHaveBeenCalled();
   });
 
+  it("surfaces an error summary and focuses the first invalid field on a failed submit", async () => {
+    const user = userEvent.setup();
+    render(<AddEditStayForm />);
+    // Leave the location empty so submit fails on it.
+    await fillDates(user, "2099-01-10", "2099-01-12");
+    await user.click(submitButton());
+    // A summary hint appears near the button (count of flagged fields interpolated).
+    expect(await screen.findByText(/יש לתקן את השדות המסומנים/)).toBeInTheDocument();
+    // Focus is driven to the first invalid field — the location search box (aria-invalid).
+    const search = screen.getByLabelText("חיפוש עיר");
+    expect(search).toHaveAttribute("aria-invalid", "true");
+    await waitFor(() => expect(search).toHaveFocus());
+  });
+
   it("rejects departure before arrival with date.range_invalid", async () => {
     const user = userEvent.setup();
     render(<AddEditStayForm />);

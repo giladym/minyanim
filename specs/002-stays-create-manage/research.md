@@ -18,8 +18,20 @@ TTL) to control cost/quota. **Rate-limited** by reusing 001's `RATE_LIMITER` bin
 
 **Rationale**: The decisive constraint is ToS permission to *store* resolved coordinates
 long-term. MapTiler's terms permit it, fitting a schema where `lat`/`lng` are first-class
-columns. Hebrew autocomplete supported (`language=he`, `country=il` bias). Server-side keeps the
+columns. Hebrew autocomplete supported (`language=he` localizes labels). Server-side keeps the
 key secret, normalizes provider output, and enables edge caching.
+
+> **Correction (2026-06-20):** the original plan added a `country=il` filter for Hebrew as a
+> "bias." MapTiler treats `country` as a **hard exclusion**, so Hebrew users could not find any
+> place outside Israel — the opposite of what a travel product needs. The filter is **removed**:
+> search is **global in every language**, and `language` only localizes labels. See spec
+> Clarifications (Session 2026-06-20) and FR-002/FR-008.
+
+**Reverse geocoding (added 2026-06-20):** `GET /api/geo/reverse?lat&lng&lang` powers map
+**click-to-pick** — same MapTiler client, injectable `fetch`, normalization, Cache API (keyed on
+rounded `lat,lng,lang`), rate-limit, and `geo.unavailable` contract as forward search. Returns 0–1
+results (`limit=1`, nearest city-level place); rejects out-of-range coordinates with
+`400 geo.invalid_coords`.
 
 **Privacy** (egress): the search text is sent to MapTiler — so the form sends **only the city
 search box** to the geocoder; the **`address_private` field is NEVER auto-geocoded**. Privacy
@@ -44,8 +56,14 @@ The secret **geocoding** key stays backend-only. Import MapLibre's CSS
 (`maplibre-gl/dist/maplibre-gl.css`) or the map renders broken; lazy-load the map so it doesn't
 bloat the dashboard route.
 
-**Rationale**: The map is only confirmation (search-first UX); tile failures never block the
+**Rationale**: The map is confirmation-and-pick (search-first UX); tile failures never block the
 flow. Separating the public tile key from the secret geocoding key matches 001's secret rigor.
+
+> **Update (2026-06-20):** the map is now **interactive** — besides confirming a pick it accepts
+> **clicks to set the location** (reverse-geocoded via D1's `/api/geo/reverse`). It is created once
+> and the marker/center are updated imperatively on selection (no teardown per click). Still fully
+> optional: no tile key / tile failure → no map, but search + manual entry remain. The marker
+> stays inside the lazy-loaded MapLibre chunk (no impact on the initial bundle).
 
 **CSP note**: 001 *planned* a strict CSP (research D11) but the SPA currently ships none. If/when
 the strict CSP lands, MapLibre needs `worker-src blob:` + `child-src blob:` (it spawns blob Web
@@ -209,9 +227,10 @@ errors (e.g. `auth.required`, `rate.limited`, `geo.unavailable`). (Reconciled to
 implementation during validation — the FE always reads `body.errors`, so operational errors
 carry the same envelope with `field: null` rather than a bare `{ code }`.)
 
-**New error codes** added to `packages/shared/src/errors.ts` (currently 5 codes): `location.required`,
-`date.in_past`, `date.range_invalid`, `num_men.too_low`, `confirm.required`, `geo.unavailable` —
-with matching `errors.*` i18n keys in `he.ts` + `en.ts`.
+**New error codes** added to `packages/shared/src/errors.ts`: `location.required`,
+`date.in_past`, `date.range_invalid`, `num_men.too_low`, `confirm.required`, `geo.unavailable`,
+and (2026-06-20) **`geo.invalid_coords`** (`400` from `/api/geo/reverse` for out-of-range
+coordinates) — each with matching `errors.*` i18n keys in `he.ts` + `en.ts`.
 
 ## D14. Testing & mocking seam (geocoding is server-side)
 
