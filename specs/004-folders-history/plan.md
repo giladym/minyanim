@@ -96,7 +96,7 @@ packages/shared/src/
 
 apps/backend/src/
 ├── db/schema.ts               # + folder table (+ NOCASE unique index, R2); stay folder_id FK (set null) + 2 indexes
-├── migrations/0004_*.sql      # drop/recreate stay+commitment in dep order, folder first; strip PRAGMA; verify commitment FK (R3)
+├── ../migrations/0004_*.sql   # NOTE: drizzle out dir is apps/backend/migrations/ (NOT src/) — drop/recreate stay+commitment in dep order, folder first; strip PRAGMA; commitment FK ON DELETE SET NULL preserved (R3)
 ├── routes/folders.ts          # GET/POST/PATCH/DELETE /api/folders  (+ mount in index.ts — R12)
 ├── routes/stays.ts (extend)   # GET /api/stays?scope=&folder=&cursor= ; DELETE /api/stays/:id/permanent
 ├── controllers/{folderController.ts, stayController.ts(extend: historyTag in toOwnerResponse — R6)}

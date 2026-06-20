@@ -31,8 +31,8 @@ folderId: text("folder_id").references(() => folder.id, { onDelete: "set null" }
 
 Adding the FK can't be an `ALTER` in SQLite. **`commitment.stay_id` already FK-references `stay(id)`
 (003)**, and drizzle-kit's auto-rebuild emits `PRAGMA foreign_keys=OFF` wrappers that **D1 rejects**
-(D1 manages FK state). **Decision (R3): pre-launch, no data → migration `0004` drops + recreates in
-dependency order** — drop `commitment` + `stay`, create `folder`, recreate `stay` (with the
+(D1 manages FK state). **Decision (R3): pre-launch, no data → migration `0004` (in `apps/backend/migrations/`, the
+drizzle `out` dir — NOT `src/migrations/`) drops + recreates in dependency order** — drop `commitment` + `stay`, create `folder`, recreate `stay` (with the
 `folder_id` FK + indexes below), recreate `commitment` (with its `stay_id` FK). Generate via
 drizzle-kit, **review the SQL, strip any `PRAGMA foreign_keys` lines**, and **test** that after the
 migration `PRAGMA foreign_key_list(commitment)` still shows `stay_id → stay`.
