@@ -70,6 +70,8 @@ const staysEditRoute = createRoute({
   component: lazyRouteComponent(() => import("./features/stays/AddEditStayForm"), "EditStayPage"),
 });
 const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/profile", component: lazyRouteComponent(() => import("./features/profile/Profile"), "ProfilePage") });
+// Discovery (feature 003 US1): search an area → potential + hosted minyanim.
+const discoveryRoute = createRoute({ getParentRoute: () => authedLayout, path: "/discovery", component: lazyRouteComponent(() => import("./features/discovery/DiscoveryPage"), "DiscoveryPage") });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -78,7 +80,7 @@ const routeTree = rootRoute.addChildren([
   forgotRoute,
   resetRoute,
   verifyRoute,
-  authedLayout.addChildren([staysRoute, staysNewRoute, staysEditRoute, profileRoute]),
+  authedLayout.addChildren([staysRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });
