@@ -10,6 +10,9 @@ import {
 } from "../controllers/eventController";
 import { commit, changeCommitment, withdraw } from "../services/commitmentService";
 import { claimRole, releaseRole } from "../services/roleService";
+import { eventExists, flagEvent } from "../repositories/flagRepository";
+import { NotFound } from "../lib/errors";
+import { createDb } from "../db/client";
 import { EventRoleSchema } from "@minyanim/shared";
 import type { Env } from "../env";
 import type { Logger } from "../lib/logger";
@@ -87,4 +90,14 @@ events.delete("/api/events/:id/roles/:role", async (c) => {
   const role = EventRoleSchema.safeParse(c.req.param("role"));
   if (!role.success) return c.json({ errors: [{ field: "role", code: "resource.not_found" }] }, 404);
   return c.json({ minyan: await releaseRole(buildCtx(c), userId, c.req.param("id"), role.data) });
+});
+
+/** POST /api/events/:id/flag — flag for moderation (idempotent; thresholds owned by 006 — D19). */
+events.post("/api/events/:id/flag", async (c) => {
+  const userId = await requireUserId(c);
+  const db = createDb(c.env.DB);
+  const id = c.req.param("id");
+  if (!(await eventExists(db, id))) throw NotFound();
+  await flagEvent(db, id, userId);
+  return c.json({ ok: true });
 });

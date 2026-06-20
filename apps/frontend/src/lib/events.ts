@@ -104,3 +104,8 @@ export function useReleaseRole(id: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
   });
 }
+
+export const flagMinyan = (id: string) => api(`/events/${id}/flag`, { method: "POST", body: "{}" });
+export function useFlagMinyan(id: string) {
+  return useMutation({ mutationFn: () => flagMinyan(id) });
+}

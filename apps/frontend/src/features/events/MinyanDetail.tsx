@@ -14,6 +14,7 @@ import {
   useWithdraw,
   useClaimRole,
   useReleaseRole,
+  useFlagMinyan,
   type AnyMinyanDTO,
 } from "../../lib/events";
 
@@ -230,6 +231,24 @@ export function MinyanDetail() {
           </button>
         </div>
       )}
+
+      {!isOwner(m) && m.status !== "cancelled" && <FlagButton id={id} />}
     </div>
+  );
+}
+
+/** Discreet "report" affordance (FR-017/D19). Idempotent server-side; the UI just acknowledges. */
+function FlagButton({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const flag = useFlagMinyan(id);
+  return (
+    <button
+      type="button"
+      className="self-start text-xs font-bold text-faint disabled:opacity-60"
+      disabled={flag.isPending || flag.isSuccess}
+      onClick={() => flag.mutate()}
+    >
+      {flag.isSuccess ? t("minyanDetail.flagged") : t("minyanDetail.flag")}
+    </button>
   );
 }

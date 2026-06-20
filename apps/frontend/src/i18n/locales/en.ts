@@ -191,6 +191,8 @@ export const en = {
       release: "Release",
       roleFilled: "Filled",
       shareWhatsApp: "Share to WhatsApp",
+      flag: "Report this minyan",
+      flagged: "Reported — thank you",
     },
     notifications: {
       title: "Notifications",

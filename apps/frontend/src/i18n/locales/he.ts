@@ -191,6 +191,8 @@ export const he = {
       release: "שחרור",
       roleFilled: "מאויש",
       shareWhatsApp: "שיתוף בוואטסאפ",
+      flag: "דיווח על המניין",
+      flagged: "דווח — תודה",
     },
     notifications: {
       title: "התראות",

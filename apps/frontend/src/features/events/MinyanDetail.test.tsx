@@ -23,6 +23,7 @@ vi.mock("../../lib/events", () => ({
   useWithdraw: () => ({ mutate: withdrawMutate, isPending: false }),
   useClaimRole: () => noop,
   useReleaseRole: () => noop,
+  useFlagMinyan: () => ({ mutate: vi.fn(), isPending: false, isSuccess: false }),
 }));
 
 import { MinyanDetail } from "./MinyanDetail";
