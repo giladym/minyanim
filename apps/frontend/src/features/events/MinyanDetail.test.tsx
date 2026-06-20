@@ -7,6 +7,8 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
+// Signed-in viewer (so the public-but-authed path shows the Join form, not the sign-in CTA).
+vi.mock("../../lib/auth-client", () => ({ authClient: { useSession: () => ({ data: { user: { id: "viewer" } } }) } }));
 
 const useMinyan = vi.fn();
 const commitMutateAsync = vi.fn();

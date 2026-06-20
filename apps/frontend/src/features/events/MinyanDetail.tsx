@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, Link } from "@tanstack/react-router";
 import type { MinyanStatus, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
-import type { EventRole } from "@minyanim/shared";
+import type { EventRole, PublicMinyanDTO } from "@minyanim/shared";
+import { authClient } from "../../lib/auth-client";
 import {
   useMinyan,
   useCancelMinyan,
@@ -29,6 +30,19 @@ function hasPrivate(m: AnyMinyanDTO): m is ParticipantMinyanDTO | OwnerMinyanDTO
 }
 function isOwner(m: AnyMinyanDTO): m is OwnerMinyanDTO {
   return (m as OwnerMinyanDTO).isHost === true;
+}
+
+/**
+ * Build the WhatsApp share text from PUBLIC fields only — city/tefillot/count + join link, NEVER
+ * the private address (SC-005/FR-012). Pure + exported so it's unit-testable.
+ */
+export function buildShareText(m: PublicMinyanDTO, joinUrl: string, tefillaLabel: (tf: string) => string): string {
+  const tefillot = m.services.map((s) => tefillaLabel(s.tefilla) + (s.time ? ` ${s.time}` : "")).join(", ");
+  return `${m.city}, ${m.country} · ${tefillot} · ${m.committedMen}/10\n${joinUrl}`;
+}
+
+export function whatsAppHref(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
 /** Role slots (US4): a committed participant claims/releases Ba'al Tefila / Ba'al Korei. Open slots
@@ -78,10 +92,24 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
   const change = useChangeCommitment(id);
   const withdraw = useWithdraw(id);
 
+  const { data: session } = authClient.useSession();
   if (isOwner(m)) return null; // host is auto-committed; uses host controls
 
   const committed = hasPrivate(m); // participant view ⇒ already joined
   const fieldCls = "w-24 rounded-xl border border-line2 bg-surface px-3 py-2.5 text-ink outline-none focus:border-clay";
+
+  // Signed-out visitor (e.g. arriving via a WhatsApp join link): show a sign-in CTA that returns
+  // here after auth (D13/R11) — works for Google or email/password.
+  if (!session && !committed) {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
+        <p className="text-sm text-ink">{t("commit.signInToJoin")}</p>
+        <Link to="/sign-in" search={{ redirect: `/minyan/${id}` }} className="self-start rounded-xl bg-clay px-5 py-2.5 font-extrabold text-on-clay">
+          {t("commit.signIn")}
+        </Link>
+      </div>
+    );
+  }
 
   if (committed) {
     return (
@@ -159,6 +187,14 @@ export function MinyanDetail() {
           </p>
         )}
         {m.notes && <p className="text-sm text-muted">{m.notes}</p>}
+        <a
+          href={whatsAppHref(buildShareText(m, `${window.location.origin}/minyan/${m.id}`, (tf) => t(`tefilla.${tf}`)))}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 self-start rounded-xl bg-[#25D366] px-4 py-2.5 text-sm font-bold text-white"
+        >
+          {t("minyanDetail.shareWhatsApp")}
+        </a>
       </div>
 
       {m.status !== "cancelled" && m.status !== "completed" && <CommitSection id={id} m={m} />}

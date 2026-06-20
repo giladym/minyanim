@@ -190,6 +190,7 @@ export const en = {
       claim: "Claim",
       release: "Release",
       roleFilled: "Filled",
+      shareWhatsApp: "Share to WhatsApp",
     },
     notifications: {
       title: "Notifications",
@@ -211,6 +212,8 @@ export const en = {
       updateSize: "Update",
       withdraw: "Withdraw",
       conflictWarning: "Heads up — you're already committed to another minyan on this date.",
+      signInToJoin: "Sign in to join this minyan and see the exact address.",
+      signIn: "Sign in",
     },
     stays: {
       title: "My Stays",

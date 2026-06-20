@@ -190,6 +190,7 @@ export const he = {
       claim: "לקיחת התפקיד",
       release: "שחרור",
       roleFilled: "מאויש",
+      shareWhatsApp: "שיתוף בוואטסאפ",
     },
     notifications: {
       title: "התראות",
@@ -211,6 +212,8 @@ export const he = {
       updateSize: "עדכון",
       withdraw: "ביטול הרשמה",
       conflictWarning: "לתשומת לבכם — אתם כבר רשומים למניין אחר בתאריך הזה.",
+      signInToJoin: "התחברו כדי להצטרף למניין ולראות את הכתובת המדויקת.",
+      signIn: "התחברות",
     },
     stays: {
       title: "השהיות שלי",
