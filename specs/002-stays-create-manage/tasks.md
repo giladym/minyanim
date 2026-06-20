@@ -85,7 +85,6 @@ monorepo `apps/frontend`, `apps/backend`, `packages/shared`. Builds on 001.
 - [x] T032 [P] i18n audit: all new strings keyed (he/en), no hardcoded colors (tokens only)
 - [x] T033 Run `quickstart.md` scenarios end-to-end locally; verify SC-001..SC-004
 - [x] T034 Update OpenAPI/Swagger note + `docs` if needed; ensure `pnpm typecheck && lint && test` green; push (CI + Workers Builds auto-deploy from `002-...` is preview-only — verify on develop after merge)
-- [x] T035 **Submit-error UX (FR-012)**: keep "Save stay" enabled; on failed submit show a `role="alert"` error summary by the button (`stays.fixErrors`, he/en), focus the first invalid field, auto-expand "פרטים נוספים" if a hidden field is flagged. `LocationPicker` accepts an `invalid` prop so the active location input carries `aria-invalid`. Same behavior for server-returned field errors. Unit test in `AddEditStayForm.test.tsx`.
 
 ---
 
@@ -93,8 +92,10 @@ monorepo `apps/frontend`, `apps/backend`, `packages/shared`. Builds on 001.
 
 Surfaced from hands-on use; spec/research/plan updated accordingly (Clarifications Session 2026-06-20).
 
+- [x] T035 **Submit-error UX (FR-012)**: keep "Save stay" enabled; on failed submit show a `role="alert"` error summary by the button (`stays.fixErrors`, he/en), focus the first invalid field, auto-expand "פרטים נוספים" if a hidden field is flagged. `LocationPicker` accepts an `invalid` prop so the active location input carries `aria-invalid`. Same behavior for server-returned field errors. Unit test in `AddEditStayForm.test.tsx`.
 - [x] T036 **Global place search (bug fix, FR-002/FR-008)**: remove the hard `country=il` filter from `geoService.searchPlaces` — search is global in every language (`language` localizes labels only). Refactor the provider-fetch + Cache-API read/write into shared helpers. Update `apps/backend/test/geo.test.ts` (assert no country filter + correct `language` for he/en).
 - [x] T037 **Map click-to-pick (FR-008a)**: add `reverseGeocode` to `geoService` + `GET /api/geo/reverse` (session-required, rate-limited, `400 geo.invalid_coords` for out-of-range coords) wired in `routes/geo.ts`; new shared error code `geo.invalid_coords` (+ he/en i18n). Frontend: `reverseGeocode` in `lib/geo.ts`; make `LocationPicker`'s `PickableMap` interactive (init-once map, click → reverse-geocode → fill location, imperative marker/center sync), with `mapHint`/`mapPickAlt`/`reverseSearching`/`reverseNoResults` i18n. Backend tests: reverse service (lng,lat order, rounded, no country filter) + route (401/400/200). Update `contracts/api.md`.
+- [x] T038 **Date-picker min/max affordance (FR-012)**: constrain the arrival/departure native pickers in `AddEditStayForm.tsx` — departure `min` = arrival, arrival `max` = departure, both floored at a soft past-floor (device yesterday, ±1-day buffer matching the server) — to prevent an out-of-order or clearly-past range at entry. UX affordance only; shared schema + server stay authoritative (`departure ≥ arrival`, timezone-correct past check unchanged). Unit test in `AddEditStayForm.test.tsx`.
 
 ---
 

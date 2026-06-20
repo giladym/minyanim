@@ -66,6 +66,21 @@ describe("AddEditStayForm — validation (create)", () => {
     await waitFor(() => expect(search).toHaveFocus());
   });
 
+  it("constrains the date pickers (min/max) to prevent an out-of-order range at entry", async () => {
+    const user = userEvent.setup();
+    render(<AddEditStayForm />);
+    const arrivalInput = screen.getByLabelText("תאריך הגעה");
+    const departureInput = screen.getByLabelText("תאריך עזיבה");
+    // With both empty, each picker floors at the soft past-floor (device yesterday, UTC-midnight).
+    const floor = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    expect(arrivalInput).toHaveAttribute("min", floor);
+    expect(departureInput).toHaveAttribute("min", floor);
+    // Once a range is chosen, departure can't precede arrival and arrival can't follow departure.
+    await fillDates(user, "2099-01-10", "2099-01-12");
+    expect(departureInput).toHaveAttribute("min", "2099-01-10");
+    expect(arrivalInput).toHaveAttribute("max", "2099-01-12");
+  });
+
   it("rejects departure before arrival with date.range_invalid", async () => {
     const user = userEvent.setup();
     render(<AddEditStayForm />);

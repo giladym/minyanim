@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18
 
-**Status**: Clarified (2026-06-19)
+**Status**: Clarified (2026-06-20)
 
 **Context**: See [`specs/ROADMAP.md`](../ROADMAP.md). Depends on **001 Platform Foundation**.
 
@@ -268,7 +268,11 @@ reflected immediately; cancelling removes it from the active list.
   MUST make the errors impossible to miss — surface a top-level error summary (`role="alert"`)
   near the submit button, move keyboard focus to the first invalid field, and auto-expand the
   "פרטים נוספים" disclosure when a flagged field lives inside it. The same focus/summary behavior
-  applies to field errors returned by the server.
+  applies to field errors returned by the server. The arrival/departure date pickers MUST expose
+  `min`/`max` constraints (departure ≥ arrival; arrival ≤ departure; a soft past-floor) to prevent
+  an out-of-order or clearly-past range at entry — a UX affordance only, with the server remaining
+  authoritative for the timezone-correct "not in the past" check and the shared schema enforcing
+  `departure ≥ arrival` regardless of what the picker allows.
 
 ### Key Entities
 

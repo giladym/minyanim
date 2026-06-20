@@ -106,6 +106,13 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const errorCount = Object.keys(errors).length;
 
+  // Soft past-floor for the date pickers: one day back, mirroring the server's ±1-day tolerance
+  // for coordinate-less stays. A hard `today` floor would wrongly block a "today at destination"
+  // arrival for a user traveling west (e.g. IL → US), so we leave a one-day buffer. This is a UX
+  // affordance only — the server stays authoritative for the timezone-correct "not in the past"
+  // rule, and the schema enforces departure ≥ arrival regardless of what the picker allows.
+  const pastFloor = useMemo(() => epochToDateInput(Date.now() - 24 * 60 * 60 * 1000), []);
+
   // After a failed submit, move focus to the first invalid field (and scroll it into view) so the
   // user is taken straight to what needs fixing — keeps the always-enabled submit button usable
   // while making the validation errors impossible to miss.
@@ -271,6 +278,8 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
                 type="date"
                 className={fieldCls}
                 value={arrival}
+                min={pastFloor}
+                max={departure || undefined}
                 aria-label={t("stays.arrivalDate")}
                 aria-invalid={!!errors.arrivalDate}
                 onChange={(e) => setArrival(e.target.value)}
@@ -283,6 +292,7 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
                 type="date"
                 className={fieldCls}
                 value={departure}
+                min={arrival || pastFloor}
                 aria-label={t("stays.departureDate")}
                 aria-invalid={!!errors.departureDate}
                 onChange={(e) => setDeparture(e.target.value)}
