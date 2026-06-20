@@ -31,6 +31,7 @@ export function HostMinyanForm() {
   const host = useHostMinyan();
 
   const [location, setLocation] = useState<LocationValue>({ city: "", country: "", lat: null, lng: null });
+  const [addressPrivate, setAddressPrivate] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [services, setServices] = useState<ServiceRow[]>([{ tefilla: "shacharit", time: "" }]);
   const [nusach, setNusach] = useState<Nusach>("any");
@@ -57,7 +58,7 @@ export function HostMinyanForm() {
       country: location.country,
       lat: location.lat,
       lng: location.lng,
-      addressPrivate: null,
+      addressPrivate: addressPrivate || null,
       eventDate: dateToEpoch(eventDate),
       notes: notes || null,
       minyan: {
@@ -93,6 +94,17 @@ export function HostMinyanForm() {
         <section className="rounded-2xl border border-line bg-surface p-5">
           <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} />
           {fieldError("city")}
+          <label className="mt-4 block">
+            <span className={labelCls}>{t("host.addressPrivate")}</span>
+            <input
+              className={fieldCls}
+              value={addressPrivate}
+              aria-label={t("host.addressPrivate")}
+              placeholder={t("host.addressPlaceholder")}
+              onChange={(e) => setAddressPrivate(e.target.value)}
+            />
+            <span className="mt-1 block text-xs text-muted">{t("host.addressHint")}</span>
+          </label>
         </section>
 
         <section className="rounded-2xl border border-line bg-surface p-5">

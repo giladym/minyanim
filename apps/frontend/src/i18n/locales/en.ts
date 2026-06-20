@@ -156,6 +156,9 @@ export const en = {
     },
     host: {
       title: "Host a minyan",
+      addressPrivate: "Specific address",
+      addressPlaceholder: "e.g. Marriott Hotel, 19 Słomińskiego St, room 2",
+      addressHint: "The exact address — shown only to people who join this minyan. Tip: click the precise spot on the map to drop an accurate pin.",
       date: "Date",
       services: "Tefillot",
       tefilla: "Tefilla",
