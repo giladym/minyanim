@@ -6,6 +6,7 @@ import {
   type OwnerMinyanDTO,
   type ParticipantMinyanDTO,
   type PublicMinyanDTO,
+  type EventRole,
 } from "@minyanim/shared";
 import { api } from "./api";
 
@@ -81,6 +82,25 @@ export function useWithdraw(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => withdrawCommitment(id),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+export const claimRole = (id: string, role: EventRole) => api(`/events/${id}/roles/${role}`, { method: "POST", body: "{}" });
+export const releaseRole = (id: string, role: EventRole) => api(`/events/${id}/roles/${role}`, { method: "DELETE" });
+
+export function useClaimRole(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (role: EventRole) => claimRole(id, role),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+export function useReleaseRole(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (role: EventRole) => releaseRole(id, role),
     onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
   });
 }

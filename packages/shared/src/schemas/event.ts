@@ -128,6 +128,8 @@ export interface ParticipantMinyanDTO extends PublicMinyanDTO {
   addressNotes: string | null;
   hostContact: { name: string; phone: string | null; email: string | null };
   participants: ParticipantInfo[];
+  /** Which role slots the viewing participant personally holds (drives claim vs release UI). */
+  myRoles: { baalTefila: boolean; baalKorei: boolean };
 }
 
 /** Host's full view (management). Same shape as participant in v1; distinguished for future use. */

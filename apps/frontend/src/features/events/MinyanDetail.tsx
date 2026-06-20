@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, Link } from "@tanstack/react-router";
 import type { MinyanStatus, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
+import type { EventRole } from "@minyanim/shared";
 import {
   useMinyan,
   useCancelMinyan,
@@ -10,6 +11,8 @@ import {
   useCommit,
   useChangeCommitment,
   useWithdraw,
+  useClaimRole,
+  useReleaseRole,
   type AnyMinyanDTO,
 } from "../../lib/events";
 
@@ -26,6 +29,42 @@ function hasPrivate(m: AnyMinyanDTO): m is ParticipantMinyanDTO | OwnerMinyanDTO
 }
 function isOwner(m: AnyMinyanDTO): m is OwnerMinyanDTO {
   return (m as OwnerMinyanDTO).isHost === true;
+}
+
+/** Role slots (US4): a committed participant claims/releases Ba'al Tefila / Ba'al Korei. Open slots
+ * are clearly indicated; the viewer's own slots show a release action. */
+function RolesSection({ id, m }: { id: string; m: ParticipantMinyanDTO | OwnerMinyanDTO }) {
+  const { t } = useTranslation();
+  const claim = useClaimRole(id);
+  const release = useReleaseRole(id);
+  const ROLES: EventRole[] = ["baal_tefila", "baal_korei"];
+  const busy = claim.isPending || release.isPending;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+      <h2 className="font-extrabold text-ink">{t("minyanDetail.rolesTitle")}</h2>
+      {ROLES.map((role) => {
+        const mine = m.myRoles[role === "baal_tefila" ? "baalTefila" : "baalKorei"];
+        const filled = m.rolesFilled[role === "baal_tefila" ? "baalTefila" : "baalKorei"];
+        return (
+          <div key={role} className="flex items-center justify-between">
+            <span className="font-semibold text-ink">{t(`roles.${role}`)}</span>
+            {mine ? (
+              <button type="button" className="text-sm font-bold text-clay-ink disabled:opacity-60" disabled={busy} onClick={() => release.mutate(role)}>
+                {t("minyanDetail.release")}
+              </button>
+            ) : filled ? (
+              <span className="text-sm text-muted">{t("minyanDetail.roleFilled")}</span>
+            ) : (
+              <button type="button" className="text-sm font-bold text-clay disabled:opacity-60" disabled={busy} onClick={() => claim.mutate(role)}>
+                {t("minyanDetail.claim")}
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 /** Commit / change / withdraw UI (US3). Host sees no commit UI (auto-committed). A signed-out
@@ -123,6 +162,8 @@ export function MinyanDetail() {
       </div>
 
       {m.status !== "cancelled" && m.status !== "completed" && <CommitSection id={id} m={m} />}
+
+      {hasPrivate(m) && m.status !== "cancelled" && m.status !== "completed" && <RolesSection id={id} m={m} />}
 
       {hasPrivate(m) ? (
         <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">

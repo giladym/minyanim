@@ -186,6 +186,10 @@ export const en = {
       hostControls: "Host controls",
       cancel: "Cancel this minyan",
       cancelConfirm: "Cancel this minyan? Committed participants will be notified.",
+      rolesTitle: "Prayer roles",
+      claim: "Claim",
+      release: "Release",
+      roleFilled: "Filled",
     },
     notifications: {
       title: "Notifications",

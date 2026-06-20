@@ -19,6 +19,8 @@ vi.mock("../../lib/events", () => ({
   useCommit: () => ({ mutateAsync: commitMutateAsync, isPending: false }),
   useChangeCommitment: () => noop,
   useWithdraw: () => ({ mutate: withdrawMutate, isPending: false }),
+  useClaimRole: () => noop,
+  useReleaseRole: () => noop,
 }));
 
 import { MinyanDetail } from "./MinyanDetail";
@@ -48,7 +50,7 @@ describe("MinyanDetail — commit UI", () => {
 
   it("committed participant sees address + withdraw, not a join button", async () => {
     useMinyan.mockReturnValue({
-      data: { ...base, addressPrivate: "Secret 1", hostContact: { name: "דוד", phone: null, email: "d@x.com" }, participants: [{ userId: "u", name: "דוד", numMen: 8, phone: null, email: "d@x.com" }] },
+      data: { ...base, addressPrivate: "Secret 1", hostContact: { name: "דוד", phone: null, email: "d@x.com" }, participants: [{ userId: "u", name: "דוד", numMen: 8, phone: null, email: "d@x.com" }], myRoles: { baalTefila: false, baalKorei: false } },
       isLoading: false,
     });
     render(<MinyanDetail />);
@@ -59,7 +61,7 @@ describe("MinyanDetail — commit UI", () => {
 
   it("host sees host controls and no join/commit UI", () => {
     useMinyan.mockReturnValue({
-      data: { ...base, addressPrivate: "Secret 1", hostContact: { name: "דוד", phone: null, email: "d@x.com" }, participants: [], isHost: true },
+      data: { ...base, addressPrivate: "Secret 1", hostContact: { name: "דוד", phone: null, email: "d@x.com" }, participants: [], myRoles: { baalTefila: false, baalKorei: false }, isHost: true },
       isLoading: false,
     });
     render(<MinyanDetail />);

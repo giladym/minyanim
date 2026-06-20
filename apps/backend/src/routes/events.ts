@@ -9,6 +9,8 @@ import {
   cancelMinyanController,
 } from "../controllers/eventController";
 import { commit, changeCommitment, withdraw } from "../services/commitmentService";
+import { claimRole, releaseRole } from "../services/roleService";
+import { EventRoleSchema } from "@minyanim/shared";
 import type { Env } from "../env";
 import type { Logger } from "../lib/logger";
 
@@ -69,4 +71,20 @@ events.delete("/api/events/:id/commit", async (c) => {
   const userId = await requireUserId(c);
   await withdraw(buildCtx(c), userId, c.req.param("id"));
   return c.json({ ok: true });
+});
+
+/** POST /api/events/:id/roles/:role — claim a prayer-role slot (US4). */
+events.post("/api/events/:id/roles/:role", async (c) => {
+  const userId = await requireUserId(c);
+  const role = EventRoleSchema.safeParse(c.req.param("role"));
+  if (!role.success) return c.json({ errors: [{ field: "role", code: "resource.not_found" }] }, 404);
+  return c.json({ minyan: await claimRole(buildCtx(c), userId, c.req.param("id"), role.data) });
+});
+
+/** DELETE /api/events/:id/roles/:role — release a role the caller holds. */
+events.delete("/api/events/:id/roles/:role", async (c) => {
+  const userId = await requireUserId(c);
+  const role = EventRoleSchema.safeParse(c.req.param("role"));
+  if (!role.success) return c.json({ errors: [{ field: "role", code: "resource.not_found" }] }, 404);
+  return c.json({ minyan: await releaseRole(buildCtx(c), userId, c.req.param("id"), role.data) });
 });

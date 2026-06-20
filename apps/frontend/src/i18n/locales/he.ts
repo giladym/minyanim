@@ -186,6 +186,10 @@ export const he = {
       hostControls: "ניהול המארח",
       cancel: "ביטול המניין",
       cancelConfirm: "לבטל את המניין? המשתתפים הרשומים יקבלו הודעה.",
+      rolesTitle: "תפקידים",
+      claim: "לקיחת התפקיד",
+      release: "שחרור",
+      roleFilled: "מאויש",
     },
     notifications: {
       title: "התראות",

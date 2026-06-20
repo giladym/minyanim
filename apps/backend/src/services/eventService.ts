@@ -15,6 +15,7 @@ import { fuzzCoord } from "../lib/geoPrivacy";
 import * as repo from "../repositories/eventRepository";
 import type { MinyanJoined } from "../repositories/eventRepository";
 import { recipientsForEvent, eventNotifyContext } from "../repositories/notificationRepository";
+import { userRolesForEvent } from "../repositories/roleRepository";
 import { onCancelled } from "./notificationService";
 
 function toUtcMidnight(epochMs: number): Date {
@@ -68,11 +69,13 @@ function buildPublic(
   };
 }
 
-/** Add the participant-only fields (address + host contact + participant list) to a public DTO. */
-async function withParticipantFields(ctx: Ctx, m: MinyanJoined, base: PublicMinyanDTO): Promise<ParticipantMinyanDTO> {
+/** Add the participant-only fields (address + host contact + participant list + the viewer's own
+ * role slots) to a public DTO. */
+async function withParticipantFields(ctx: Ctx, m: MinyanJoined, base: PublicMinyanDTO, viewerId: string): Promise<ParticipantMinyanDTO> {
   const parts = await repo.participantsForEvent(ctx.db, m.id);
   const phones = await repo.firstPhonesByUser(ctx.db, parts.map((p) => p.userId));
   const host = parts.find((p) => p.userId === m.hostUserId);
+  const myRoles = await userRolesForEvent(ctx.db, m.id, viewerId);
   return {
     ...base,
     // Committed participants get the EXACT point + private address + entry notes (D4).
@@ -88,6 +91,7 @@ async function withParticipantFields(ctx: Ctx, m: MinyanJoined, base: PublicMiny
       email: p.email,
       phone: phones.get(p.userId) ?? null,
     })),
+    myRoles,
   };
 }
 
@@ -114,11 +118,11 @@ export async function getMinyan(
   const base = buildPublic(m, men.get(id) ?? 0, roles);
 
   if (isHost) {
-    const p = await withParticipantFields(ctx, m, base);
+    const p = await withParticipantFields(ctx, m, base, viewerId!);
     return { ...p, isHost: true } satisfies OwnerMinyanDTO;
   }
   const committed = viewerId !== null && (await repo.getCommitment(ctx.db, id, viewerId)) !== null;
-  return committed ? withParticipantFields(ctx, m, base) : base;
+  return committed ? withParticipantFields(ctx, m, base, viewerId!) : base;
 }
 
 /**
