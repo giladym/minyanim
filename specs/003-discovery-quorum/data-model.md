@@ -23,8 +23,8 @@ A hosted gathering at a precise point. Owned by its host; cascade-deleted with t
 | lat | real, NOT NULL | precise point (hosted events always have coords) |
 | lng | real, NOT NULL | precise point |
 | address_private | text, NULL | **private** — only in Participant/Owner DTOs (D4/R10) |
-| event_date | integer, NOT NULL | date-only, epoch-ms @ UTC midnight of civil date (002 convention) |
-| event_time | text, NOT NULL | local `HH:MM` |
+| event_date | integer, NOT NULL | date-only, epoch-ms @ UTC midnight of civil date — the Shabbat/day (002 convention) |
+| notes | text, NULL | free-text host notes (D3) |
 | status | text, NOT NULL | `'forming'` \| `'cancelled'`; default `'forming'` (quorum/ready/completed derived, R4) |
 | hidden | integer (bool) | default 0; moderation seam — excluded from discovery (D19). 006 owns the threshold |
 | created_at / updated_at | integer (ts) | epoch-ms |
@@ -34,9 +34,9 @@ A hosted gathering at a precise point. Owned by its host; cascade-deleted with t
 | Field | Type | Notes |
 |-------|------|-------|
 | event_id | text (PK, FK → `event(id)`) | **ON DELETE CASCADE** |
-| tefilla | text, NOT NULL | `'shacharit'` \| `'mincha'` \| `'maariv'` (+ future) |
 | nusach | text, NOT NULL | `'ashkenaz'` \| `'sefard'` \| `'chabad'` \| `'mizrachi'` \| `'any'` (D16) |
 | sefer_torah | integer (bool) | host-declared availability; default 0 |
+| services | text (JSON) | `[{ tefilla: 'shacharit'\|'mincha'\|'maariv', time?: 'HH:MM'\|null }]` (≥1); typed by `MinyanServiceSchema`, the 002 `prayer_needs` pattern (D3) |
 
 ## Entity: `commitment`
 
@@ -152,10 +152,10 @@ roles/notifications), their own commitments, role claims, and notifications — 
 
 - **committedMen** = `SUM(commitment.num_men)` for the event — computed in a **single grouped
   query** across the discovery result set (R15), never per-event.
-- **isShabbatShacharit** = `tefilla='shacharit' AND new Date(event_date).getUTCDay()===6`. Uses the
-  **UTC-midnight convention** (event_date is UTC-midnight of its civil date, so `getUTCDay()` IS the
-  civil weekday — no `tzFromCoords`, matching how 002's `coversShabbat` actually works). A tiny
-  `isSaturday(epoch)` helper, **not** `coversShabbat`.
+- **isShabbatShacharit** = `services.some(s => s.tefilla==='shacharit') AND isSaturday(event_date)`.
+  Uses the **UTC-midnight convention** (event_date is UTC-midnight of its civil date, so
+  `getUTCDay()===6` IS the civil weekday — no `tzFromCoords`, matching how 002's `coversShabbat`
+  actually works). The `isSaturday(epoch)` helper, **not** `coversShabbat`.
 - **baalKoreiClaimed** = an `event_role` row exists with `role='baal_korei'`. **Ba'al Tefila is
   display-only — it never gates `ready`.**
 - **isPast** (→ `completed`) = `civilDate(event_date,"UTC") < todayCivil(tzFromCoords(lat,lng))`

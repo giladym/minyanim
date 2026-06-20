@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
-import type { PrayerNeeds } from "@minyanim/shared";
+import type { PrayerNeeds, MinyanService } from "@minyanim/shared";
 
 // better-auth-owned tables (user/session/account/verification) + our phone_number.
 // Field KEYS match better-auth's model fields; DB column names are snake_case.
@@ -136,7 +136,7 @@ export const event = sqliteTable(
     lng: real("lng").notNull(),
     addressPrivate: text("address_private"),
     eventDate: integer("event_date", { mode: "timestamp" }).notNull(),
-    eventTime: text("event_time").notNull(),
+    notes: text("notes"),
     status: text("status").notNull().default("forming"),
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -153,9 +153,10 @@ export const minyan = sqliteTable("minyan", {
   eventId: text("event_id")
     .primaryKey()
     .references(() => event.id, { onDelete: "cascade" }),
-  tefilla: text("tefilla").notNull(),
   nusach: text("nusach").notNull().default("any"),
   seferTorah: integer("sefer_torah", { mode: "boolean" }).notNull().default(false),
+  // The gathering's tefillot, each with an optional time (D3). Typed JSON like 002's prayer_needs.
+  services: text("services", { mode: "json" }).$type<MinyanService[]>().notNull(),
 });
 
 export const commitment = sqliteTable(

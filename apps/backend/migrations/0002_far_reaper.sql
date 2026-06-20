@@ -37,7 +37,7 @@ CREATE TABLE `event` (
 	`lng` real NOT NULL,
 	`address_private` text,
 	`event_date` integer NOT NULL,
-	`event_time` text NOT NULL,
+	`notes` text,
 	`status` text DEFAULT 'forming' NOT NULL,
 	`hidden` integer DEFAULT false NOT NULL,
 	`created_at` integer NOT NULL,
@@ -71,9 +71,9 @@ CREATE TABLE `flag` (
 CREATE UNIQUE INDEX `flag_event_user_uidx` ON `flag` (`event_id`,`user_id`);--> statement-breakpoint
 CREATE TABLE `minyan` (
 	`event_id` text PRIMARY KEY NOT NULL,
-	`tefilla` text NOT NULL,
 	`nusach` text DEFAULT 'any' NOT NULL,
 	`sefer_torah` integer DEFAULT false NOT NULL,
+	`services` text NOT NULL,
 	FOREIGN KEY (`event_id`) REFERENCES `event`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint

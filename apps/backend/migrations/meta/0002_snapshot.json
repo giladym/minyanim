@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "33847dc8-60fb-4f70-bf62-0311081ddd35",
+  "id": "74f703ed-8cbd-4cbd-aa66-d2fe22ecb614",
   "prevId": "02b98822-a024-47c6-8391-6981f2f2982a",
   "tables": {
     "account": {
@@ -396,11 +396,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "event_time": {
-          "name": "event_time",
+        "notes": {
+          "name": "notes",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "status": {
@@ -644,13 +644,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "tefilla": {
-          "name": "tefilla",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "nusach": {
           "name": "nusach",
           "type": "text",
@@ -666,6 +659,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": false
+        },
+        "services": {
+          "name": "services",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {},

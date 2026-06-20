@@ -20,11 +20,13 @@ search view, sees the *potential* (how many men have Stays in an area for a give
 when it has reached quorum AND has a Sefer Torah AND a claimed Ba'al Korei. Beit Chabad pins
 appear as a static informational layer. Email + in-app notifications fire on quorum events.
 
-**Key modeling fact**: a **Minyan is one service** — exactly one location, one date, one
-tefilla, one time, one nusach. One place therefore hosts **multiple Minyanim** when it runs
-several services (e.g. a hotel with a 07:00 and an 08:30 Shacharit, or a separate Friday-night
-Maariv and a Shabbat-morning Shacharit). "Same place" is determined by coordinate proximity for
-grouping in the UI. A Minyan belongs to exactly one location; a location may have many Minyanim.
+**Key modeling fact**: a **Minyan is a gathering** — one location, one date (the Shabbat/day), one
+nusach, and a **set of tefillot** (services), each with an optional time. Hosting a Shabbat is one
+Minyan covering Friday-night through Saturday tefillot; a single commitment joins the whole
+gathering and quorum (10 men) is counted for it. A place still hosts **multiple Minyanim** when it
+runs genuinely distinct groups (e.g. a hotel's 07:00 vs 08:30 Shacharit). "Same place" is
+coordinate proximity for UI grouping. A Minyan belongs to exactly one location; a location may have
+many Minyanim.
 
 ---
 
@@ -48,12 +50,16 @@ the requirements below and will be cited by the planning artifacts.
   (`apps/backend/src/lib/timezone.ts`). A Stay counts toward **every** Shabbat its
   `[arrival, departure]` range overlaps; potential is grouped by those buckets. No zmanim
   dependency (precise windows are Feature 005).
-- **D3 — Minyan granularity & commitment model.** A Minyan = one date + one tefilla + one time +
-  one nusach (multi-service places = multiple Minyan rows). A **Commitment** is
-  `(userId, minyanId, numMen, stayId?)` — it carries its own party size and does **not** require
-  a backing Stay, so a WhatsApp recruit with no Stay can join. The optional `stayId` links a
-  commitment to a Stay only for the reconciliation flow (D12). One commitment per (minyan, user),
-  enforced by a unique constraint.
+- **D3 — Minyan granularity & commitment model (gathering model).** A Minyan is a **gathering**:
+  one host + one place + one **date** (the Shabbat/day) + one nusach + a Sefer-Torah flag + free
+  **notes** + a **set of tefillot ("services")**, each with an **optional time** (e.g. a Shabbat
+  gathering = Friday-night Maariv, Shacharit ~08:30, Mincha, Maariv). Hosting a Shabbat is **one**
+  Minyan, not one per tefilla. A place with genuinely distinct groups (e.g. a hotel's 07:00 vs
+  08:30 Shacharit) is **two** Minyanim. A **Commitment** is `(userId, minyanId, numMen, stayId?)`
+  joining the **whole gathering** — it carries its own party size and does **not** require a backing
+  Stay (a WhatsApp recruit can join); the optional `stayId` is only for reconciliation (D12). One
+  commitment per (minyan, user). v1 commitment = "coming to this gathering," not per-tefilla
+  attendance (a future refinement).
 - **D4 — Three-tier privacy DTOs.** Mirroring 002's Owner/Public pattern (`OwnerStayDTO` /
   `PublicStayDTO` in `packages/shared/src/schemas/stay.ts`, D8): `PublicMinyanDTO` (city/venue,
   date, tefilla, time, nusach, counts, status — specific address and host/participant contact
@@ -101,8 +107,8 @@ the requirements below and will be cited by the planning artifacts.
   email/password** (no flow assumes a Google identity — ROADMAP decision 8), preserving a
   post-auth redirect to `/minyan/:id` (reusing `apps/backend/src/lib/redirect.ts`). The pre-auth
   landing shows the public projection only.
-- **D14 — Commitment conflict.** Committing to ≥2 Minyanim with the same tefilla on the same date
-  in overlapping time is a **soft warning**; the user may proceed.
+- **D14 — Commitment conflict.** Committing to ≥2 Minyan gatherings on the **same date** (the same
+  Shabbat/day — you can't be in two places) is a **soft warning**; the user may proceed.
 - **D15 — Party size bounds.** A commitment's `numMen` is ≥1 and ≤ a sane maximum (planning
   constant, ≈50), enforced by a shared-Zod rule (mirroring 002's man-count rule). Quorum is met at
   ≥10; overshoot is allowed and displayed.
@@ -191,10 +197,11 @@ first committed participant.
 **Acceptance Scenarios**:
 
 1. **Given** a user in an area with potential, **When** they host a Minyan with location, date,
-   tefilla, time, nusach, and Sefer Torah availability, **Then** it is created, the host is
-   auto-committed with their party size (D11), and it is shown in discovery.
-2. **Given** an existing place, **When** the user hosts another Minyan there with a different
-   tefilla/time/nusach, **Then** both Minyanim coexist at that place (D3).
+   nusach, Sefer Torah availability, and a set of tefillot (each with an optional time), **Then**
+   it is created, the host is auto-committed with their party size (D11), and it is shown in
+   discovery.
+2. **Given** an existing place, **When** the user hosts another Minyan there as a distinct group
+   (different services/times/nusach), **Then** both Minyanim coexist at that place (D3).
 3. **Given** a Shabbat-morning Minyan with a Sefer Torah, **When** it has ≥10 committed men
    AND a participant has claimed the Ba'al Korei role, **Then** its derived status reaches
    "ready" (D8).
@@ -232,9 +239,9 @@ within the polling window. They withdraw; it drops back.
 6. **Given** a "quorum reached"/"ready" Minyan, **When** a withdrawal (or D12 auto-withdrawal)
    drops it below 10 — or a required Torah/Ba'al Korei is lost — **Then** the status recomputes to
    "forming" and a deduped "quorum lost" notification fires (D10).
-7. **Given** a user already committed to a Minyan with the same tefilla on the same date in an
-   overlapping time, **When** they try to commit to another, **Then** they receive a soft conflict
-   warning and may proceed (D14).
+7. **Given** a user already committed to a Minyan on a given date, **When** they try to commit to
+   another gathering on the **same date**, **Then** they receive a soft conflict warning and may
+   proceed (D14).
 8. **Given** a user tries to commit twice to the same Minyan, **When** submitted, **Then** the
    second attempt is rejected (`commitment.duplicate`, D9); committing to a cancelled or completed
    Minyan is rejected (`minyan.cancelled` / `minyan.completed`).
@@ -349,8 +356,8 @@ this stay"; tapping it opens discovery pre-filtered to that Stay's location + da
 - A committed participant's optional linked Stay is edited/cancelled (feature 002) → if it no
   longer covers the Minyan's date, the commitment is auto-withdrawn and the user notified; counts
   recompute (D12). A commitment with no linked Stay is unaffected.
-- A place has multiple Minyanim and a user tries to commit to two overlapping ones (same
-  tefilla/time/date) → soft conflict warning; user may proceed (D14).
+- A user tries to commit to two Minyan gatherings on the same date → soft conflict warning; user
+  may proceed (D14).
 - Specific address + host/participant contact are revealed only to committed participants, on
   commit, and revoked on withdrawal (D4).
 - A withdrawal/role-release/Torah-removal that drops a Minyan below readiness reverts its status
@@ -374,9 +381,10 @@ this stay"; tapping it opens discovery pre-filtered to that Stay's location + da
 - **FR-001**: The system MUST let a user search by city/place and date range and display
   per-Shabbat *potential* — the sum of `num_men` over active Stays inside the search area whose
   date range overlaps each Shabbat bucket, computed server-side (D1/D2).
-- **FR-002**: The system MUST let a user host a Minyan as a single service — one precise location,
-  one date, one tefilla, one time, one nusach (Ashkenaz / Sefard / Chabad / Mizrachi / any), and
-  Sefer Torah availability (D3).
+- **FR-002**: The system MUST let a user host a Minyan as a gathering — one precise location, one
+  date, one nusach (Ashkenaz / Sefard / Chabad / Mizrachi / any), a Sefer Torah flag, optional
+  notes, and a **set of tefillot** (≥1; Shacharit / Mincha / Maariv) each with an **optional time**
+  (D3).
 - **FR-003**: The system MUST support multiple Minyanim at the same location, distinguished by
   tefilla, time, host, or nusach; "same place" is a coordinate-proximity grouping (D3).
 - **FR-004**: Users MUST be able to commit a party size to a Minyan (1 ≤ size ≤ max, D15), change
@@ -384,9 +392,8 @@ this stay"; tapping it opens discovery pre-filtered to that Stay's location + da
   (D3). A user MUST NOT hold two commitments on the same Minyan (D9).
 - **FR-005**: A Minyan's status MUST be **derived server-side** (never stored beyond
   forming/cancelled, D7) and recompute bidirectionally (D10): "quorum reached" requires ≥10
-  committed men; for a Shabbat-morning Torah-reading minyan (tefilla = Shacharit on a Shabbat
-  date in destination tz, D8) "ready" additionally requires a Sefer Torah AND a claimed Ba'al
-  Korei.
+  committed men; for a gathering that **includes a Shabbat-morning Shacharit** (a Shacharit service
+  on a Shabbat date, D8) "ready" additionally requires a Sefer Torah AND a claimed Ba'al Korei.
 - **FR-006**: Below readiness, a Minyan MUST display the current count, how many more men are
   needed, and which readiness elements are missing (Sefer Torah, Ba'al Korei).
 - **FR-007**: Discovery MUST present both a map and an at-parity list. The map MUST display user
@@ -420,8 +427,8 @@ this stay"; tapping it opens discovery pre-filtered to that Stay's location + da
 - **FR-015**: A Minyan MUST auto-derive "completed" after its date passes in the destination-local
   timezone; completed and cancelled Minyanim MUST be excluded from active discovery results
   (D7/D10).
-- **FR-016**: Committing to ≥2 Minyanim with the same tefilla on the same date in overlapping time
-  MUST raise a soft conflict warning that the user may override (D14).
+- **FR-016**: Committing to ≥2 Minyan gatherings on the same date MUST raise a soft conflict
+  warning that the user may override (D14).
 - **FR-017**: Every Stay/Minyan in discovery MUST offer a "flag" affordance, and discovery MUST
   exclude content marked hidden by moderation via a shared predicate that defaults to visible; the
   moderation threshold/behaviour is owned by Feature 006 (D19).
@@ -441,11 +448,11 @@ Persistence uses the generic **`event`** model with a `type` discriminator (D21)
 v1 type and the user-facing name.
 
 - **Event** (`type = 'minyan'` in v1) — host (User), location (city/country + coordinates +
-  private specific address), single date + time, stored status (forming/cancelled), `type`,
-  timestamps. Derived at read time: quorum/ready/completed (D7/D8).
-- **Minyan attributes** (the `type = 'minyan'` specifics) — tefilla, nusach, Sefer Torah
-  available, Ba'al Tefila / Ba'al Korei role-slot holders. Physical layout (1:1 detail table vs
-  Zod-typed JSON column) finalized in `plan.md` (D21).
+  private specific address), single date (the Shabbat/day), free notes, stored status
+  (forming/cancelled), `type`, timestamps. Derived at read time: quorum/ready/completed (D7/D8).
+- **Minyan attributes** (the `type = 'minyan'` detail, 1:1) — nusach, Sefer Torah available, and a
+  **services** array `[{ tefilla, time? }]` (≥1). Role-slot holders (Ba'al Tefila / Ba'al Korei)
+  live in `event_role` (D9).
 - **Commitment** — `(userId, eventId, numMen, stayId?)`, unique per (event, user); `stayId`
   optional, used only for the reconciliation flow (D3/D9/D12).
 - **Role claim** — at most one participant per (eventId, role ∈ {baal_tefila, baal_korei}),

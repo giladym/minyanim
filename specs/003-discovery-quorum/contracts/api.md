@@ -62,14 +62,24 @@ Host a Minyan. Body = `CreateEventInput` (shared Zod; `type:"minyan"` + minyan a
 {
   "type": "minyan",
   "city":"…","country":"…","lat":0,"lng":0,"addressPrivate":"…|null",
-  "eventDate": 1754524800000, "eventTime": "08:30",
-  "minyan": { "tefilla":"shacharit", "nusach":"ashkenaz", "seferTorah": true },
+  "eventDate": 1754524800000,
+  "notes": "…|null",
+  "minyan": {
+    "nusach": "ashkenaz",
+    "seferTorah": true,
+    "services": [
+      { "tefilla": "maariv", "time": null },
+      { "tefilla": "shacharit", "time": "08:30" },
+      { "tefilla": "mincha", "time": null }
+    ]
+  },
   "hostNumMen": 1
 }
 ```
 Enums (shared Zod SSOT): `type:'minyan'`; `tefilla∈{shacharit,mincha,maariv}`;
-`nusach∈{ashkenaz,sefard,chabad,mizrachi,any}`; `eventTime` matches `^([01]\d|2[0-3]):[0-5]\d$`;
-`hostNumMen` 1..50. `addressPrivate` optional (coords are the location). Validation: structural via
+`nusach∈{ashkenaz,sefard,chabad,mizrachi,any}`; each service `time` is optional and matches
+`^([01]\d|2[0-3]):[0-5]\d$`; `services` has ≥1 entry; `hostNumMen` 1..50. `addressPrivate` + `notes`
+optional (coords are the location). Validation: structural via
 shared Zod; **temporal** server-side (`eventDate` not before destination-local today — tz from the
 event's mandatory `lat/lng`; reuse 002's check; no `X-Client-Timezone` fallback since events always
 have coords). Creates event + minyan + **host self-commitment** (`hostNumMen`) in one **non-atomic**
@@ -78,9 +88,10 @@ have coords). Creates event + minyan + **host self-commitment** (`hostNumMen`) i
 
 ### `PATCH /api/events/{id}` (host-only)
 
-Edit a hosted Minyan. Body (all optional): `{ seferTorah?, eventTime?, addressPrivate?, nusach? }`.
-**Date and tefilla are immutable in v1.** Toggling `seferTorah:false` (or any readiness-affecting
-change) recomputes derived status and may fire a `quorum_lost` crossing fan-out (R9).
+Edit a hosted Minyan. Body (all optional): `{ addressPrivate?, notes?, nusach?, seferTorah?,
+services? }`. **The date is immutable in v1.** Toggling `seferTorah:false` or removing the Shacharit
+service (or any readiness-affecting change) recomputes derived status and may fire a `quorum_lost`
+crossing fan-out (R9).
 → `200 OwnerMinyanDTO` · `404` if not the host (never leak existence) · `400` validation.
 
 ### `GET /api/events/{id}`
@@ -107,8 +118,8 @@ discovery. **Idempotent** — cancelling an already-cancelled event returns `200
 Body `{ "numMen": 3, "stayId": "stay_…|null" }` (`CreateCommitmentInput`; 1 ≤ numMen ≤ 50, D15).
 `UNIQUE(event_id,user_id)` ⇒ duplicate → `409 commitment.duplicate` (use PATCH to change). Rejects
 a `cancelled`/`completed` event (`minyan.cancelled` / `minyan.completed`). Sets a soft, non-blocking
-**conflict** flag if the caller already has an active commitment with the **same tefilla on the same
-`event_date`** (time ignored — `event_time` has no duration; D14/R12). Reveals the address on
+**conflict** flag if the caller already has an active commitment on the **same `event_date`** (same
+Shabbat/day — can't be in two places; D14/R12). Reveals the address on
 success (R10). Recompute + crossing fan-out (R8/R9 — in-app rows synchronous, email via `defer`).
 → `201 { "minyan": ParticipantMinyanDTO, "conflict": true|false }` (single envelope).
 

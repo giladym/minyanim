@@ -9,11 +9,13 @@ the original draft over-claimed reuse.
 
 ## R1 — Generic event physical layout (D21)
 
-**Decision**: One base **`event`** table (common fields + `type`) + a **1:1 `minyan` detail**
-table keyed by `event_id` ("class-table inheritance"). Minyan columns (tefilla, nusach,
-sefer_torah) live on `minyan`; commitments/notifications reference `event`. Roles live in
-`event_role` (R5). **Rationale**: FR-008 filters (nusach, Sefer Torah) and the FR-005 readiness
-classification (tefilla) must be indexable SQL columns, not JSON. A future type = a new `type` +
+**Decision**: One base **`event`** table (common fields + `type` + `notes`) + a **1:1 `minyan`
+detail** table keyed by `event_id` ("class-table inheritance"). Minyan columns: `nusach`,
+`sefer_torah` (indexable SQL columns, for FR-008 filters), and a **`services` typed-JSON array**
+`[{ tefilla, time? }]` (the gathering's tefillot, D3 — the 002 `prayer_needs` JSON pattern, since
+services aren't filtered individually). Commitments/notifications reference `event`. Roles live in
+`event_role` (R5). **Rationale**: the FR-008 filters (nusach, Sefer Torah) stay indexable columns;
+the per-tefilla services are descriptive and fit a typed JSON array. A future type = a new `type` +
 detail table, no rewrite. **Alternatives rejected**: nullable per-type columns on `event` (sprawl);
 Zod-typed JSON `details` (the 002 `prayer_needs` pattern) — fine for non-filtered attributes but
 `json_extract` is unindexed and hurts SC-001/FR-008.
@@ -63,8 +65,9 @@ weekday (the bug 002 itself avoids). `tzFromCoords` is still used for the *not-p
 **Decision**: `event` stores only `forming`/`cancelled`; `quorum`/`ready`/`completed` are
 **derived** in `eventService`, never stored. Inputs:
 - `committedMen` = `SUM(commitment.num_men)` for the event (single grouped query, R15).
-- `isShabbatShacharit` = `tefilla==='shacharit' AND new Date(event_date).getUTCDay()===6` (Saturday,
-  UTC-midnight convention — **no tz**, R3). A tiny `isSaturday(epoch)` helper, not `coversShabbat`.
+- `isShabbatShacharit` = `services.some(s => s.tefilla==='shacharit') AND isSaturday(event_date)`
+  (Saturday via the UTC-midnight convention — **no tz**, R3). The `isSaturday(epoch)` helper, not
+  `coversShabbat`. (A gathering "includes a Shabbat-morning Shacharit" — D3.)
 - `seferTorah` (minyan), `baalKoreiClaimed` = an `event_role` row with role `baal_korei`.
 - `isPast` (→ `completed`) = `civilDate(event_date,"UTC") < todayCivil(tzFromCoords(lat,lng))`
   (reuse 002's tz-based past check — coords are mandatory on events).
@@ -195,9 +198,9 @@ sign-in (**Google or email/password**) preserving a redirect (reuse `lib/redirec
   `WHERE` on indexed columns.
 - **Place grouping** (D3/FR-003): discovery returns a flat `minyanim[]`; the **client groups by
   rounded coordinates** — proximity key = `(round(lat,4), round(lng,4))` (~11 m; planning constant).
-- **Commitment conflict** (D14): v1 conflict = the caller already has an active commitment with the
-  **same tefilla on the same `event_date`** (time ignored — `event_time` is a duration-less string).
-  Soft, non-blocking; uses the `commitment.user_id` index.
+- **Commitment conflict** (D14): v1 conflict = the caller already has an active commitment on the
+  **same `event_date`** (same Shabbat/day — gathering model). Soft, non-blocking; uses the
+  `commitment.user_id` index.
 
 ## R13 — Error codes & shared enums (FR-004/006/009/016)
 
