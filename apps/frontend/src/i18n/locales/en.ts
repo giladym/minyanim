@@ -180,6 +180,15 @@ export const en = {
       cancel: "Cancel this minyan",
       cancelConfirm: "Cancel this minyan? Committed participants will be notified.",
     },
+    commit: {
+      joinTitle: "Join this minyan",
+      join: "Join",
+      partySize: "How many men",
+      youreIn: "You're in",
+      updateSize: "Update",
+      withdraw: "Withdraw",
+      conflictWarning: "Heads up — you're already committed to another minyan on this date.",
+    },
     stays: {
       title: "My Stays",
       placeholder: "Your stays will appear here (feature 002).",

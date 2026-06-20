@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { CreateEventInput, UpdateEventInput } from "@minyanim/shared";
+import { CreateEventInput, UpdateEventInput, CreateCommitmentInput, UpdateCommitmentInput } from "@minyanim/shared";
 import { buildCtx } from "../lib/context";
 import { requireUserId, optionalUserId } from "../lib/auth";
 import {
@@ -8,6 +8,7 @@ import {
   updateMinyanController,
   cancelMinyanController,
 } from "../controllers/eventController";
+import { commit, changeCommitment, withdraw } from "../services/commitmentService";
 import type { Env } from "../env";
 import type { Logger } from "../lib/logger";
 
@@ -45,4 +46,27 @@ events.post("/api/events/:id/cancel", async (c) => {
   const userId = await requireUserId(c);
   const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };
   return c.json(await cancelMinyanController(buildCtx(c), userId, c.req.param("id"), body.confirm === true));
+});
+
+/** POST /api/events/:id/commit — join the gathering with a party size (US3). */
+events.post("/api/events/:id/commit", async (c) => {
+  const userId = await requireUserId(c);
+  const parsed = CreateCommitmentInput.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json(envelope(parsed.error.issues), 400);
+  return c.json(await commit(buildCtx(c), userId, c.req.param("id"), parsed.data), 201);
+});
+
+/** PATCH /api/events/:id/commit — change the caller's party size. */
+events.patch("/api/events/:id/commit", async (c) => {
+  const userId = await requireUserId(c);
+  const parsed = UpdateCommitmentInput.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json(envelope(parsed.error.issues), 400);
+  return c.json({ minyan: await changeCommitment(buildCtx(c), userId, c.req.param("id"), parsed.data.numMen) });
+});
+
+/** DELETE /api/events/:id/commit — withdraw the caller's commitment. */
+events.delete("/api/events/:id/commit", async (c) => {
+  const userId = await requireUserId(c);
+  await withdraw(buildCtx(c), userId, c.req.param("id"));
+  return c.json({ ok: true });
 });

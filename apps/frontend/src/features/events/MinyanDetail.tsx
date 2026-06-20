@@ -1,7 +1,17 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, Link } from "@tanstack/react-router";
+import { useParams, useNavigate, Link } from "@tanstack/react-router";
 import type { MinyanStatus, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
-import { useMinyan, useCancelMinyan, useUpdateMinyan, type AnyMinyanDTO } from "../../lib/events";
+import { ApiError } from "../../lib/api";
+import {
+  useMinyan,
+  useCancelMinyan,
+  useUpdateMinyan,
+  useCommit,
+  useChangeCommitment,
+  useWithdraw,
+  type AnyMinyanDTO,
+} from "../../lib/events";
 
 const STATUS_CLS: Record<MinyanStatus, string> = {
   ready: "text-teal-ink",
@@ -16,6 +26,64 @@ function hasPrivate(m: AnyMinyanDTO): m is ParticipantMinyanDTO | OwnerMinyanDTO
 }
 function isOwner(m: AnyMinyanDTO): m is OwnerMinyanDTO {
   return (m as OwnerMinyanDTO).isHost === true;
+}
+
+/** Commit / change / withdraw UI (US3). Host sees no commit UI (auto-committed). A signed-out
+ * visitor who tries to join is routed through sign-in with a redirect back here (D13). */
+function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [numMen, setNumMen] = useState(1);
+  const [conflict, setConflict] = useState(false);
+  const commit = useCommit(id);
+  const change = useChangeCommitment(id);
+  const withdraw = useWithdraw(id);
+
+  if (isOwner(m)) return null; // host is auto-committed; uses host controls
+
+  const committed = hasPrivate(m); // participant view ⇒ already joined
+  const fieldCls = "w-24 rounded-xl border border-line2 bg-surface px-3 py-2.5 text-ink outline-none focus:border-clay";
+
+  if (committed) {
+    return (
+      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+        <h2 className="font-extrabold text-ink">{t("commit.youreIn")}</h2>
+        <div className="flex items-center gap-2">
+          <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(Number(e.target.value))} />
+          <button type="button" className="rounded-xl border border-clay px-4 py-2.5 font-bold text-clay disabled:opacity-60" disabled={change.isPending} onClick={() => change.mutate(numMen)}>
+            {t("commit.updateSize")}
+          </button>
+          <button type="button" className="rounded-xl px-3 py-2.5 font-bold text-clay-ink disabled:opacity-60" disabled={withdraw.isPending} onClick={() => withdraw.mutate()}>
+            {t("commit.withdraw")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  async function join() {
+    try {
+      const r = await commit.mutateAsync(numMen);
+      setConflict(r.conflict);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        void navigate({ to: "/sign-in", search: { redirect: `/minyan/${id}` } });
+      }
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+      <h2 className="font-extrabold text-ink">{t("commit.joinTitle")}</h2>
+      <div className="flex items-center gap-2">
+        <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(Number(e.target.value))} />
+        <button type="button" className="rounded-xl bg-clay px-5 py-2.5 font-extrabold text-on-clay disabled:opacity-60" disabled={commit.isPending} onClick={join}>
+          {t("commit.join")}
+        </button>
+      </div>
+      {conflict && <p role="alert" className="text-sm font-semibold text-clay-ink">{t("commit.conflictWarning")}</p>}
+    </div>
+  );
 }
 
 /** Minyan detail page (US2). Server returns the viewer-appropriate shape; this renders public,
@@ -53,6 +121,8 @@ export function MinyanDetail() {
         )}
         {m.notes && <p className="text-sm text-muted">{m.notes}</p>}
       </div>
+
+      {m.status !== "cancelled" && m.status !== "completed" && <CommitSection id={id} m={m} />}
 
       {hasPrivate(m) ? (
         <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">

@@ -18,6 +18,11 @@ export const getMinyan = (id: string) => api<AnyMinyanDTO>(`/events/${id}`);
 export const hostMinyan = (input: CreateEventInputType) => api<OwnerMinyanDTO>("/events", { method: "POST", body: JSON.stringify(input) });
 export const updateMinyan = (id: string, input: UpdateEventInputType) => api<OwnerMinyanDTO>(`/events/${id}`, { method: "PATCH", body: JSON.stringify(input) });
 export const cancelMinyan = (id: string) => api<{ ok: true }>(`/events/${id}/cancel`, { method: "POST", body: JSON.stringify({ confirm: true }) });
+export const commitToMinyan = (id: string, numMen: number, stayId?: string | null) =>
+  api<{ minyan: ParticipantMinyanDTO; conflict: boolean }>(`/events/${id}/commit`, { method: "POST", body: JSON.stringify({ numMen, stayId: stayId ?? null }) });
+export const changeCommitment = (id: string, numMen: number) =>
+  api<{ minyan: ParticipantMinyanDTO }>(`/events/${id}/commit`, { method: "PATCH", body: JSON.stringify({ numMen }) });
+export const withdrawCommitment = (id: string) => api<{ ok: true }>(`/events/${id}/commit`, { method: "DELETE" });
 
 /**
  * Minyan-detail query. Polls every {@link POLL_DETAIL_MS} so the committed count/status stay fresh
@@ -52,6 +57,30 @@ export function useCancelMinyan(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => cancelMinyan(id),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+export function useCommit(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (numMen: number) => commitToMinyan(id, numMen),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+export function useChangeCommitment(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (numMen: number) => changeCommitment(id, numMen),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+export function useWithdraw(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => withdrawCommitment(id),
     onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
   });
 }

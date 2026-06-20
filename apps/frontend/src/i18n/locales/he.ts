@@ -180,6 +180,15 @@ export const he = {
       cancel: "ביטול המניין",
       cancelConfirm: "לבטל את המניין? המשתתפים הרשומים יקבלו הודעה.",
     },
+    commit: {
+      joinTitle: "הצטרפות למניין",
+      join: "הצטרפות",
+      partySize: "כמה גברים",
+      youreIn: "אתם רשומים",
+      updateSize: "עדכון",
+      withdraw: "ביטול הרשמה",
+      conflictWarning: "לתשומת לבכם — אתם כבר רשומים למניין אחר בתאריך הזה.",
+    },
     stays: {
       title: "השהיות שלי",
       placeholder: "כאן יופיעו השהיות שלכם (פיצ׳ר 002).",
