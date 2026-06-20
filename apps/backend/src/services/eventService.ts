@@ -11,6 +11,7 @@ import type { Ctx } from "../lib/context";
 import { AppError } from "../lib/errors";
 import { tzFromCoords, civilDate, todayCivil } from "../lib/timezone";
 import { deriveStatus, missingForReady, isShabbatShacharit } from "../lib/minyanStatus";
+import { fuzzCoord } from "../lib/geoPrivacy";
 import * as repo from "../repositories/eventRepository";
 import type { MinyanJoined } from "../repositories/eventRepository";
 
@@ -46,8 +47,9 @@ function buildPublic(
     type: "minyan",
     city: m.city,
     country: m.country,
-    lat: m.lat,
-    lng: m.lng,
+    // Public projection: fuzzed to ~neighbourhood; the exact point is participant-only (D4).
+    lat: fuzzCoord(m.lat),
+    lng: fuzzCoord(m.lng),
     eventDate: m.eventDate.getTime(),
     nusach: m.nusach,
     seferTorah: m.seferTorah,
@@ -71,7 +73,11 @@ async function withParticipantFields(ctx: Ctx, m: MinyanJoined, base: PublicMiny
   const host = parts.find((p) => p.userId === m.hostUserId);
   return {
     ...base,
+    // Committed participants get the EXACT point + private address + entry notes (D4).
+    lat: m.lat,
+    lng: m.lng,
     addressPrivate: m.addressPrivate,
+    addressNotes: m.addressNotes,
     hostContact: { name: m.hostName, email: host?.email ?? "", phone: phones.get(m.hostUserId) ?? null },
     participants: parts.map((p) => ({
       userId: p.userId,
@@ -134,6 +140,7 @@ export async function hostMinyan(ctx: Ctx, userId: string, input: CreateEventInp
       lat: input.lat,
       lng: input.lng,
       addressPrivate: input.addressPrivate ?? null,
+      addressNotes: input.addressNotes ?? null,
       eventDate,
       notes: input.notes ?? null,
       status: "forming",
@@ -160,6 +167,7 @@ export async function updateMinyan(
 
   const eventFields: Record<string, unknown> = { updatedAt: new Date() };
   if (input.addressPrivate !== undefined) eventFields.addressPrivate = input.addressPrivate ?? null;
+  if (input.addressNotes !== undefined) eventFields.addressNotes = input.addressNotes ?? null;
   if (input.notes !== undefined) eventFields.notes = input.notes ?? null;
   await repo.updateEventRow(ctx.db, id, eventFields);
 

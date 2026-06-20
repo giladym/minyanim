@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GeoResult } from "@minyanim/shared";
-import { reverseGeocode, searchPlaces } from "../../lib/geo";
+import { reverseGeocode, searchPlaces, searchPlacesPrecise } from "../../lib/geo";
 import { ApiError } from "../../lib/api";
 
 /** The location subset of a Stay the picker resolves. lat/lng are null in manual mode. */
@@ -34,12 +34,16 @@ export function LocationPicker({
   value,
   onChange,
   invalid = false,
+  precise = false,
 }: {
   value: LocationValue;
   onChange: (v: LocationValue) => void;
   /** When the parent's submit validation flagged the location, mark the active input invalid so
    * focus-first-error can land on it and screen readers announce the problem. */
   invalid?: boolean;
+  /** Precise mode (minyan host): address/POI-level search + a map click drops the EXACT point
+   * (not the city centre). Default false = city-level (Stays). */
+  precise?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const [manual, setManual] = useState(false);
@@ -64,7 +68,7 @@ export function LocationPicker({
     setSearching(true);
     setSearchError("");
     const handle = setTimeout(() => {
-      searchPlaces(query.trim(), lang)
+      (precise ? searchPlacesPrecise : searchPlaces)(query.trim(), lang)
         .then((r) => {
           setResults(r.results);
           setAttribution(r.attribution);
@@ -82,7 +86,7 @@ export function LocationPicker({
         });
     }, 300);
     return () => clearTimeout(handle);
-  }, [query, lang, manual, t]);
+  }, [query, lang, manual, t, precise]);
 
   function pick(r: GeoResult) {
     onChange({ city: r.city, country: r.country, lat: r.lat, lng: r.lng });
@@ -100,7 +104,16 @@ export function LocationPicker({
         const hit = r.results[0];
         if (hit) {
           setAttribution(r.attribution);
-          pick(hit);
+          // Precise (minyan): keep the EXACT clicked point; use the reverse hit only for the
+          // city/country labels. City-level (Stays): adopt the locality's own coordinates.
+          if (precise) {
+            onChange({ city: hit.city, country: hit.country, lat, lng });
+            setResults([]);
+            setPickMessage("");
+            setQuery(hit.label);
+          } else {
+            pick(hit);
+          }
         } else {
           setPickMessage(t("stays.location.reverseNoResults"));
         }

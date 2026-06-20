@@ -59,6 +59,7 @@ export const CreateEventInput = z.object({
   lat: z.number(),
   lng: z.number(),
   addressPrivate: z.string().max(500).nullish(),
+  addressNotes: z.string().max(2000).nullish(),
   eventDate: z.number().int(),
   notes: z.string().max(2000).nullish(),
   minyan: MinyanAttrsSchema,
@@ -69,6 +70,7 @@ export type CreateEventInputType = z.infer<typeof CreateEventInput>;
 /** Host edit (PATCH). Date is immutable in v1; services/nusach/Torah/notes/address are editable. */
 export const UpdateEventInput = z.object({
   addressPrivate: z.string().max(500).nullish(),
+  addressNotes: z.string().max(2000).nullish(),
   notes: z.string().max(2000).nullish(),
   nusach: NusachSchema.optional(),
   seferTorah: z.boolean().optional(),
@@ -119,9 +121,11 @@ export interface PublicMinyanDTO {
   updatedAt: number;
 }
 
-/** Committed-participant view: adds the private address, host contact, and the participant list. */
+/** Committed-participant view: adds the private address + entry notes, host contact, the exact
+ * coordinates (the public view's lat/lng are fuzzed), and the participant list. */
 export interface ParticipantMinyanDTO extends PublicMinyanDTO {
   addressPrivate: string | null;
+  addressNotes: string | null;
   hostContact: { name: string; phone: string | null; email: string | null };
   participants: ParticipantInfo[];
 }

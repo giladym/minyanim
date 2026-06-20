@@ -135,6 +135,9 @@ export const event = sqliteTable(
     lat: real("lat").notNull(),
     lng: real("lng").notNull(),
     addressPrivate: text("address_private"),
+    // Private entry/access instructions (e.g. "ring twice, code 1234") — revealed only to
+    // committed participants alongside the address (D4).
+    addressNotes: text("address_notes"),
     eventDate: integer("event_date", { mode: "timestamp" }).notNull(),
     notes: text("notes"),
     status: text("status").notNull().default("forming"),

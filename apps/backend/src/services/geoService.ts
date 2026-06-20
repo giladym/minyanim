@@ -40,12 +40,22 @@ function countryOf(feature: MapTilerFeature): string {
   return country?.text ?? "";
 }
 
+/** Context id prefixes that name a city-level locality (used to label address/POI results). */
+const CITY_PREFIXES = ["municipality", "municipal_district", "locality", "place", "region"];
+
+/** Best city name for a feature: a city-level context entry, else the feature's own text. For a
+ * city result this is just `text`; for an address/POI result it's the enclosing municipality. */
+function cityOf(feature: MapTilerFeature): string {
+  const hit = feature.context?.find((c) => CITY_PREFIXES.some((p) => (c.id ?? "").startsWith(p)));
+  return hit?.text ?? feature.text ?? "";
+}
+
 /** Normalize a provider feature to our internal GeoResult, or null if it lacks coordinates. */
 function normalize(feature: MapTilerFeature): GeoResult | null {
   const center = feature.center;
   if (!center || center.length < 2) return null;
   const candidate = {
-    city: feature.text ?? "",
+    city: cityOf(feature),
     country: countryOf(feature),
     lat: center[1],
     lng: center[0],
@@ -55,8 +65,10 @@ function normalize(feature: MapTilerFeature): GeoResult | null {
   return parsed.success ? parsed.data : null;
 }
 
-/** Place types we ask MapTiler for — city-level granularity (never street/POI; D1). */
+/** City-level types (Stays; the private address is never geocoded — D1). */
 const PLACE_TYPES = "municipality,municipal_district,locality,place";
+/** Precise types (Minyanim): address/POI/street as well, so an exact venue resolves to a point. */
+const PRECISE_PLACE_TYPES = "address,poi,street,municipality,municipal_district,locality,place";
 
 /** Fetch features from a MapTiler geocoding URL, mapping any failure to `502 geo.unavailable`. */
 async function fetchFeatures(doFetch: FetchFn, url: string): Promise<MapTilerFeature[]> {
@@ -115,6 +127,7 @@ export async function searchPlaces(
   q: string,
   lang: string,
   deps: SearchDeps = {},
+  precise = false,
 ): Promise<GeoSearchResponse> {
   if (env.GEO_MODE === "mock") return mockResponse();
 
@@ -122,15 +135,16 @@ export async function searchPlaces(
   const language = lang === "en" ? "en" : "he";
   // Normalize once: the SAME query string drives the provider request and the cache key.
   const normalizedQ = q.trim().toLowerCase();
+  const types = precise ? PRECISE_PLACE_TYPES : PLACE_TYPES;
 
-  // Cache key: a stable synthetic URL from q+lang (cache is per-account, not per-real-URL).
-  const cacheKey = new Request(`https://geo.cache/search?q=${encodeURIComponent(normalizedQ)}&lang=${language}`);
+  // Cache key: a stable synthetic URL from q+lang+precision (cache is per-account, not per-real-URL).
+  const cacheKey = new Request(`https://geo.cache/search?q=${encodeURIComponent(normalizedQ)}&lang=${language}&p=${precise ? 1 : 0}`);
   const cached = await readCache(cacheKey);
   if (cached) return cached;
 
   const url =
     `https://api.maptiler.com/geocoding/${encodeURIComponent(normalizedQ)}.json` +
-    `?key=${env.MAPTILER_API_KEY}&language=${language}&limit=5&types=${PLACE_TYPES}`;
+    `?key=${env.MAPTILER_API_KEY}&language=${language}&limit=5&types=${types}`;
 
   const results = (await fetchFeatures(doFetch, url))
     .map(normalize)

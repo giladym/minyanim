@@ -16,9 +16,10 @@ function hostBody(overrides: Record<string, unknown> = {}) {
     type: "minyan",
     city: "זקופנה",
     country: "פולין",
-    lat: 49.3,
-    lng: 19.95,
+    lat: 49.312345,
+    lng: 19.954321,
     addressPrivate: "12 Secret St",
+    addressNotes: "ring twice, code 1234",
     eventDate: Date.UTC(2030, 0, 5),
     notes: "קומה 2",
     minyan: { nusach: "ashkenaz", seferTorah: true, services: [{ tefilla: "shacharit", time: "08:30" }, { tefilla: "mincha", time: null }] },
@@ -67,16 +68,22 @@ describe("POST /api/events (host) + privacy", () => {
     expect(body.id).toBe(id);
     expect(body.committedMen).toBe(2);
     expect(body).not.toHaveProperty("addressPrivate");
+    expect(body).not.toHaveProperty("addressNotes");
     expect(body).not.toHaveProperty("hostContact");
     expect(body).not.toHaveProperty("participants");
+    // Public pin is fuzzed to ~neighbourhood (2 dp), not the exact host coordinates (D4).
+    expect(body.lat).toBe(49.31);
+    expect(body.lng).toBe(19.95);
   });
 
-  it("GET /:id — host sees the owner view with private fields", async () => {
+  it("GET /:id — host sees the owner view with the exact point + private fields", async () => {
     const cookie = await signIn();
     const id = (await (await host(cookie)).json()).id;
     const body = await (await SELF.fetch(`https://x/api/events/${id}`, { headers: { cookie } })).json();
     expect(body.addressPrivate).toBe("12 Secret St");
+    expect(body.addressNotes).toBe("ring twice, code 1234");
     expect(body.hostContact).toBeTruthy();
+    expect(body.lat).toBe(49.312345); // exact for the host/participant
   });
 });
 

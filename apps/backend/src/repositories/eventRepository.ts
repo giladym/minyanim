@@ -18,6 +18,7 @@ export interface MinyanJoined {
   lat: number;
   lng: number;
   addressPrivate: string | null;
+  addressNotes: string | null;
   eventDate: Date;
   notes: string | null;
   storedStatus: string;
@@ -50,6 +51,7 @@ const SELECT_JOINED = {
   lat: event.lat,
   lng: event.lng,
   addressPrivate: event.addressPrivate,
+  addressNotes: event.addressNotes,
   eventDate: event.eventDate,
   notes: event.notes,
   storedStatus: event.status,
@@ -72,6 +74,7 @@ function mapJoined(r: Record<string, unknown>): MinyanJoined {
     lat: r.lat as number,
     lng: r.lng as number,
     addressPrivate: (r.addressPrivate as string | null) ?? null,
+    addressNotes: (r.addressNotes as string | null) ?? null,
     eventDate: r.eventDate as Date,
     notes: (r.notes as string | null) ?? null,
     storedStatus: r.storedStatus as string,

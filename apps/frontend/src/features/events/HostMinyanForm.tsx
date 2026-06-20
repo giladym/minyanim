@@ -32,6 +32,7 @@ export function HostMinyanForm() {
 
   const [location, setLocation] = useState<LocationValue>({ city: "", country: "", lat: null, lng: null });
   const [addressPrivate, setAddressPrivate] = useState("");
+  const [addressNotes, setAddressNotes] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [services, setServices] = useState<ServiceRow[]>([{ tefilla: "shacharit", time: "" }]);
   const [nusach, setNusach] = useState<Nusach>("any");
@@ -59,6 +60,7 @@ export function HostMinyanForm() {
       lat: location.lat,
       lng: location.lng,
       addressPrivate: addressPrivate || null,
+      addressNotes: addressNotes || null,
       eventDate: dateToEpoch(eventDate),
       notes: notes || null,
       minyan: {
@@ -92,7 +94,7 @@ export function HostMinyanForm() {
       <h1 className="text-2xl font-extrabold text-ink">{t("host.title")}</h1>
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
         <section className="rounded-2xl border border-line bg-surface p-5">
-          <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} />
+          <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} precise />
           {fieldError("city")}
           <label className="mt-4 block">
             <span className={labelCls}>{t("host.addressPrivate")}</span>
@@ -104,6 +106,18 @@ export function HostMinyanForm() {
               onChange={(e) => setAddressPrivate(e.target.value)}
             />
             <span className="mt-1 block text-xs text-muted">{t("host.addressHint")}</span>
+          </label>
+          <label className="mt-4 block">
+            <span className={labelCls}>{t("host.addressNotes")}</span>
+            <textarea
+              className={fieldCls}
+              rows={2}
+              value={addressNotes}
+              aria-label={t("host.addressNotes")}
+              placeholder={t("host.addressNotesPlaceholder")}
+              onChange={(e) => setAddressNotes(e.target.value)}
+            />
+            <span className="mt-1 block text-xs text-muted">{t("host.addressNotesHint")}</span>
           </label>
         </section>
 

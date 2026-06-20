@@ -148,6 +148,16 @@ the requirements below and will be cited by the planning artifacts.
   location + date range, reusing the discovery query. The **proactive push** nudge (notify a user
   when a new Minyan appears near an existing Stay) is **deferred** to a fast-follow/v2 and noted
   in Assumptions.
+- **D23 — Precise minyan location + coordinate privacy (2026-06-21, from manual QA).** Unlike a
+  Stay (whose address is never geocoded — city-level only, D1), a Minyan is a real gathering point,
+  so the host flow uses **address-level geocoding** (`/api/geo/search?precise=1` → address/POI/
+  street types) and a **map click that drops the EXACT point** (not the city centre). The host also
+  provides a private **specific address** and optional **access notes** (entry/parking
+  instructions). Coordinate privacy: the host's exact point is stored, but the **public**
+  projection (discovery + `PublicMinyanDTO`) **fuzzes lat/lng to ~neighbourhood** (rounded to 2 dp
+  ≈ 1.1 km); the **exact coordinates + specific address + access notes + contact** are returned
+  only in the committed-participant / owner views (extends D4). Stays remain city-level (D1
+  unchanged).
 
 ---
 

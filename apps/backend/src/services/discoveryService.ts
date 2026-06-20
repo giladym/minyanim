@@ -7,6 +7,7 @@ import {
 import type { Db } from "../db/client";
 import { shabbatSaturdaysInRange } from "../lib/timezone";
 import { deriveStatus, missingForReady, isShabbatShacharit } from "../lib/minyanStatus";
+import { fuzzCoord } from "../lib/geoPrivacy";
 import {
   listMinyanimInBbox,
   committedMenByEvent,
@@ -67,8 +68,9 @@ function toPublicMinyan(
     type: "minyan",
     city: m.city,
     country: m.country,
-    lat: m.lat,
-    lng: m.lng,
+    // Discovery is public — fuzz the pin to ~neighbourhood (exact reveals on commit, D4).
+    lat: fuzzCoord(m.lat),
+    lng: fuzzCoord(m.lng),
     eventDate: m.eventDate.getTime(),
     nusach: m.nusach,
     seferTorah: m.seferTorah,

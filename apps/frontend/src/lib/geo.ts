@@ -14,6 +14,12 @@ export function searchPlaces(q: string, lang: string): Promise<GeoSearchResponse
   return api<GeoSearchResponse>(`/geo/search?${params.toString()}`);
 }
 
+/** Address/POI-level forward geocoding for the minyan host flow (precise pin). */
+export function searchPlacesPrecise(q: string, lang: string): Promise<GeoSearchResponse> {
+  const params = new URLSearchParams({ q, lang, precise: "1" });
+  return api<GeoSearchResponse>(`/geo/search?${params.toString()}`);
+}
+
 /**
  * GET /api/geo/reverse — reverse-geocode map coordinates to the nearest city-level place
  * (server-side). Powers click-to-pick on the confirmation map. Returns 0–1 results; an empty

@@ -128,6 +128,7 @@ export function MinyanDetail() {
         <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
           <h2 className="font-extrabold text-ink">{t("minyanDetail.details")}</h2>
           {m.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {m.addressPrivate}</p>}
+          {m.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {m.addressNotes}</p>}
           <p className="text-sm text-muted">{t("minyanDetail.host")}: {m.hostContact.name}{m.hostContact.phone ? ` · ${m.hostContact.phone}` : ""}</p>
           <p className="text-sm text-muted">{t("minyanDetail.participants", { count: m.participants.length })}</p>
         </div>
