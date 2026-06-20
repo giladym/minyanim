@@ -73,6 +73,8 @@ export async function beitChabadInBbox(db: Db, b: Bbox) {
     .select({
       id: beitChabadPin.id,
       name: beitChabadPin.name,
+      address: beitChabadPin.address,
+      phone: beitChabadPin.phone,
       city: beitChabadPin.city,
       country: beitChabadPin.country,
       lat: beitChabadPin.lat,

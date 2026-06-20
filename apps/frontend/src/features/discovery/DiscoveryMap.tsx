@@ -8,6 +8,25 @@ type MarkerInstance = InstanceType<MapLib["Marker"]>;
 
 const DEFAULT_ZOOM = 10;
 
+/** Escape user/admin-supplied text before injecting into the popup HTML. */
+function esc(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+/** Informational popup for a Beit Chabad pin (name + address + phone; not joinable — D18). */
+function beitChabadPopup(c: BeitChabadPinDTO, t: (k: string) => string): string {
+  const line = (label: string, val: string, href?: string) =>
+    `<div style="margin-top:4px;font-size:13px;color:var(--ink)">${esc(label)}: ${href ? `<a href="${esc(href)}" style="color:var(--clay)">${esc(val)}</a>` : esc(val)}</div>`;
+  return (
+    `<div dir="rtl" style="font-family:Assistant,system-ui,sans-serif;max-width:230px;color:var(--ink)">` +
+    `<div style="font-weight:800">${esc(c.name)}</div>` +
+    (c.address ? line(t("minyanDetail.address"), c.address) : "") +
+    (c.phone ? line(t("discovery.phone"), c.phone, `tel:${c.phone}`) : "") +
+    `<div style="margin-top:6px;font-size:12px;color:var(--muted)">${esc(c.city)}, ${esc(c.country)} · ${esc(t("discovery.beitChabadInfo"))}</div>` +
+    `</div>`
+  );
+}
+
 /**
  * Discovery map (FR-018). Lazy-loaded MapLibre showing **user minyanim** (clay pins, clickable →
  * the minyan) and a distinct **Beit Chabad** static layer (gold pins, informational). Optional: if
@@ -82,23 +101,33 @@ export function DiscoveryMap({
     markersRef.current.forEach((mk) => mk.remove());
     markersRef.current = [];
 
-    const addMarker = (label: string, color: string, lng: number, lat: number, onClick?: () => void) => {
-      const el = document.createElement(onClick ? "button" : "div");
+    const addMarker = (
+      label: string,
+      color: string,
+      lng: number,
+      lat: number,
+      opts: { onClick?: () => void; popupHtml?: string } = {},
+    ) => {
+      const el = document.createElement(opts.onClick ? "button" : "div");
       el.setAttribute("aria-label", label);
       el.title = label;
-      el.style.cssText = `width:18px;height:18px;border-radius:50%;border:2px solid var(--surface);background:${color};box-shadow:0 1px 3px rgba(0,0,0,.3);${onClick ? "cursor:pointer;padding:0;" : ""}`;
-      if (onClick) {
+      el.style.cssText = `width:18px;height:18px;border-radius:50%;border:2px solid var(--surface);background:${color};box-shadow:0 1px 3px rgba(0,0,0,.3);${opts.onClick ? "cursor:pointer;padding:0;" : "cursor:pointer;"}`;
+      if (opts.onClick) {
         (el as HTMLButtonElement).type = "button";
-        el.addEventListener("click", onClick);
+        el.addEventListener("click", opts.onClick);
       }
-      markersRef.current.push(new lib.Marker({ element: el }).setLngLat([lng, lat]).addTo(map));
+      const marker = new lib.Marker({ element: el }).setLngLat([lng, lat]);
+      if (opts.popupHtml) marker.setPopup(new lib.Popup({ offset: 16, closeButton: true }).setHTML(opts.popupHtml));
+      markersRef.current.push(marker.addTo(map));
     };
 
     for (const m of minyanim) {
-      addMarker(`${m.city} · ${t(`minyanStatus.${m.status}`)} · ${m.committedMen}/10`, "var(--clay)", m.lng, m.lat, () => onSelectRef.current(m.id));
+      addMarker(`${m.city} · ${t(`minyanStatus.${m.status}`)} · ${m.committedMen}/10`, "var(--clay)", m.lng, m.lat, {
+        onClick: () => onSelectRef.current(m.id),
+      });
     }
     for (const c of beitChabad) {
-      addMarker(`${t("discovery.beitChabad")}: ${c.name}`, "var(--gold)", c.lng, c.lat);
+      addMarker(`${t("discovery.beitChabad")}: ${c.name}`, "var(--gold)", c.lng, c.lat, { popupHtml: beitChabadPopup(c, t) });
     }
   }, [ready, minyanim, beitChabad, t]);
 

@@ -155,6 +155,8 @@ export const he = {
       loading: "טוען…",
       mapAlt: "מפת מניינים ונקודות בית חב״ד באזור",
       beitChabad: "בית חב״ד",
+      phone: "טלפון",
+      beitChabadInfo: "למידע בלבד — לא ניתן להצטרף",
     },
     host: {
       title: "אירוח מניין",

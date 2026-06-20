@@ -30,10 +30,12 @@ export interface PotentialBucket {
   seferTorahCount: number;
 }
 
-/** Static Beit Chabad pin surfaced on the discovery map (D18). */
+/** Static Beit Chabad pin surfaced on the discovery map (D18). Informational only (not joinable). */
 export interface BeitChabadPinDTO {
   id: string;
   name: string;
+  address: string | null;
+  phone: string | null;
   city: string;
   country: string;
   lat: number;
