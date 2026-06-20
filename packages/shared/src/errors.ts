@@ -16,6 +16,15 @@ export const ERROR_CODES = {
   CONFIRM_REQUIRED: "confirm.required",
   GEO_UNAVAILABLE: "geo.unavailable",
   GEO_INVALID_COORDS: "geo.invalid_coords",
+  // 003 — Discovery & Quorum.
+  COMMITMENT_DUPLICATE: "commitment.duplicate",
+  COMMITMENT_CONFLICT: "commitment.conflict",
+  ROLE_ALREADY_CLAIMED: "role.already_claimed",
+  MINYAN_CANCELLED: "minyan.cancelled",
+  MINYAN_COMPLETED: "minyan.completed",
+  PARTY_SIZE_INVALID: "party_size.invalid",
+  NOT_COMMITTED: "not_committed",
+  EVENT_TIME_INVALID: "event.time_invalid",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;

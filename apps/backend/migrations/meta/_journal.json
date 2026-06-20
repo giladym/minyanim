@@ -15,6 +15,13 @@
       "when": 1781846908031,
       "tag": "0001_clear_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781986699994,
+      "tag": "0002_little_randall",
+      "breakpoints": true
     }
   ]
 }
