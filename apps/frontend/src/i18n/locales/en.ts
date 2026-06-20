@@ -153,6 +153,10 @@ export const en = {
       missing: "Still needs",
       seferTorah: "Sefer Torah",
       loading: "Loading…",
+      mapAlt: "Map of minyanim and Beit Chabad pins in this area",
+      beitChabad: "Beit Chabad",
+      phone: "Phone",
+      beitChabadInfo: "Informational — not joinable",
     },
     host: {
       title: "Host a minyan",

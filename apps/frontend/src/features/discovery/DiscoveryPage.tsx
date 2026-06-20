@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearch } from "@tanstack/react-router";
+import { useSearch, useNavigate, Link } from "@tanstack/react-router";
 import type { GeoResult, Nusach, PublicMinyanDTO, MinyanStatus } from "@minyanim/shared";
 import { searchPlaces } from "../../lib/geo";
 import { useDiscovery, type DiscoveryParams } from "../../lib/discovery";
+import { DiscoveryMap } from "./DiscoveryMap";
 
 /** Epoch-ms → "YYYY-MM-DD" for seeding the date inputs (UTC, matching the date convention). */
 function epochToInput(epoch: number): string {
@@ -37,6 +38,7 @@ const STATUS_CLS: Record<MinyanStatus, string> = {
  */
 export function DiscoveryPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const lang = i18n.resolvedLanguage === "en" ? "en" : "he";
   // Optional pre-fill from a "Minyanim near this stay" link (FR-019).
   const seed = useSearch({ from: "/authed/discovery" });
@@ -168,6 +170,14 @@ export function DiscoveryPage() {
 
           <section className="flex flex-col gap-3">
             <h2 className="text-lg font-extrabold text-ink">{t("discovery.minyanimTitle")}</h2>
+            {data && (
+              <DiscoveryMap
+                center={{ lat: params.lat, lng: params.lng }}
+                minyanim={data.minyanim}
+                beitChabad={data.beitChabad}
+                onSelectMinyan={(id) => void navigate({ to: "/minyan/$id", params: { id } })}
+              />
+            )}
             {data && data.minyanim.length === 0 && <p className="text-sm text-muted">{t("discovery.minyanimEmpty")}</p>}
             {data?.minyanim.map((m) => <MinyanRow key={m.id} m={m} />)}
             {isFetching && !data && <p className="text-sm text-muted">{t("discovery.loading")}</p>}
@@ -182,7 +192,7 @@ function MinyanRow({ m }: { m: PublicMinyanDTO }) {
   const { t } = useTranslation();
   const tefillot = m.services.map((s) => t(`tefilla.${s.tefilla}`) + (s.time ? ` ${s.time}` : "")).join(" · ");
   return (
-    <article className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
+    <Link to="/minyan/$id" params={{ id: m.id }} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5 transition hover:border-clay">
       <div className="flex items-center justify-between">
         <h3 className="font-extrabold text-ink">{m.city}, {m.country}</h3>
         <span className={`text-sm font-bold ${STATUS_CLS[m.status]}`}>{t(`minyanStatus.${m.status}`)}</span>
@@ -198,6 +208,6 @@ function MinyanRow({ m }: { m: PublicMinyanDTO }) {
         </p>
       )}
       {m.notes && <p className="text-sm text-muted">{m.notes}</p>}
-    </article>
+    </Link>
   );
 }

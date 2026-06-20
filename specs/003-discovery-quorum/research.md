@@ -231,6 +231,23 @@ card. **Rationale**: with tens–hundreds of minyanim × a 5–8 s poll × many 
 aggregates would swamp D1 reads against SC-001/SC-002. **Alternatives rejected**: per-event
 `SUM`/readiness queries (N+1, the original draft's implicit shape).
 
+## R16 — Precise minyan location + coordinate privacy (D23, added during implementation)
+
+**Decision**: a Minyan is a real gathering point (unlike a Stay, whose address is never geocoded —
+D1/city-level only), so the host flow uses **address-level geocoding** (`/api/geo/search?precise=1`
+→ address/poi/street types; `searchPlaces(..., precise)` / `LocationPicker precise`) and a map
+click that drops the **exact** point. The host also stores a private specific address +
+**`address_notes`** (entry/access instructions). **Coordinate privacy**: the exact point is stored,
+but the **public** projection (discovery + `PublicMinyanDTO`) **fuzzes lat/lng to ~neighbourhood**
+(`fuzzCoord`, 2dp ≈ 1.1 km); the **exact coords + address + access notes + contact** are returned
+only in the committed-participant / owner views (extends R10/D4). Beit Chabad pins expose
+`address`/`phone` on map-pin click (informational, not joinable). **Rationale**: a minyan needs a
+findable, pinnable point, but "exact location is private until you commit" preserves host privacy.
+**Alternatives rejected**: exact public pin (reveals the building to everyone); city-level only for
+minyanim (can't find the venue). The "Share to WhatsApp" + pre-auth join build from the fuzzed
+public shape only. **Verified by**: events.test (fuzzed public coords + gated address/notes), the
+discovery axe e2e (which also caught/fixed the WhatsApp-button contrast — SC-007).
+
 ## Planning constants (centralized in shared config — tunable)
 
 radius 15 km · near-quorum threshold 8/10 · party-size 1..50 · place-grouping coord rounding 4 dp ·

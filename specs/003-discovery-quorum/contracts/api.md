@@ -31,13 +31,15 @@ Stay of the caller's own is required** (D22).
   "potential": [
     { "shabbat": "2026-08-07", "menCount": 11, "seferTorahCount": 2 }
   ],
-  "minyanim": [ /* PublicMinyanDTO[] — address-free */ ],
-  "beitChabad": [ { "id":"bcp_…","name":"…","city":"…","lat":0,"lng":0 } ],
+  "minyanim": [ /* PublicMinyanDTO[] — address-free, lat/lng FUZZED ~2dp (D23) */ ],
+  "beitChabad": [ { "id":"bcp_…","name":"…","address":"…|null","phone":"…|null","city":"…","country":"…","lat":0,"lng":0 } ],
   "attribution": "© MapTiler © OpenStreetMap contributors"
 }
 ```
-`PublicMinyanDTO` omits `address_private` + contact **structurally** (SC-005). `200` with empty
-arrays is valid. Target p95 < 2 s (SC-001).
+`PublicMinyanDTO` omits `address_private`/`address_notes` + contact **structurally** and **fuzzes
+lat/lng to ~neighbourhood** (D23/SC-005) — the exact point reveals only in the
+Participant/Owner view. Beit Chabad pins are informational (address/phone shown on map-pin click;
+not joinable). `200` with empty arrays is valid. Target p95 < 2 s (SC-001).
 
 ### `GET /api/discovery/near-stay/{stayId}`
 
@@ -61,7 +63,7 @@ Host a Minyan. Body = `CreateEventInput` (shared Zod; `type:"minyan"` + minyan a
 ```json
 {
   "type": "minyan",
-  "city":"…","country":"…","lat":0,"lng":0,"addressPrivate":"…|null",
+  "city":"…","country":"…","lat":0,"lng":0,"addressPrivate":"…|null","addressNotes":"…|null",
   "eventDate": 1754524800000,
   "notes": "…|null",
   "minyan": {
@@ -78,8 +80,9 @@ Host a Minyan. Body = `CreateEventInput` (shared Zod; `type:"minyan"` + minyan a
 ```
 Enums (shared Zod SSOT): `type:'minyan'`; `tefilla∈{shacharit,mincha,maariv}`;
 `nusach∈{ashkenaz,sefard,chabad,mizrachi,any}`; each service `time` is optional and matches
-`^([01]\d|2[0-3]):[0-5]\d$`; `services` has ≥1 entry; `hostNumMen` 1..50. `addressPrivate` + `notes`
-optional (coords are the location). Validation: structural via
+`^([01]\d|2[0-3]):[0-5]\d$`; `services` has ≥1 entry; `hostNumMen` 1..50. `addressPrivate` +
+`addressNotes` + `notes` optional (coords are the location; the host form resolves a precise point
+via **`GET /api/geo/search?precise=1`** — address/POI types — or a map click, D23). Validation: structural via
 shared Zod; **temporal** server-side (`eventDate` not before destination-local today — tz from the
 event's mandatory `lat/lng`; reuse 002's check; no `X-Client-Timezone` fallback since events always
 have coords). Creates event + minyan + **host self-commitment** (`hostNumMen`) in one **non-atomic**
@@ -88,8 +91,8 @@ have coords). Creates event + minyan + **host self-commitment** (`hostNumMen`) i
 
 ### `PATCH /api/events/{id}` (host-only)
 
-Edit a hosted Minyan. Body (all optional): `{ addressPrivate?, notes?, nusach?, seferTorah?,
-services? }`. **The date is immutable in v1.** Toggling `seferTorah:false` or removing the Shacharit
+Edit a hosted Minyan. Body (all optional): `{ addressPrivate?, addressNotes?, notes?, nusach?,
+seferTorah?, services? }`. **The date is immutable in v1.** Toggling `seferTorah:false` or removing the Shacharit
 service (or any readiness-affecting change) recomputes derived status and may fire a `quorum_lost`
 crossing fan-out (R9).
 → `200 OwnerMinyanDTO` · `404` if not the host (never leak existence) · `400` validation.
