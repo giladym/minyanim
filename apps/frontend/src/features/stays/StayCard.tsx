@@ -24,10 +24,13 @@ export function StayCard({
   stay,
   highlighted,
   onCancel,
+  nearbyMinyanim,
 }: {
   stay: OwnerStayDTO;
   highlighted: boolean;
   onCancel: (id: string) => void;
+  /** Count of hosted minyanim near this stay (FR-019); undefined while loading. */
+  nearbyMinyanim?: number;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "he";
@@ -68,6 +71,18 @@ export function StayCard({
           </span>
         )}
       </div>
+
+      {!stay.isPast && (
+        <Link
+          to="/discovery"
+          search={{ lat: stay.lat ?? undefined, lng: stay.lng ?? undefined, city: stay.city, country: stay.country, from: stay.arrivalDate, to: stay.departureDate }}
+          className="mt-3 block text-sm font-bold text-clay"
+        >
+          {nearbyMinyanim && nearbyMinyanim > 0
+            ? t("stays.nearbyMinyanim", { count: nearbyMinyanim })
+            : t("stays.findMinyanim")}
+        </Link>
+      )}
 
       {!stay.isPast && (
         <div className="mt-4 flex gap-3">

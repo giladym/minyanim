@@ -23,7 +23,9 @@ geo.get("/api/geo/search", async (c) => {
   await requireUserId(c);
   const q = c.req.query("q") ?? "";
   const lang = c.req.query("lang") ?? "he";
-  const result = await searchPlaces(c.env, q, lang);
+  // `precise=1` (minyan host flow) returns address/POI-level results; default is city-level (Stays).
+  const precise = c.req.query("precise") === "1";
+  const result = await searchPlaces(c.env, q, lang, {}, precise);
   return c.json(result);
 });
 

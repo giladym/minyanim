@@ -15,6 +15,20 @@
       "when": 1781846908031,
       "tag": "0001_clear_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781987938086,
+      "tag": "0002_far_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1781991426920,
+      "tag": "0003_vengeful_menace",
+      "breakpoints": true
     }
   ]
 }

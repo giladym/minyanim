@@ -1,5 +1,5 @@
-import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
-import type { PrayerNeeds } from "@minyanim/shared";
+import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
+import type { PrayerNeeds, MinyanService } from "@minyanim/shared";
 
 // better-auth-owned tables (user/session/account/verification) + our phone_number.
 // Field KEYS match better-auth's model fields; DB column names are snake_case.
@@ -113,5 +113,151 @@ export const stay = sqliteTable(
   (t) => [
     index("stay_user_idx").on(t.userId),
     index("stay_user_arrival_idx").on(t.userId, t.arrivalDate),
+    // 003 (D15 geospatial seam): bounding-box scan for cross-user "potential" aggregation.
+    index("stay_lat_lng_idx").on(t.lat, t.lng),
   ],
 );
+
+// ── Feature 003: Discovery & Quorum ─────────────────────────────────────────
+// A Minyan is a generic `event` (type='minyan', D21) + a 1:1 `minyan` detail. Commitments,
+// roles, and notifications reference the generic event. All child tables cascade from user/event.
+
+export const event = sqliteTable(
+  "event",
+  {
+    id: text("id").primaryKey(),
+    type: text("type").notNull().default("minyan"),
+    hostUserId: text("host_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    city: text("city").notNull(),
+    country: text("country").notNull(),
+    lat: real("lat").notNull(),
+    lng: real("lng").notNull(),
+    addressPrivate: text("address_private"),
+    // Private entry/access instructions (e.g. "ring twice, code 1234") — revealed only to
+    // committed participants alongside the address (D4).
+    addressNotes: text("address_notes"),
+    eventDate: integer("event_date", { mode: "timestamp" }).notNull(),
+    notes: text("notes"),
+    status: text("status").notNull().default("forming"),
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("event_host_idx").on(t.hostUserId),
+    index("event_lat_lng_idx").on(t.lat, t.lng),
+    index("event_status_type_date_idx").on(t.status, t.type, t.eventDate),
+  ],
+);
+
+export const minyan = sqliteTable("minyan", {
+  eventId: text("event_id")
+    .primaryKey()
+    .references(() => event.id, { onDelete: "cascade" }),
+  nusach: text("nusach").notNull().default("any"),
+  seferTorah: integer("sefer_torah", { mode: "boolean" }).notNull().default(false),
+  // The gathering's tefillot, each with an optional time (D3). Typed JSON like 002's prayer_needs.
+  services: text("services", { mode: "json" }).$type<MinyanService[]>().notNull(),
+});
+
+export const commitment = sqliteTable(
+  "commitment",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    numMen: integer("num_men").notNull(),
+    stayId: text("stay_id").references(() => stay.id, { onDelete: "set null" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("commitment_event_user_uidx").on(t.eventId, t.userId),
+    index("commitment_event_idx").on(t.eventId),
+    index("commitment_user_idx").on(t.userId),
+  ],
+);
+
+export const eventRole = sqliteTable(
+  "event_role",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [uniqueIndex("event_role_uidx").on(t.eventId, t.role)],
+);
+
+export const notification = sqliteTable(
+  "notification",
+  {
+    id: text("id").primaryKey(),
+    recipientUserId: text("recipient_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    read: integer("read", { mode: "boolean" }).notNull().default(false),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [index("notification_recipient_idx").on(t.recipientUserId)],
+);
+
+// Idempotency ledger (R8): a threshold crossing fans out only when a NEW row inserts here.
+export const notificationEventLog = sqliteTable(
+  "notification_event_log",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    threshold: integer("threshold"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [uniqueIndex("notification_event_log_uidx").on(t.eventId, t.kind, t.threshold)],
+);
+
+// Flag affordance (D19). The 3-flag auto-hide threshold + moderation UI are Feature 006.
+export const flag = sqliteTable(
+  "flag",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [uniqueIndex("flag_event_user_uidx").on(t.eventId, t.userId)],
+);
+
+// Static, admin-curated informational pins (D18). Not user-owned.
+export const beitChabadPin = sqliteTable("beit_chabad_pin", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  address: text("address"),
+  phone: text("phone"),
+  city: text("city").notNull(),
+  country: text("country").notNull(),
+  lat: real("lat").notNull(),
+  lng: real("lng").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});

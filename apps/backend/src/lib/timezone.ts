@@ -73,3 +73,39 @@ export function coversShabbat(arrival: Date, departure: Date, _tz: string): bool
   }
   return false;
 }
+
+/** UTC-midnight epoch of a stored civil date (normalizes any intra-day instant). */
+function utcMidnight(d: Date): number {
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+/**
+ * Whether a stored civil date is a Saturday (Shabbat). Stored dates are UTC midnight of their
+ * civil date, so the UTC weekday IS the civil weekday — no timezone needed (D2/R3/R4). Used for
+ * the Shabbat-morning Torah-reading readiness classification.
+ */
+export function isSaturday(date: Date): boolean {
+  return new Date(date).getUTCDay() === 6;
+}
+
+/**
+ * The Saturday (Shabbat) civil dates — as "YYYY-MM-DD" — within `[arrival, departure] ∩ [from, to]`.
+ * Tz-free (UTC-midnight convention, R3); used to bucket per-Shabbat discovery potential (FR-001).
+ *
+ * @param arrival Stay arrival (UTC midnight of civil date).
+ * @param departure Stay departure (UTC midnight of civil date).
+ * @param from Query window start (UTC midnight of civil date).
+ * @param to Query window end (UTC midnight of civil date).
+ * @returns Ascending list of Saturday civil dates in the overlap (empty if none).
+ */
+export function shabbatSaturdaysInRange(arrival: Date, departure: Date, from: Date, to: Date): string[] {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const lo = Math.max(utcMidnight(arrival), utcMidnight(from));
+  const hi = Math.min(utcMidnight(departure), utcMidnight(to));
+  const out: string[] = [];
+  for (let t = lo; t <= hi; t += DAY_MS) {
+    const d = new Date(t);
+    if (d.getUTCDay() === 6) out.push(civilDate(d, "UTC"));
+  }
+  return out;
+}

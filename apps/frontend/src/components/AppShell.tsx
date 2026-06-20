@@ -6,6 +6,7 @@ import { getProfile, patchProfile } from "../lib/profile";
 import { authClient } from "../lib/auth-client";
 import { RouteAnnouncer } from "./RouteAnnouncer";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
+import { useNotifications } from "../lib/notifications";
 
 const NAV = [
   { href: "/discovery", key: "nav.discovery" },
@@ -20,6 +21,7 @@ export function AppShell() {
   const { theme, setTheme } = useTheme();
   const { data: session } = authClient.useSession();
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  const unread = useNotifications().data?.unread ?? 0;
   const initial = (session?.user?.name || session?.user?.email || "").trim().charAt(0).toUpperCase() || "•";
 
   // A manual theme/lang change must win over a late-arriving profile sync, otherwise the
@@ -86,7 +88,7 @@ export function AppShell() {
           +
         </a>
         {NAV.slice(2).map((n) => (
-          <NavItem key={n.href} href={n.href} label={t(n.key)} active={path === n.href} />
+          <NavItem key={n.href} href={n.href} label={t(n.key)} active={path === n.href} badge={n.href === "/notifications" ? unread : 0} />
         ))}
       </nav>
 
@@ -95,10 +97,15 @@ export function AppShell() {
   );
 }
 
-function NavItem({ href, label, active }: { href: string; label: string; active: boolean }) {
+function NavItem({ href, label, active, badge = 0 }: { href: string; label: string; active: boolean; badge?: number }) {
   return (
-    <a href={href} className={"flex w-16 flex-col items-center gap-1 text-[11px] font-bold " + (active ? "text-clay" : "text-faint")}>
+    <a href={href} className={"relative flex w-16 flex-col items-center gap-1 text-[11px] font-bold " + (active ? "text-clay" : "text-faint")}>
       <span className={"h-4 w-4 rounded-full border-2 " + (active ? "border-clay" : "border-faint")} />
+      {badge > 0 && (
+        <span className="absolute -top-1 end-3 min-w-[16px] rounded-full bg-clay px-1 text-center text-[10px] font-bold text-on-clay" aria-hidden>
+          {badge > 9 ? "9+" : badge}
+        </span>
+      )}
       {label}
     </a>
   );

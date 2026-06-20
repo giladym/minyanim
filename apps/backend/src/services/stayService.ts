@@ -16,6 +16,9 @@ import {
   cancelStay as repoCancel,
   type StayRow,
 } from "../repositories/stayRepository";
+// 003 (D12/R9): after a Stay cancel/edit, reconcile any commitments linked to it (auto-withdraw
+// when the Stay no longer covers the event date). 002 service → 003 service is the intended seam.
+import { reconcileCommitmentsForStay } from "./commitmentService";
 
 /** Normalize an epoch-ms instant to a Date at UTC midnight of its UTC civil date (D4). */
 function toUtcMidnight(epochMs: number): Date {
@@ -218,10 +221,14 @@ export async function updateStay(
   if (input.folderId !== undefined) fields.folderId = input.folderId ?? null;
 
   const row = await repoUpdate(db, userId, id, fields);
+  if (row) await reconcileCommitmentsForStay(db, id); // D12: edited dates may drop coverage
   return row ? toOwnerDTO(row) : null;
 }
 
-/** Soft-cancel an owned stay; returns true if a row was cancelled. */
-export function cancelStay(db: Db, userId: string, id: string): Promise<boolean> {
-  return repoCancel(db, userId, id);
+/** Soft-cancel an owned stay; returns true if a row was cancelled. Also auto-withdraws any
+ * commitments linked to it (D12). */
+export async function cancelStay(db: Db, userId: string, id: string): Promise<boolean> {
+  const ok = await repoCancel(db, userId, id);
+  if (ok) await reconcileCommitmentsForStay(db, id);
+  return ok;
 }

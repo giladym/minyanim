@@ -1,0 +1,29 @@
+import { z } from "zod";
+
+/** Quorum-event notification kinds (D6). */
+export const NotificationKindSchema = z.enum([
+  "quorum_reached",
+  "near_quorum",
+  "quorum_lost",
+  "cancelled",
+]);
+export type NotificationKind = z.infer<typeof NotificationKindSchema>;
+
+/** One in-app notification (inbox row). */
+export interface NotificationDTO {
+  id: string;
+  eventId: string;
+  kind: NotificationKind;
+  /** Public context for rendering the inbox line (never private fields). */
+  city: string;
+  country: string;
+  eventDate: number;
+  read: boolean;
+  createdAt: number;
+}
+
+/** GET /api/notifications response. */
+export interface NotificationListResponse {
+  notifications: NotificationDTO[];
+  unread: number;
+}
