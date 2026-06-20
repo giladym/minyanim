@@ -10,6 +10,7 @@ import { AppError, NotFound } from "../lib/errors";
 import { isCompleted } from "../lib/minyanStatus";
 import { getMinyanById } from "../repositories/eventRepository";
 import { getMinyan } from "./eventService";
+import { onQuorumChange } from "./notificationService";
 import * as repo from "../repositories/commitmentRepository";
 
 /** Guard: the event exists and is joinable (not cancelled / not completed). Returns the joined row. */
@@ -47,6 +48,7 @@ export async function commit(
   });
   if (!row) throw new AppError(409, ERROR_CODES.COMMITMENT_DUPLICATE);
   ctx.log.info("commitment.changed", { eventId, delta: input.numMen });
+  await onQuorumChange(ctx, eventId);
   const minyan = (await getMinyan(ctx, userId, eventId)) as ParticipantMinyanDTO;
   return { minyan, conflict };
 }
@@ -60,6 +62,7 @@ export async function changeCommitment(
 ): Promise<ParticipantMinyanDTO | OwnerMinyanDTO> {
   const row = await repo.updateCommitmentMen(ctx.db, eventId, userId, numMen);
   if (!row) throw new AppError(404, ERROR_CODES.NOT_COMMITTED);
+  await onQuorumChange(ctx, eventId);
   return (await getMinyan(ctx, userId, eventId)) as ParticipantMinyanDTO | OwnerMinyanDTO;
 }
 
@@ -69,7 +72,7 @@ export async function withdraw(ctx: Ctx, userId: string, eventId: string): Promi
   if (!removed) throw new AppError(404, ERROR_CODES.NOT_COMMITTED);
   await repo.deleteRolesForUserEvent(ctx.db, eventId, userId);
   ctx.log.info("commitment.changed", { eventId, delta: 0, withdrew: true });
-  // (US5 recomputes readiness here and fires a deduped quorum_lost on a downward crossing.)
+  await onQuorumChange(ctx, eventId); // may fire a deduped quorum_lost on a downward crossing
 }
 
 /**

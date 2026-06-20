@@ -8,6 +8,7 @@ import { stays } from "./routes/stays";
 import { geo } from "./routes/geo";
 import { discovery } from "./routes/discovery";
 import { events } from "./routes/events";
+import { notifications } from "./routes/notifications";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -50,6 +51,8 @@ app.route("/", geo);
 app.route("/", discovery);
 // Events/Minyanim — host, view (optional-auth for join link), edit, cancel. (003 US2)
 app.route("/", events);
+// Notifications inbox — list / mark-read. (003 US5; emails sent server-side via waitUntil)
+app.route("/", notifications);
 
 // Liveness/readiness incl. D1 connectivity. (T027)
 app.get("/api/health", async (c) => {

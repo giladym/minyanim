@@ -14,6 +14,8 @@ import { deriveStatus, missingForReady, isShabbatShacharit } from "../lib/minyan
 import { fuzzCoord } from "../lib/geoPrivacy";
 import * as repo from "../repositories/eventRepository";
 import type { MinyanJoined } from "../repositories/eventRepository";
+import { recipientsForEvent, eventNotifyContext } from "../repositories/notificationRepository";
+import { onCancelled } from "./notificationService";
 
 function toUtcMidnight(epochMs: number): Date {
   const d = new Date(epochMs);
@@ -184,5 +186,10 @@ export async function updateMinyan(
 /** Host-only cancel (D11): void commitments + roles, flip to cancelled. (US5 adds the fan-out.) */
 export async function cancelMinyan(ctx: Ctx, userId: string, id: string, confirm: boolean): Promise<boolean> {
   if (confirm !== true) throw new AppError(400, ERROR_CODES.CONFIRM_REQUIRED, "confirm");
-  return repo.cancelMinyanBatch(ctx.db, id, userId);
+  // Capture recipients + context BEFORE the batch voids commitments, so we can still notify them.
+  const info = await eventNotifyContext(ctx.db, id);
+  const recipients = await recipientsForEvent(ctx.db, id);
+  const ok = await repo.cancelMinyanBatch(ctx.db, id, userId);
+  if (ok && info) await onCancelled(ctx, id, recipients, info);
+  return ok;
 }

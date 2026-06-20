@@ -187,6 +187,18 @@ export const he = {
       cancel: "ביטול המניין",
       cancelConfirm: "לבטל את המניין? המשתתפים הרשומים יקבלו הודעה.",
     },
+    notifications: {
+      title: "התראות",
+      empty: "אין עדיין התראות.",
+      markAllRead: "סימון הכל כנקרא",
+      unread: "לא נקרא",
+      kind: {
+        quorum_reached: "יש מניין! הגעתם ל-10 גברים",
+        near_quorum: "כמעט מניין — חסרים עוד מעט",
+        quorum_lost: "המניין ירד מתחת ל-10",
+        cancelled: "מניין בוטל",
+      },
+    },
     commit: {
       joinTitle: "הצטרפות למניין",
       join: "הצטרפות",

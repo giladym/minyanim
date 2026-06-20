@@ -74,6 +74,8 @@ const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/p
 const discoveryRoute = createRoute({ getParentRoute: () => authedLayout, path: "/discovery", component: lazyRouteComponent(() => import("./features/discovery/DiscoveryPage"), "DiscoveryPage") });
 // Host a Minyan (003 US2) — auth-guarded.
 const minyanNewRoute = createRoute({ getParentRoute: () => authedLayout, path: "/minyan/new", component: lazyRouteComponent(() => import("./features/events/HostMinyanForm"), "HostMinyanForm") });
+// Notifications inbox (003 US5).
+const notificationsRoute = createRoute({ getParentRoute: () => authedLayout, path: "/notifications", component: lazyRouteComponent(() => import("./features/notifications/NotificationsInbox"), "NotificationsInbox") });
 // Minyan detail (003 US2) — PUBLIC (root-level) so the WhatsApp join link works pre-auth (D13).
 const minyanDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/minyan/$id", component: lazyRouteComponent(() => import("./features/events/MinyanDetail"), "MinyanDetail") });
 
@@ -85,7 +87,7 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   verifyRoute,
   minyanDetailRoute,
-  authedLayout.addChildren([staysRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute]),
+  authedLayout.addChildren([staysRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });

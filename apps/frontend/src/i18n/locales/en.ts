@@ -187,6 +187,18 @@ export const en = {
       cancel: "Cancel this minyan",
       cancelConfirm: "Cancel this minyan? Committed participants will be notified.",
     },
+    notifications: {
+      title: "Notifications",
+      empty: "No notifications yet.",
+      markAllRead: "Mark all read",
+      unread: "Unread",
+      kind: {
+        quorum_reached: "Quorum reached — you have a minyan!",
+        near_quorum: "Almost a minyan — a few more needed",
+        quorum_lost: "Dropped below 10 men",
+        cancelled: "A minyan was cancelled",
+      },
+    },
     commit: {
       joinTitle: "Join this minyan",
       join: "Join",
