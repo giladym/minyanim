@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicMinyanDTO, BeitChabadPinDTO } from "@minyanim/shared";
 
@@ -33,6 +33,9 @@ export function DiscoveryMap({
   const markersRef = useRef<MarkerInstance[]>([]);
   const onSelectRef = useRef(onSelectMinyan);
   onSelectRef.current = onSelectMinyan;
+  // Flips true once the (async) map is created, so the markers effect — which may run before the
+  // map finishes loading — re-runs and actually places the pins on first load.
+  const [ready, setReady] = useState(false);
   const tileKey = import.meta.env.VITE_MAPTILER_TILE_KEY as string | undefined;
 
   // Create the map once (lazy import keeps MapLibre out of the initial bundle).
@@ -43,13 +46,15 @@ export function DiscoveryMap({
       .then(([mod]) => {
         if (cancelled || !ref.current) return;
         libRef.current = mod;
-        mapRef.current = new mod.Map({
+        const map = new mod.Map({
           container: ref.current,
           style: `https://api.maptiler.com/maps/streets/style.json?key=${tileKey}`,
           center: [center.lng, center.lat],
           zoom: DEFAULT_ZOOM,
           attributionControl: false,
         });
+        mapRef.current = map;
+        map.on("load", () => !cancelled && setReady(true));
       })
       .catch(() => {
         // Tile/library failure is non-fatal — the list view is the source of truth.
@@ -95,7 +100,7 @@ export function DiscoveryMap({
     for (const c of beitChabad) {
       addMarker(`${t("discovery.beitChabad")}: ${c.name}`, "var(--gold)", c.lng, c.lat);
     }
-  }, [minyanim, beitChabad, t]);
+  }, [ready, minyanim, beitChabad, t]);
 
   if (!tileKey) return null;
   return <div ref={ref} role="application" aria-label={t("discovery.mapAlt")} className="h-72 w-full overflow-hidden rounded-2xl border border-line" />;
