@@ -1,6 +1,6 @@
 import { and, eq, gte, lte, inArray, sql, or } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { event, minyan, commitment, eventRole, user } from "../db/schema";
+import { event, minyan, commitment, eventRole, user, phoneNumber } from "../db/schema";
 import type { MinyanService, Nusach } from "@minyanim/shared";
 
 export type EventRow = typeof event.$inferSelect;
@@ -21,6 +21,7 @@ export interface MinyanJoined {
   eventDate: Date;
   notes: string | null;
   storedStatus: string;
+  hidden: boolean;
   nusach: Nusach;
   seferTorah: boolean;
   services: MinyanService[];
@@ -52,6 +53,7 @@ const SELECT_JOINED = {
   eventDate: event.eventDate,
   notes: event.notes,
   storedStatus: event.status,
+  hidden: event.hidden,
   nusach: minyan.nusach,
   seferTorah: minyan.seferTorah,
   services: minyan.services,
@@ -73,6 +75,7 @@ function mapJoined(r: Record<string, unknown>): MinyanJoined {
     eventDate: r.eventDate as Date,
     notes: (r.notes as string | null) ?? null,
     storedStatus: r.storedStatus as string,
+    hidden: Boolean(r.hidden),
     nusach: r.nusach as Nusach,
     seferTorah: Boolean(r.seferTorah),
     services: (r.services as MinyanService[]) ?? [],
@@ -132,6 +135,86 @@ export async function committedMenByEvent(db: Db, eventIds: string[]): Promise<M
     .where(inArray(commitment.eventId, eventIds))
     .groupBy(commitment.eventId);
   for (const r of rows) out.set(r.eventId, Number(r.men));
+  return out;
+}
+
+/**
+ * Create a Minyan (event + 1:1 minyan detail + host self-commitment) in one `db.batch` (D11/R6).
+ * `db.batch` pipelines but is NOT a rollback transaction — the caller assembles the DTO from the
+ * validated inputs + generated ids rather than relying on batch RETURNING.
+ */
+export async function createMinyanBatch(
+  db: Db,
+  eventValues: EventInsert,
+  minyanValues: MinyanInsert,
+  hostCommitment: typeof commitment.$inferInsert,
+): Promise<void> {
+  await db.batch([
+    db.insert(event).values(eventValues),
+    db.insert(minyan).values(minyanValues),
+    db.insert(commitment).values(hostCommitment),
+  ]);
+}
+
+/** Patch an event's own columns (host-only enforced by the caller). Returns the updated row. */
+export async function updateEventRow(db: Db, id: string, fields: Partial<EventInsert>): Promise<EventRow | null> {
+  const rows = await db.update(event).set(fields).where(eq(event.id, id)).returning();
+  return rows[0] ?? null;
+}
+
+/** Patch the minyan detail (nusach / seferTorah / services). */
+export async function updateMinyanRow(db: Db, eventId: string, fields: Partial<MinyanInsert>): Promise<void> {
+  await db.update(minyan).set(fields).where(eq(minyan.eventId, eventId));
+}
+
+/**
+ * Cancel a Minyan: flip status → 'cancelled' and void all commitments + role claims, in one
+ * `db.batch` (D11). Returns true if the event existed and was owned by `hostUserId`.
+ */
+export async function cancelMinyanBatch(db: Db, id: string, hostUserId: string): Promise<boolean> {
+  const owned = await db
+    .select({ id: event.id, status: event.status })
+    .from(event)
+    .where(and(eq(event.id, id), eq(event.hostUserId, hostUserId)))
+    .limit(1);
+  if (!owned[0]) return false;
+  if (owned[0].status === "cancelled") return true; // idempotent — no re-void
+  await db.batch([
+    db.update(event).set({ status: "cancelled", updatedAt: new Date() }).where(eq(event.id, id)),
+    db.delete(commitment).where(eq(commitment.eventId, id)),
+    db.delete(eventRole).where(eq(eventRole.eventId, id)),
+  ]);
+  return true;
+}
+
+/** One commitment row, or null — for membership checks (DTO selection, duplicate guard). */
+export async function getCommitment(db: Db, eventId: string, userId: string) {
+  const rows = await db
+    .select()
+    .from(commitment)
+    .where(and(eq(commitment.eventId, eventId), eq(commitment.userId, userId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** Participants of an event with their display name + email + party size (for the participant view). */
+export async function participantsForEvent(db: Db, eventId: string) {
+  return db
+    .select({ userId: commitment.userId, numMen: commitment.numMen, name: user.name, email: user.email })
+    .from(commitment)
+    .innerJoin(user, eq(user.id, commitment.userId))
+    .where(eq(commitment.eventId, eventId));
+}
+
+/** First phone (E.164) per user id, batched — for participant/host contact in the participant view. */
+export async function firstPhonesByUser(db: Db, userIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (userIds.length === 0) return out;
+  const rows = await db
+    .select({ userId: phoneNumber.userId, e164: phoneNumber.e164 })
+    .from(phoneNumber)
+    .where(inArray(phoneNumber.userId, userIds));
+  for (const r of rows) if (!out.has(r.userId)) out.set(r.userId, r.e164);
   return out;
 }
 

@@ -7,6 +7,7 @@ import { calendar } from "./routes/calendar";
 import { stays } from "./routes/stays";
 import { geo } from "./routes/geo";
 import { discovery } from "./routes/discovery";
+import { events } from "./routes/events";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -47,6 +48,8 @@ app.route("/", stays);
 app.route("/", geo);
 // Discovery (auth-guarded) — per-Shabbat potential + hosted minyanim in an area. (003 US1)
 app.route("/", discovery);
+// Events/Minyanim — host, view (optional-auth for join link), edit, cancel. (003 US2)
+app.route("/", events);
 
 // Liveness/readiness incl. D1 connectivity. (T027)
 app.get("/api/health", async (c) => {
