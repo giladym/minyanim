@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { user, phoneNumber, account, session } from "../db/schema";
+import { user, phoneNumber, account, session, stay } from "../db/schema";
 
 /** Data access for the user profile (isolates Drizzle from services). */
 export async function findUser(db: Db, id: string) {
@@ -42,6 +42,7 @@ export async function deletePhone(db: Db, userId: string, id: string): Promise<b
  */
 export async function deleteUserCascade(db: Db, userId: string): Promise<void> {
   await db.batch([
+    db.delete(stay).where(eq(stay.userId, userId)),
     db.delete(phoneNumber).where(eq(phoneNumber.userId, userId)),
     db.delete(account).where(eq(account.userId, userId)),
     db.delete(session).where(eq(session.userId, userId)),

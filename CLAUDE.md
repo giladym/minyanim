@@ -1,7 +1,8 @@
 <!-- SPECKIT START -->
-Active plan: `specs/001-platform-foundation/plan.md` (+ research.md, data-model.md,
-contracts/api.md, quickstart.md). Product decomposition & shared decisions:
-`specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
+Active plan: `specs/002-stays-create-manage/plan.md` (+ research.md, data-model.md,
+contracts/api.md, quickstart.md). 001 Platform Foundation is complete (deployed to dev, CI/CD via
+Workers Builds). Product decomposition & shared decisions: `specs/ROADMAP.md`. Design system:
+`design/DESIGN-SYSTEM.md`.
 
 Architecture (constitution v1.1.0 + docs/architecture.md): **pnpm + Turborepo monorepo** —
 `apps/frontend` (Vite React SPA + TanStack Router/Query on Workers Static Assets),
@@ -15,5 +16,5 @@ D1 sessions; needs a transactional email provider — Resend rec., research D16)
 structured logging via Workers Observability (**no Winston**); JSDoc on exports; KISS.
 `kosher-zmanim` (LGPL) computed SERVER-SIDE ONLY (legal sign-off pending — never ship to
 client). Tests: vitest-pool-workers, Vitest+Testing Library, Playwright + axe-core (WCAG AA).
-Decisions: docs/adr/. Active plan: specs/001-platform-foundation/plan.md.
+Decisions: docs/adr/. Active plan: specs/002-stays-create-manage/plan.md.
 <!-- SPECKIT END -->

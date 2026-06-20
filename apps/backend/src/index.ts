@@ -4,6 +4,8 @@ import { secureHeaders } from "hono/secure-headers";
 import { createAuth } from "./auth";
 import { me } from "./routes/me";
 import { calendar } from "./routes/calendar";
+import { stays } from "./routes/stays";
+import { geo } from "./routes/geo";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -38,6 +40,10 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => createAuth(c.env).handler(c.req.ra
 app.route("/", me);
 // Hebrew calendar (public): current Hebrew date + upcoming holiday, computed server-side.
 app.route("/", calendar);
+// Stays (CRUD) — auth-guarded, layered route→controller→service→repository. (002)
+app.route("/", stays);
+// Geocoding proxy (auth + rate-limited) — keeps the MapTiler key server-side. (002)
+app.route("/", geo);
 
 // Liveness/readiness incl. D1 connectivity. (T027)
 app.get("/api/health", async (c) => {

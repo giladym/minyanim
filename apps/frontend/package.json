@@ -11,6 +11,7 @@
     "deploy": "pnpm build:prerender && wrangler deploy",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "test": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "better-auth": "^1.6.19",
     "i18next": "^26.3.1",
     "i18next-browser-languagedetector": "^8.2.1",
+    "maplibre-gl": "^4.7.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^17.0.8"
@@ -29,12 +31,17 @@
     "@cloudflare/workers-types": "^4.20241127.0",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^25.0.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.6.3",
     "vite": "^6.0.3",
+    "vitest": "^2.1.8",
     "wrangler": "^4.0.0"
   }
 }

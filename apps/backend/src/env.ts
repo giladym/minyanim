@@ -5,6 +5,10 @@ export interface Env {
   GOOGLE_CLIENT_SECRET: string;
   BETTER_AUTH_SECRET: string;
   RESEND_API_KEY: string;
+  /** MapTiler forward-geocoding key (server-side secret; never sent to the client). */
+  MAPTILER_API_KEY: string;
+  /** "live" calls MapTiler; "mock" returns canned geocoding results (e2e/dev). Default: live. */
+  GEO_MODE?: string;
   /** Public base URL of the app (frontend origin); used for auth callbacks/links. */
   APP_BASE_URL?: string;
   /** Cloudflare Rate Limiting binding (optional — present in deployed/configured envs). */
