@@ -78,6 +78,10 @@ button:not(:disabled),
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
   --color-chip: var(--chip);
+  /* WhatsApp brand color (fixed across light/dark) — for the "Share to WhatsApp" CTA so it's
+     recognizable; kept as a named token rather than a magic hex (constitution: tokens-only). */
+  --color-whatsapp: #25d366;
+  --color-on-whatsapp: #ffffff;
   --font-sans: "Assistant", system-ui, sans-serif;
 }
 

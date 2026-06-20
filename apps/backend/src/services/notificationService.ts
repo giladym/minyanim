@@ -53,6 +53,8 @@ export async function onQuorumChange(ctx: Ctx, eventId: string): Promise<void> {
   if (men >= QUORUM) {
     if (await repo.claimCrossing(ctx.db, eventId, "quorum_reached", QUORUM)) {
       await fanOut(ctx, eventId, "quorum_reached", recipients, info);
+    } else {
+      ctx.log.info("notification.idempotent_skip", { eventId, kind: "quorum_reached" });
     }
   } else if (await repo.clearCrossing(ctx.db, eventId, "quorum_reached", QUORUM)) {
     await fanOut(ctx, eventId, "quorum_lost", host, info);

@@ -192,7 +192,7 @@ export function MinyanDetail() {
           href={whatsAppHref(buildShareText(m, `${window.location.origin}/minyan/${m.id}`, (tf) => t(`tefilla.${tf}`)))}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 self-start rounded-xl bg-[#25D366] px-4 py-2.5 text-sm font-bold text-white"
+          className="mt-1 self-start rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-bold text-on-whatsapp"
         >
           {t("minyanDetail.shareWhatsApp")}
         </a>

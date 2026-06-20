@@ -12,7 +12,9 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply minyanim --local",
-    "db:migrate:remote": "wrangler d1 migrations apply minyanim --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply minyanim --remote",
+    "db:seed:beit-chabad:local": "wrangler d1 execute minyanim --local --file=seed/beit-chabad.sql",
+    "db:seed:beit-chabad:remote": "wrangler d1 execute minyanim --remote --file=seed/beit-chabad.sql"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.6.1",
