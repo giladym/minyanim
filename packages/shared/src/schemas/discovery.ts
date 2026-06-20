@@ -15,7 +15,11 @@ export const DiscoveryQuery = z.object({
   from: z.coerce.number().int(),
   to: z.coerce.number().int(),
   nusach: NusachSchema.optional(),
-  seferTorah: z.coerce.boolean().optional(),
+  // Present+true filters to Torah-only; absent or "false" = no filter (D17). NOT z.coerce.boolean
+  // (which would turn the string "false" into true).
+  seferTorah: z
+    .union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")])
+    .optional(),
 });
 export type DiscoveryQueryType = z.infer<typeof DiscoveryQuery>;
 

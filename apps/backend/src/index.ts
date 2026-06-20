@@ -6,6 +6,7 @@ import { me } from "./routes/me";
 import { calendar } from "./routes/calendar";
 import { stays } from "./routes/stays";
 import { geo } from "./routes/geo";
+import { discovery } from "./routes/discovery";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -44,6 +45,8 @@ app.route("/", calendar);
 app.route("/", stays);
 // Geocoding proxy (auth + rate-limited) — keeps the MapTiler key server-side. (002)
 app.route("/", geo);
+// Discovery (auth-guarded) — per-Shabbat potential + hosted minyanim in an area. (003 US1)
+app.route("/", discovery);
 
 // Liveness/readiness incl. D1 connectivity. (T027)
 app.get("/api/health", async (c) => {

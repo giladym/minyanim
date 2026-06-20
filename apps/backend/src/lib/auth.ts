@@ -1,9 +1,9 @@
-import type { Context } from "hono";
 import { createAuth } from "../auth";
 import { Unauthorized } from "./errors";
 import type { Env } from "../env";
 
-type AuthCtx = Context<{ Bindings: Env }>;
+/** Minimal structural context — accepts any Hono context regardless of its `Variables`. */
+type AuthCtx = { env: Env; req: { raw: Request } };
 
 /**
  * Resolve the authenticated user id from the better-auth session, or throw 401. Lifted from the
