@@ -52,6 +52,12 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
 9. **Contact-info visibility:** a Stay/Minyan participant's name is visible to other
    participants of the same Minyan; phone/email and specific address are visible only to
    confirmed participants of the same Minyan, never to the public.
+10. **Generic event model.** A Minyan is persisted as a generic **`event`** with a **`type`**
+    discriminator (`minyan` is the only type in v1), applied throughout the application — D1
+    schema, `packages/shared` Zod contracts, services, and the `/api/events` surface. Commitments
+    and notifications reference the generic `event`. Additional event types are future features
+    that add a `type` value, not a rewrite. User-facing copy still uses the domain term "מניין"
+    (003 decision D21).
 
 ---
 
