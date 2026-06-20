@@ -153,6 +153,8 @@ export const he = {
       missing: "עדיין חסר",
       seferTorah: "ספר תורה",
       loading: "טוען…",
+      mapAlt: "מפת מניינים ונקודות בית חב״ד באזור",
+      beitChabad: "בית חב״ד",
     },
     host: {
       title: "אירוח מניין",
