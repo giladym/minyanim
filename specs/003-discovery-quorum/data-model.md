@@ -22,7 +22,8 @@ A hosted gathering at a precise point. Owned by its host; cascade-deleted with t
 | country | text, NOT NULL | public location |
 | lat | real, NOT NULL | precise point (hosted events always have coords) |
 | lng | real, NOT NULL | precise point |
-| address_private | text, NULL | **private** — only in Participant/Owner DTOs (D4/R10) |
+| address_private | text, NULL | **private** — only in Participant/Owner DTOs (D4/R10/D23) |
+| address_notes | text, NULL | **private** entry/access instructions (e.g. "ring twice, code 1234") — only in Participant/Owner DTOs (D23) |
 | event_date | integer, NOT NULL | date-only, epoch-ms @ UTC midnight of civil date — the Shabbat/day (002 convention) |
 | notes | text, NULL | free-text host notes (D3) |
 | status | text, NOT NULL | `'forming'` \| `'cancelled'`; default `'forming'` (quorum/ready/completed derived, R4) |
@@ -186,14 +187,16 @@ Tests enumerate all men∈{9,10,11} × torah∈{0,1} × korei∈{0,1} × shabbat
 
 ## DTO boundary (D4 / R10) — three Minyan shapes in `packages/shared`
 
-- **PublicMinyanDTO** — `id, type, city, country, lat, lng, event_date, event_time, tefilla,
-  nusach, sefer_torah, committedMen, status, host display name`. **No `address_private`, no host/
-  participant contact, no participant list.** Used for discovery, the WhatsApp share, and the
-  pre-auth join page.
-- **ParticipantMinyanDTO** — Public + `address_private`, host contact (phone/email), and the
-  participant list (names + phone/email). Returned only to a committed participant (membership
-  checked via `commitment`).
-- **OwnerMinyanDTO** — the host's full view (Participant + host-only management fields).
+- **PublicMinyanDTO** — `id, type, city, country, lat, lng (FUZZED ~2dp — D23), event_date, services,
+  notes, nusach, sefer_torah, committedMen, status, isShabbatShacharit, missingForReady, rolesFilled,
+  host display name`. **No `address_private`/`address_notes`, no host/participant contact, no
+  participant list, no exact coordinates.** Used for discovery, the WhatsApp share, and the pre-auth
+  join page.
+- **ParticipantMinyanDTO** — Public + **exact `lat/lng`** + `address_private` + `address_notes` +
+  host contact (phone/email) + the participant list (names + phone/email) + `myRoles`. Returned
+  only to a committed participant (membership checked via `commitment`). The exact point + address +
+  access notes reveal **on commit** (D23).
+- **OwnerMinyanDTO** — the host's full view (Participant + `isHost`).
 
 Private columns are **structurally absent** from `PublicMinyanDTO` (SC-005), proven by a DTO
 non-exposure test (mirrors 002 T030).
