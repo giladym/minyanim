@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useStays, useCancelStay } from "../../lib/stays";
+import { useNearStayCounts } from "../../lib/discovery";
 import { StayCard } from "./StayCard";
 
 /**
@@ -13,6 +14,7 @@ import { StayCard } from "./StayCard";
 export function StaysDashboard() {
   const { t } = useTranslation();
   const { data: stays, isLoading, isError } = useStays();
+  const { data: nearbyCounts } = useNearStayCounts();
   const cancel = useCancelStay();
   const search = useSearch({ from: "/authed/stays" });
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -75,6 +77,7 @@ export function StaysDashboard() {
                 stay={s}
                 highlighted={search.highlight === s.id}
                 onCancel={setConfirmingId}
+                nearbyMinyanim={nearbyCounts?.[s.id]}
               />
             </li>
           ))}

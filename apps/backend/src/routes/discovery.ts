@@ -3,6 +3,9 @@ import { DiscoveryQuery } from "@minyanim/shared";
 import { createDb } from "../db/client";
 import { requireUserId } from "../lib/auth";
 import { discoverController } from "../controllers/discoveryController";
+import { nearStay, nearStayCounts } from "../services/discoveryService";
+import { toPublicMinyanDTO } from "@minyanim/shared";
+import { NotFound } from "../lib/errors";
 import type { Env } from "../env";
 import type { Logger } from "../lib/logger";
 
@@ -29,4 +32,18 @@ discovery.get("/api/discovery", async (c) => {
     potentialBuckets: result.potential.length,
   });
   return c.json(result);
+});
+
+/** GET /api/discovery/near-stay/:stayId — potential + minyanim near an owned Stay (FR-019). */
+discovery.get("/api/discovery/near-stay/:stayId", async (c) => {
+  const userId = await requireUserId(c);
+  const result = await nearStay(createDb(c.env.DB), userId, c.req.param("stayId"));
+  if (!result) throw NotFound();
+  return c.json({ ...result, minyanim: result.minyanim.map(toPublicMinyanDTO) });
+});
+
+/** GET /api/discovery/near-stay-counts — batched nearby-minyan counts for the My-Stays dashboard. */
+discovery.get("/api/discovery/near-stay-counts", async (c) => {
+  const userId = await requireUserId(c);
+  return c.json({ counts: await nearStayCounts(createDb(c.env.DB), userId) });
 });

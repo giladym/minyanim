@@ -1,10 +1,12 @@
 import {
+  DISCOVERY_RADIUS_KM,
   type DiscoveryQueryType,
   type DiscoveryResult,
   type PotentialBucket,
   type PublicMinyanDTO,
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
+import { getStayById, listStays } from "./../repositories/stayRepository";
 import { shabbatSaturdaysInRange } from "../lib/timezone";
 import { deriveStatus, missingForReady, isShabbatShacharit } from "../lib/minyanStatus";
 import { fuzzCoord } from "../lib/geoPrivacy";
@@ -125,4 +127,29 @@ export async function discover(db: Db, q: DiscoveryQueryType): Promise<Discovery
 
   const beitChabad = bbox ? await beitChabadInBbox(db, bbox) : [];
   return { potential, minyanim, beitChabad, attribution: ATTRIBUTION };
+}
+
+/** Build the discovery query that matches a Stay's location + date range (FR-019/D22). */
+function queryForStay(s: { lat: number | null; lng: number | null; city: string; country: string; arrivalDate: Date; departureDate: Date }): DiscoveryQueryType {
+  const base = { radiusKm: DISCOVERY_RADIUS_KM, from: s.arrivalDate.getTime(), to: s.departureDate.getTime() };
+  return s.lat != null && s.lng != null
+    ? { ...base, lat: s.lat, lng: s.lng }
+    : { ...base, city: s.city, country: s.country };
+}
+
+/** Potential + hosted minyanim near an owned Stay (FR-019 pull). Null if the Stay isn't owned. */
+export async function nearStay(db: Db, userId: string, stayId: string): Promise<DiscoveryResult | null> {
+  const stay = await getStayById(db, userId, stayId);
+  if (!stay) return null;
+  return discover(db, queryForStay(stay));
+}
+
+/** Batched count of nearby hosted minyanim per active Stay, for the My-Stays dashboard (R15). */
+export async function nearStayCounts(db: Db, userId: string): Promise<Record<string, number>> {
+  const stays = await listStays(db, userId);
+  const counts: Record<string, number> = {};
+  for (const s of stays) {
+    counts[s.id] = (await discover(db, queryForStay(s))).minyanim.length;
+  }
+  return counts;
 }

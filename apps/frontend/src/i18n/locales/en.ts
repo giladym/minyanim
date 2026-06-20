@@ -234,6 +234,9 @@ export const en = {
       past: "Ended",
       edit: "Edit",
       cancelStay: "Cancel stay",
+      findMinyanim: "Find minyanim near this stay",
+      nearbyMinyanim_one: "{{count}} minyan near this stay",
+      nearbyMinyanim_other: "{{count}} minyanim near this stay",
       // Form — sections & titles
       newTitle: "New stay",
       editTitle: "Edit stay",

@@ -71,7 +71,20 @@ const staysEditRoute = createRoute({
 });
 const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/profile", component: lazyRouteComponent(() => import("./features/profile/Profile"), "ProfilePage") });
 // Discovery (feature 003 US1): search an area → potential + hosted minyanim.
-const discoveryRoute = createRoute({ getParentRoute: () => authedLayout, path: "/discovery", component: lazyRouteComponent(() => import("./features/discovery/DiscoveryPage"), "DiscoveryPage") });
+const discoveryRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/discovery",
+  // Optional pre-fill from the "Minyanim near this stay" link (FR-019).
+  validateSearch: (s): { lat?: number; lng?: number; city?: string; country?: string; from?: number; to?: number } => ({
+    lat: typeof s.lat === "number" ? s.lat : undefined,
+    lng: typeof s.lng === "number" ? s.lng : undefined,
+    city: typeof s.city === "string" ? s.city : undefined,
+    country: typeof s.country === "string" ? s.country : undefined,
+    from: typeof s.from === "number" ? s.from : undefined,
+    to: typeof s.to === "number" ? s.to : undefined,
+  }),
+  component: lazyRouteComponent(() => import("./features/discovery/DiscoveryPage"), "DiscoveryPage"),
+});
 // Host a Minyan (003 US2) — auth-guarded.
 const minyanNewRoute = createRoute({ getParentRoute: () => authedLayout, path: "/minyan/new", component: lazyRouteComponent(() => import("./features/events/HostMinyanForm"), "HostMinyanForm") });
 // Notifications inbox (003 US5).

@@ -11,6 +11,8 @@ vi.mock("../../lib/geo", () => ({
 
 const useDiscovery = vi.fn();
 vi.mock("../../lib/discovery", () => ({ useDiscovery: (p: unknown) => useDiscovery(p) }));
+// No pre-fill seed in these tests (the search params come from the FR-019 link in real use).
+vi.mock("@tanstack/react-router", () => ({ useSearch: () => ({}) }));
 
 import { DiscoveryPage } from "./DiscoveryPage";
 import "../../i18n";

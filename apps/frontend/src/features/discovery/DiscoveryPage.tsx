@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearch } from "@tanstack/react-router";
 import type { GeoResult, Nusach, PublicMinyanDTO, MinyanStatus } from "@minyanim/shared";
 import { searchPlaces } from "../../lib/geo";
 import { useDiscovery, type DiscoveryParams } from "../../lib/discovery";
+
+/** Epoch-ms → "YYYY-MM-DD" for seeding the date inputs (UTC, matching the date convention). */
+function epochToInput(epoch: number): string {
+  return new Date(epoch).toISOString().slice(0, 10);
+}
 
 const fieldCls =
   "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay";
@@ -32,12 +38,16 @@ const STATUS_CLS: Record<MinyanStatus, string> = {
 export function DiscoveryPage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage === "en" ? "en" : "he";
+  // Optional pre-fill from a "Minyanim near this stay" link (FR-019).
+  const seed = useSearch({ from: "/authed/discovery" });
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(seed.city ?? "");
   const [results, setResults] = useState<GeoResult[]>([]);
-  const [center, setCenter] = useState<{ lat: number; lng: number; city: string; country: string } | null>(null);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [center, setCenter] = useState<{ lat: number; lng: number; city: string; country: string } | null>(
+    seed.lat != null && seed.lng != null ? { lat: seed.lat, lng: seed.lng, city: seed.city ?? "", country: seed.country ?? "" } : null,
+  );
+  const [from, setFrom] = useState(seed.from ? epochToInput(seed.from) : "");
+  const [to, setTo] = useState(seed.to ? epochToInput(seed.to) : "");
   const [nusach, setNusach] = useState<Nusach | "">("");
   const [seferTorah, setSeferTorah] = useState(false);
 

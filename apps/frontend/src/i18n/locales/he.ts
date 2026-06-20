@@ -234,6 +234,9 @@ export const he = {
       past: "הסתיימה",
       edit: "עריכה",
       cancelStay: "ביטול שהייה",
+      findMinyanim: "חיפוש מניינים ליד השהייה",
+      nearbyMinyanim_one: "מניין אחד ליד השהייה",
+      nearbyMinyanim_other: "{{count}} מניינים ליד השהייה",
       // Form — sections & titles
       newTitle: "שהייה חדשה",
       editTitle: "עריכת שהייה",
