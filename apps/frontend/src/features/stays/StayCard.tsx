@@ -60,11 +60,6 @@ export function StayCard({
             {formatDate(stay.arrivalDate, locale)} – {formatDate(stay.departureDate, locale)}
           </p>
         </div>
-        {stay.isPast && (
-          <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-faint">
-            {t("stays.past")}
-          </span>
-        )}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">

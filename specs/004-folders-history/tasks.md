@@ -92,7 +92,7 @@ advancing the clock past an upcoming departure moves it to History on the next r
 - [x] T022 [P] [US2] Backend scope truth-table test in `apps/backend/test/stay-scope.test.ts` (`vi.setSystemTime`): the 4-row table (active/cancelled × past/upcoming) → correct `scope=active` vs `scope=history` membership + `historyTag`; same-day-departure stays active (D14); coordless Stay history `isPast` pinned to UTC. (SC-002/SC-003/D2/D14/R5)
 - [x] T023 [P] [US2] Backend History pagination test in `apps/backend/test/stay-history-pagination.test.ts`: seed > pageSize past Stays incl. rows the in-service `isPast` refine drops → pages are **complete + non-duplicated** across the boundary, `nextCursor` from last KEPT row, loop-fill fires on underfill, terminal `nextCursor=null`. (SC-005/R5)
 - [x] T024 [P] [US2] Extend `apps/backend/test/stay-dto.test.ts`: `toOwnerResponse` includes `historyTag`; `toPublicStayDTO` omits it. **Update the existing `OwnerStayDTO` test literal** in that file to include the now-required `historyTag` field, or it won't compile. (R6)
-- [ ] T025 [P] [US2] Frontend test `apps/frontend/src/features/stays/History.test.tsx`: infinite-scroll fetches the next page on `nextCursor`; year grouping; attended vs cancelled tags; `aria-live` on list growth.
+- [x] T025 [P] [US2] Frontend test `apps/frontend/src/features/stays/History.test.tsx`: infinite-scroll fetches the next page on `nextCursor`; year grouping; attended vs cancelled tags; `aria-live` on list growth.
 
 ### Implementation for User Story 2
 
@@ -100,10 +100,10 @@ advancing the clock past an upcoming departure moves it to History on the next r
 - [x] T027 [US2] Extend `apps/backend/src/services/stayService.ts`: `scope=active` → existing `listStays` then **`filter(!isPast)`**; `scope=history` → coarse query + in-service refine (`historyTag != null`) + `nextCursor` from last KEPT row + loop-fill on underfill; compute `historyTag` in `toOwnerDTO` (cancelled→"cancelled" else isPast→"attended" else null); coordless history `isPast` pinned to UTC. (R4/R5/R6/D2)
 - [x] T028 [US2] Extend `apps/backend/src/controllers/stayController.ts` `toOwnerResponse`: add `historyTag` to the allowlist (else silently dropped). (R6)
 - [x] T029 [US2] Extend `apps/backend/src/routes/stays.ts`: parse `scope` (default `active`), `folder` (`<id>|unfiled`), `cursor`, `limit`; return `{ stays }` for active and a **hand-built** `HistoryPage { stays, nextCursor }` for history (it's a TS interface, not Zod — no `.parse()`; build it like `toOwnerResponse`). (contracts/api.md)
-- [ ] T030 [US2] Extend `apps/frontend/src/lib/stays.ts`: add `useStaysInfinite("history")` via `useInfiniteQuery` (`getNextPageParam: last => last.nextCursor`, `InfiniteData` shape); cancel mutation moves the row from active cache → history (or invalidates both). (R11/D13)
-- [ ] T031 [US2] `apps/frontend/src/features/stays/StayCard.tsx`: **REMOVE** the `isPast` "past" badge (past now lives in History). (DEV-03)
-- [ ] T032 [US2] `apps/frontend/src/features/stays/HistoryPage.tsx` (+ history Stay card): infinite-scroll list, year groups, attended/cancelled tags, sort by date/folder, `aria-live`, i18n, tokens-only. (FR-005/FR-009)
-- [ ] T033 [US2] Extend `apps/frontend/src/router.tsx`: add the History route and extend `staysRoute.validateSearch` with `scope?`/`folder?`/`sort?`; point the dashboard at `scope=active`. (D1/D10)
+- [x] T030 [US2] Extend `apps/frontend/src/lib/stays.ts`: add `useStaysInfinite("history")` via `useInfiniteQuery` (`getNextPageParam: last => last.nextCursor`, `InfiniteData` shape); cancel mutation moves the row from active cache → history (or invalidates both). (R11/D13)
+- [x] T031 [US2] `apps/frontend/src/features/stays/StayCard.tsx`: **REMOVE** the `isPast` "past" badge (past now lives in History). (DEV-03)
+- [x] T032 [US2] `apps/frontend/src/features/stays/HistoryPage.tsx` (+ history Stay card): infinite-scroll list, year groups, attended/cancelled tags, sort by date/folder, `aria-live`, i18n, tokens-only. (FR-005/FR-009)
+- [x] T033 [US2] Extend `apps/frontend/src/router.tsx`: add the History route and extend `staysRoute.validateSearch` with `scope?`/`folder?`/`sort?`; point the dashboard at `scope=active`. (D1/D10)
 
 **Checkpoint**: Dashboard is active-only; History paginates correctly. US1 + US2 both independent.
 

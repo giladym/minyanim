@@ -53,15 +53,28 @@ const staysRoute = createRoute({
   path: "/stays",
   // The dashboard reads `highlight` (just-saved card id) and `flash` ("saved"|"updated") to
   // briefly surface a confirmation after a create/edit redirect (FR-012).
-  validateSearch: (s): { highlight?: string; flash?: "saved" | "updated" } => ({
+  validateSearch: (
+    s,
+  ): { highlight?: string; flash?: "saved" | "updated"; folder?: string; sort?: "date" | "folder" } => ({
     highlight: typeof s.highlight === "string" ? s.highlight : undefined,
     flash: s.flash === "saved" || s.flash === "updated" ? s.flash : undefined,
+    folder: typeof s.folder === "string" ? s.folder : undefined,
+    sort: s.sort === "date" || s.sort === "folder" ? s.sort : undefined,
   }),
   component: lazyRouteComponent(() => import("./features/stays/StaysDashboard"), "StaysDashboard"),
+});
+const staysHistoryRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/stays/history",
+  component: lazyRouteComponent(() => import("./features/stays/HistoryPage"), "HistoryPage"),
 });
 const staysNewRoute = createRoute({
   getParentRoute: () => authedLayout,
   path: "/stays/new",
+  // Optional ?from=<stayId> opens the Add form pre-filled from a source Stay (004 D9 duplicate).
+  validateSearch: (s): { from?: string } => ({
+    from: typeof s.from === "string" ? s.from : undefined,
+  }),
   component: lazyRouteComponent(() => import("./features/stays/AddEditStayForm"), "AddStayPage"),
 });
 const staysEditRoute = createRoute({
@@ -100,7 +113,7 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   verifyRoute,
   minyanDetailRoute,
-  authedLayout.addChildren([staysRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute]),
+  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });

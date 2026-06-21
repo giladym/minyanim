@@ -53,14 +53,19 @@ export function StaysDashboard() {
     <div className="mx-auto flex max-w-xl flex-col gap-5" dir="rtl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-ink">{t("stays.title")}</h1>
-        {all.length > 0 && (
-          <Link
-            to="/stays/new"
-            className="rounded-lg bg-clay px-4 py-2 text-sm font-extrabold text-on-clay"
-          >
-            {t("stays.addCta")}
+        <div className="flex items-center gap-3">
+          <Link to="/stays/history" className="text-sm font-bold text-clay">
+            {t("history.title")}
           </Link>
-        )}
+          {all.length > 0 && (
+            <Link
+              to="/stays/new"
+              className="rounded-lg bg-clay px-4 py-2 text-sm font-extrabold text-on-clay"
+            >
+              {t("stays.addCta")}
+            </Link>
+          )}
+        </div>
       </div>
 
       {all.length > 0 && (
