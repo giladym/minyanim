@@ -137,7 +137,7 @@ cannot be permanently deleted.
 - [x] T039 [P] i18n he+en parity in `apps/frontend/src/i18n/`: `folders.{title,create,rename,delete,deleteWarn,nameTaken,unfiled}`, `history.{title,attended,cancelled,empty,loadMore}`, + the 004 error messages; ensure the existing he/en parity test passes. (FR-009/R12)
 - [x] T040 [P] Structured logs (Workers Observability, no Winston) via the existing `createLogger` / `c.get("log")` pattern (as `index.ts` + the me/stays services already do): `folder.created`, `folder.deleted`, `stay.permanently_deleted`. (R12)
 - [x] T041 [P] e2e `apps/frontend/e2e/`: Playwright + axe-core for folder management + History — WCAG 2.1 AA, RTL, keyboard, ≥44px targets, `aria-live` (SC-007/FR-009).
-- [ ] T042 Run `specs/004-folders-history/quickstart.md` scenarios 1–4 against `pnpm dev`; fix any drift. Update `CLAUDE.md` (mark 004 complete) only at merge time.
+- [x] T042 Run `specs/004-folders-history/quickstart.md` scenarios 1–4 against `pnpm dev`; fix any drift. Update `CLAUDE.md` (mark 004 complete) only at merge time.
 
 ---
 

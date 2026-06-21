@@ -1,10 +1,12 @@
 <!-- SPECKIT START -->
-Active plan: `specs/004-folders-history/plan.md` (+ research.md, data-model.md,
-contracts/api.md, quickstart.md). 001 + 002 + 003 are complete (merged to `develop`, deployed to
-dev, CI/CD via Workers Builds). 003 introduced the generic `event` (type=`minyan`) model (ROADMAP
-decision 10). 004 adds folders (`stay.folder_id` FK ON DELETE SET NULL = "Unfiled") + a History view
-(past Stays move off the active dashboard — amends 002 FR-005/011, D1). Product decomposition &
-shared decisions: `specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
+No active feature plan — 001 + 002 + 003 + 004 are complete (merged to `develop`, deployed to dev,
+CI/CD via Workers Builds). Start the next feature with `/speckit-specify`. 003 introduced the generic
+`event` (type=`minyan`) model (ROADMAP decision 10). 004 added folders (`stay.folder_id` FK ON DELETE
+SET NULL = "Unfiled") + a History view (past Stays moved off the active dashboard — amended 002
+FR-005/011, D1); see `specs/004-folders-history/`. NOTE: a 004 schema change shipped (migration
+`0004` rebuilt `stay` + added `folder`) — the remote dev D1 must be migrated on deploy
+(`pnpm db:migrate:remote`); CI/Workers Builds do NOT auto-migrate. Product decomposition & shared
+decisions: `specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
 
 Architecture (constitution v1.1.0 + docs/architecture.md): **pnpm + Turborepo monorepo** —
 `apps/frontend` (Vite React SPA + TanStack Router/Query on Workers Static Assets),
@@ -18,5 +20,5 @@ D1 sessions; needs a transactional email provider — Resend rec., research D16)
 structured logging via Workers Observability (**no Winston**); JSDoc on exports; KISS.
 `kosher-zmanim` (LGPL) computed SERVER-SIDE ONLY (legal sign-off pending — never ship to
 client). Tests: vitest-pool-workers, Vitest+Testing Library, Playwright + axe-core (WCAG AA).
-Decisions: docs/adr/. Active plan: specs/004-folders-history/plan.md.
+Decisions: docs/adr/. No active plan — 001–004 shipped.
 <!-- SPECKIT END -->
