@@ -8,6 +8,7 @@ import {
   updateMinyanController,
   cancelMinyanController,
 } from "../controllers/eventController";
+import { minyanZmanimController } from "../controllers/zmanimController";
 import { commit, changeCommitment, withdraw } from "../services/commitmentService";
 import { claimRole, releaseRole } from "../services/roleService";
 import { eventExists, flagEvent } from "../repositories/flagRepository";
@@ -36,6 +37,13 @@ events.post("/api/events", async (c) => {
 events.get("/api/events/:id", async (c) => {
   const viewerId = await optionalUserId(c);
   return c.json(await getMinyanController(buildCtx(c), viewerId, c.req.param("id")));
+});
+
+/** GET /api/events/:id/zmanim — public Shabbat zmanim for a hosted Minyan (005 D9/R10). */
+events.get("/api/events/:id/zmanim", async (c) => {
+  const res = await minyanZmanimController(createDb(c.env.DB), c.req.param("id"));
+  c.header("cache-control", "public, max-age=3600");
+  return c.json(res);
 });
 
 /** PATCH /api/events/:id — host-only edit. */

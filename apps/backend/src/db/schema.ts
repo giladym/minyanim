@@ -14,6 +14,8 @@ export const user = sqliteTable("user", {
   image: text("image"),
   language: text("language").notNull().default("he"),
   theme: text("theme").notNull().default("system"),
+  // 005: which end-of-Shabbat opinion the user sees for Havdalah ('geonim'|'rabbeinu_tam'|'both').
+  havdalahOpinion: text("havdalah_opinion").notNull().default("geonim"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

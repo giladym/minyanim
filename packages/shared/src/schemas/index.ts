@@ -4,6 +4,7 @@ export * from "./auth";
 export * from "./profile";
 export * from "./stay";
 export * from "./folder";
+export * from "./zmanim";
 export * from "./event";
 export * from "./commitment";
 export * from "./discovery";

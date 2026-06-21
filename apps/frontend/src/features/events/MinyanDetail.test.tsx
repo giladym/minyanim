@@ -25,6 +25,14 @@ vi.mock("../../lib/events", () => ({
   useReleaseRole: () => noop,
   useFlagMinyan: () => ({ mutate: vi.fn(), isPending: false, isSuccess: false }),
 }));
+vi.mock("../../lib/zmanim", () => ({
+  useMinyanZmanim: () => ({
+    data: { coversShabbat: false, hasCoordinates: true, candleLightingOffsetMinutes: 18, shabbatot: [] },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+vi.mock("../../lib/profile", () => ({ useProfile: () => ({ data: { havdalahOpinion: "geonim" } }) }));
 
 import { MinyanDetail } from "./MinyanDetail";
 import "../../i18n";

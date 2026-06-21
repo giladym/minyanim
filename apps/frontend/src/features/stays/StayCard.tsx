@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import type { FolderDTO, OwnerStayDTO } from "@minyanim/shared";
+import { useStayZmanim } from "../../lib/zmanim";
+import { useProfile } from "../../lib/profile";
+import { ZmanimSection } from "./ZmanimSection";
 
 /** Format a stored UTC-midnight epoch as a localized civil date (no time-of-day). */
 function formatDate(epoch: number, locale: string): string {
@@ -40,6 +44,9 @@ export function StayCard({
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "he";
+  const [showZmanim, setShowZmanim] = useState(false);
+  const { data: profile } = useProfile();
+  const zmanimQuery = useStayZmanim(stay.id, showZmanim);
 
   return (
     <article
@@ -72,6 +79,39 @@ export function StayCard({
           </span>
         )}
       </div>
+
+      {stay.coversShabbat && (
+        <div className="mt-3">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between text-start text-sm font-bold text-clay"
+            aria-expanded={showZmanim}
+            onClick={() => setShowZmanim((v) => !v)}
+          >
+            {t("zmanim.title")}
+            <span aria-hidden>{showZmanim ? "−" : "+"}</span>
+          </button>
+          {showZmanim && (
+            <div className="mt-2">
+              <ZmanimSection
+                data={zmanimQuery.data}
+                isLoading={zmanimQuery.isLoading}
+                isError={zmanimQuery.isError}
+                havdalahOpinion={profile?.havdalahOpinion ?? "geonim"}
+                addLocationSlot={
+                  <Link
+                    to="/stays/$id/edit"
+                    params={{ id: stay.id }}
+                    className="font-bold text-clay"
+                  >
+                    {t("zmanim.addLocationCta")}
+                  </Link>
+                }
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {!stay.isPast && (
         <Link

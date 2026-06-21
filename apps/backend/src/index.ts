@@ -6,6 +6,7 @@ import { me } from "./routes/me";
 import { calendar } from "./routes/calendar";
 import { stays } from "./routes/stays";
 import { folders } from "./routes/folders";
+import { zmanim } from "./routes/zmanim";
 import { geo } from "./routes/geo";
 import { discovery } from "./routes/discovery";
 import { events } from "./routes/events";
@@ -48,6 +49,8 @@ app.route("/", calendar);
 app.route("/", stays);
 // Folders (CRUD) — auth-guarded; Stays assign via folder_id, delete reassigns to Unfiled. (004)
 app.route("/", folders);
+// Per-Stay Shabbat zmanim — owner-scoped, computed server-side. (005)
+app.route("/", zmanim);
 // Geocoding proxy (auth + rate-limited) — keeps the MapTiler key server-side. (002)
 app.route("/", geo);
 // Discovery (auth-guarded) — per-Shabbat potential + hosted minyanim in an area. (003 US1)

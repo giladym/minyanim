@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Profile, Language } from "@minyanim/shared";
+import type { Profile, Language, HavdalahOpinion } from "@minyanim/shared";
 import { getProfile, patchProfile, addPhone, deletePhone, deleteAccount } from "../../lib/profile";
 import { useTheme, type Theme } from "../../theme/ThemeProvider";
 import { authClient } from "../../lib/auth-client";
@@ -40,6 +40,9 @@ export function ProfilePage() {
     setTheme(theme);
     setP(await patchProfile({ theme }));
   }
+  async function changeHavdalahOpinion(havdalahOpinion: HavdalahOpinion) {
+    setP(await patchProfile({ havdalahOpinion }));
+  }
   async function add() {
     setPhoneErr("");
     if (!E164.test(phone)) { setPhoneErr(t("profile.invalidPhone")); return; }
@@ -75,6 +78,18 @@ export function ProfilePage() {
             <option value="light">{t("profile.themeLight")}</option>
             <option value="dark">{t("profile.themeDark")}</option>
             <option value="system">{t("profile.themeSystem")}</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-bold">{t("profile.havdalah.label")}</span>
+          <select
+            className={field}
+            value={p.havdalahOpinion}
+            onChange={(e) => void changeHavdalahOpinion(e.target.value as HavdalahOpinion)}
+          >
+            <option value="geonim">{t("profile.havdalah.geonim")}</option>
+            <option value="rabbeinu_tam">{t("profile.havdalah.rabbeinuTam")}</option>
+            <option value="both">{t("profile.havdalah.both")}</option>
           </select>
         </label>
       </section>

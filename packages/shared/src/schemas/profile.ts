@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { languageSchema, themeSchema, e164 } from "./common";
+import { languageSchema, themeSchema, havdalahOpinionSchema, e164 } from "./common";
 
 export const addPhoneSchema = z.object({
   e164,
@@ -11,6 +11,7 @@ export const updateProfileSchema = z.object({
   name: z.string().min(1, "name.required").max(120).optional(),
   language: languageSchema.optional(),
   theme: themeSchema.optional(),
+  havdalahOpinion: havdalahOpinionSchema.optional(),
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
@@ -27,5 +28,6 @@ export interface Profile {
   email: string;
   language: string;
   theme: string;
+  havdalahOpinion: string;
   phones: PhoneNumber[];
 }
