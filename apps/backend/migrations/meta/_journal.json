@@ -36,6 +36,13 @@
       "when": 1782000213434,
       "tag": "0004_silky_hiroim",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1782021504198,
+      "tag": "0005_workable_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

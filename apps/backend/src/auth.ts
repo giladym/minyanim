@@ -43,6 +43,7 @@ export function createAuth(env: Env) {
       additionalFields: {
         language: { type: "string", required: false, defaultValue: "he", input: true },
         theme: { type: "string", required: false, defaultValue: "system", input: true },
+        havdalahOpinion: { type: "string", required: false, defaultValue: "geonim", input: true },
       },
     },
   });

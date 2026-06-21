@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `havdalah_opinion` text DEFAULT 'geonim' NOT NULL;
