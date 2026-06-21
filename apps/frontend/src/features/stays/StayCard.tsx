@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import type { OwnerStayDTO } from "@minyanim/shared";
+import type { FolderDTO, OwnerStayDTO } from "@minyanim/shared";
 
 /** Format a stored UTC-midnight epoch as a localized civil date (no time-of-day). */
 function formatDate(epoch: number, locale: string): string {
@@ -24,11 +24,17 @@ export function StayCard({
   stay,
   highlighted,
   onCancel,
+  onMove,
+  folders,
   nearbyMinyanim,
 }: {
   stay: OwnerStayDTO;
   highlighted: boolean;
   onCancel: (id: string) => void;
+  /** Reassign this Stay to a folder, or to Unfiled when null (D6). */
+  onMove?: (folderId: string | null) => void;
+  /** The caller's folders, for the move-to-folder control. */
+  folders?: FolderDTO[];
   /** Count of hosted minyanim near this stay (FR-019); undefined while loading. */
   nearbyMinyanim?: number;
 }) {
@@ -85,7 +91,7 @@ export function StayCard({
       )}
 
       {!stay.isPast && (
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <Link
             to="/stays/$id/edit"
             params={{ id: stay.id }}
@@ -100,6 +106,24 @@ export function StayCard({
           >
             {t("stays.cancelStay")}
           </button>
+          {onMove && folders && folders.length > 0 && (
+            <label className="ms-auto flex items-center gap-2 text-sm text-muted">
+              <span>{t("folders.moveTo")}</span>
+              <select
+                className="rounded-lg border border-line bg-surface px-2.5 py-2 text-sm font-bold text-ink"
+                aria-label={t("folders.moveTo")}
+                value={stay.folderId ?? ""}
+                onChange={(e) => onMove(e.target.value || null)}
+              >
+                <option value="">{t("folders.unfiled")}</option>
+                {folders.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
       )}
     </article>

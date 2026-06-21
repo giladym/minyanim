@@ -8,6 +8,7 @@ import {
 } from "@minyanim/shared";
 import { getProfile } from "../../lib/profile";
 import { getStay, useCreateStay, useUpdateStay } from "../../lib/stays";
+import { useFolders, useCreateFolder } from "../../lib/folders";
 import { ApiError } from "../../lib/api";
 import { LocationPicker, type LocationValue } from "./LocationPicker";
 import { PrayerNeeds } from "./PrayerNeeds";
@@ -96,6 +97,10 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderError, setNewFolderError] = useState("");
 
   const [showDetails, setShowDetails] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -127,6 +132,8 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
 
   const create = useCreateStay();
   const update = useUpdateStay();
+  const { data: folders } = useFolders();
+  const createFolder = useCreateFolder();
   const busy = create.isPending || update.isPending;
 
   // Date-driven Shabbat affordance: show the note only when the range covers a Fri/Sat (FR-009).
@@ -167,6 +174,7 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
         setContactName(s.contactName ?? "");
         setContactPhone(s.contactPhone ?? "");
         setContactEmail(s.contactEmail ?? "");
+        setFolderId(s.folderId ?? null);
         if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
       })
       .catch(() => setSubmitError(t("stays.loadError")));
@@ -189,9 +197,9 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
       contactEmail: contactEmail || null,
       groupMembers: groupMembers || null,
       notes: notes || null,
-      folderId: null,
+      folderId,
     }),
-    [location, addressPrivate, arrival, departure, numMen, bringsSeferTorah, prayerNeeds, contactName, contactPhone, contactEmail, groupMembers, notes],
+    [location, addressPrivate, arrival, departure, numMen, bringsSeferTorah, prayerNeeds, contactName, contactPhone, contactEmail, groupMembers, notes, folderId],
   );
 
   function applyApiError(err: unknown) {
@@ -326,6 +334,85 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
               onChange={(e) => setBringsSeferTorah(e.target.checked)}
             />
             {t("stays.bringsSeferTorah")}
+          </label>
+        </Card>
+
+        <Card>
+          <label className="block">
+            <span className={labelCls}>{t("folders.label")}</span>
+            {creatingFolder ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <input
+                    className={fieldCls}
+                    value={newFolderName}
+                    maxLength={60}
+                    autoFocus
+                    aria-label={t("folders.newLabel")}
+                    placeholder={t("folders.newPlaceholder")}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    disabled={createFolder.isPending || !newFolderName.trim()}
+                    className="shrink-0 rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay disabled:opacity-60"
+                    onClick={async () => {
+                      setNewFolderError("");
+                      try {
+                        const f = await createFolder.mutateAsync(newFolderName.trim());
+                        setFolderId(f.id);
+                        setNewFolderName("");
+                        setCreatingFolder(false);
+                      } catch (err) {
+                        setNewFolderError(
+                          err instanceof ApiError && err.body.errors[0]?.code
+                            ? err.body.errors[0].code
+                            : "server.error",
+                        );
+                      }
+                    }}
+                  >
+                    {t("folders.create")}
+                  </button>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-xl border border-line px-3 py-2.5 text-sm font-bold text-ink"
+                    onClick={() => {
+                      setCreatingFolder(false);
+                      setNewFolderError("");
+                    }}
+                  >
+                    {t("folders.cancel")}
+                  </button>
+                </div>
+                {newFolderError && (
+                  <span role="alert" className={errCls}>{t(`errors.${newFolderError}`)}</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <select
+                  className={fieldCls}
+                  value={folderId ?? ""}
+                  aria-label={t("folders.label")}
+                  onChange={(e) => setFolderId(e.target.value || null)}
+                >
+                  <option value="">{t("folders.unfiled")}</option>
+                  {(folders ?? []).map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-xl border border-clay px-4 py-2.5 text-sm font-bold text-clay"
+                  onClick={() => setCreatingFolder(true)}
+                >
+                  {t("folders.createInline")}
+                </button>
+              </div>
+            )}
           </label>
         </Card>
 

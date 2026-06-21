@@ -59,8 +59,8 @@ separate empty folder — no Stay data loss; deleting a non-empty folder moves i
 
 - [x] T009 [P] [US1] Backend folder CRUD test in `apps/backend/test/folder.test.ts`: create/list/rename/delete; per-user name uniqueness **case-insensitive** → `folder.name_taken` on create + rename; `folder.name_required`/`folder.name_too_long`; owner-scoping (other user's folder → `404`). (SC-001/D3/R2)
 - [x] T010 [P] [US1] Backend reassignment + cascade test in `apps/backend/test/folder-cascade.test.ts`: delete a non-empty folder → its Stays survive with `folder_id IS NULL` (SET NULL, SC-004); extend the shipped cascade test (`apps/backend/test/stay-cascade.test.ts` — there is no file literally named "cascade-orphan") to assert zero `folder` rows after `deleteUser`. (R12)
-- [ ] T011 [P] [US1] Frontend test `apps/frontend/src/features/stays/AddEditStayForm.test.tsx`: `folderId` seeds from the loaded Stay on **edit**; the folder `<select>` renders real folders; **inline-create** adds + selects a folder; the submitted payload **includes** `folderId` (guards the R10 hardcoded-null regression).
-- [ ] T012 [P] [US1] Frontend test `apps/frontend/src/features/folders/Folders.test.tsx`: create/rename/delete-confirm dialogs; browse-by-folder grouping incl. an **Unfiled** group; move-to-folder from the Stay card; non-empty-delete warning.
+- [x] T011 [P] [US1] Frontend test `apps/frontend/src/features/stays/AddEditStayForm.test.tsx`: `folderId` seeds from the loaded Stay on **edit**; the folder `<select>` renders real folders; **inline-create** adds + selects a folder; the submitted payload **includes** `folderId` (guards the R10 hardcoded-null regression).
+- [x] T012 [P] [US1] Frontend test `apps/frontend/src/features/folders/Folders.test.tsx`: create/rename/delete-confirm dialogs; browse-by-folder grouping incl. an **Unfiled** group; move-to-folder from the Stay card; non-empty-delete warning.
 
 ### Implementation for User Story 1
 
@@ -69,10 +69,10 @@ separate empty folder — no Stay data loss; deleting a non-empty folder moves i
 - [x] T015 [US1] `apps/backend/src/controllers/folderController.ts`: hand-built `FolderDTO` via `FolderDTO.parse()` allowlist before `c.json()`. (D7)
 - [x] T016 [US1] `apps/backend/src/routes/folders.ts`: routes own the **full `/api/folders…` path** (per the `routes/stays.ts` pattern); **replicate the local `requireUserId(c)` helper from `routes/stays.ts`** (better-auth `getSession` — there is no shared session middleware; each route file re-implements it), plain Hono + `safeParse`, keyed errors. Then **mount in `apps/backend/src/index.ts`**: `import { folders }` + `app.route("/", folders)` next to the other `app.route` calls. (R12)
 - [x] T017 [US1] Extend `apps/backend/src/services/stayService.ts` create + update: when `folderId` non-null, `SELECT folder WHERE id=? AND user_id=?` → `NotFound` if absent (no leak); include `folderId` in the update path (so move/assign persists). Cross-user-assign rejected on POST + PATCH. (R7/D6)
-- [ ] T018 [US1] `apps/frontend/src/lib/folders.ts`: `["folders"]` query + create/rename/delete mutations; invalidate `["folders"]` + `["stays","active"]` on mutate. (R11/D13)
-- [ ] T019 [US1] `apps/frontend/src/features/folders/`: `FolderList` + create/rename dialogs + delete-confirm (non-empty → reassign-to-Unfiled warning). i18n strings, tokens-only, `aria-live`. (FR-001/FR-003/FR-009)
-- [ ] T020 [US1] **Fix** `apps/frontend/src/features/stays/AddEditStayForm.tsx` (R10): seed `folderId` from the loaded Stay (edit), make it a controlled real folder `<select>` + inline "create folder", and add `folderId` to the payload memo **and its deps** (currently hardcoded `null`).
-- [ ] T021 [US1] Extend `apps/frontend/src/features/stays/StaysDashboard.tsx` (browse-by-folder grouping incl. Unfiled + flat toggle) and `StayCard.tsx` (a "move to folder" action wired to the PATCH mutation).
+- [x] T018 [US1] `apps/frontend/src/lib/folders.ts`: `["folders"]` query + create/rename/delete mutations; invalidate `["folders"]` + `["stays","active"]` on mutate. (R11/D13)
+- [x] T019 [US1] `apps/frontend/src/features/folders/`: `FolderList` + create/rename dialogs + delete-confirm (non-empty → reassign-to-Unfiled warning). i18n strings, tokens-only, `aria-live`. (FR-001/FR-003/FR-009)
+- [x] T020 [US1] **Fix** `apps/frontend/src/features/stays/AddEditStayForm.tsx` (R10): seed `folderId` from the loaded Stay (edit), make it a controlled real folder `<select>` + inline "create folder", and add `folderId` to the payload memo **and its deps** (currently hardcoded `null`).
+- [x] T021 [US1] Extend `apps/frontend/src/features/stays/StaysDashboard.tsx` (browse-by-folder grouping incl. Unfiled + flat toggle) and `StayCard.tsx` (a "move to folder" action wired to the PATCH mutation).
 
 **Checkpoint**: Folders fully functional and independently testable (MVP).
 
