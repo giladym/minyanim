@@ -38,6 +38,7 @@ function toOwnerResponse(dto: OwnerStayDTO): OwnerStayDTO {
     groupMembers: dto.groupMembers,
     notes: dto.notes,
     folderId: dto.folderId,
+    historyTag: dto.historyTag,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
   };

@@ -68,6 +68,13 @@ function assertNotPast(date: Date, tz: string | null, field: string): void {
 function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
   const tz = resolveTz(row.lat, row.lng, clientTz) ?? "UTC";
   const departureCivil = civilDate(row.departureDate, "UTC");
+  const status = row.status === "cancelled" ? "cancelled" : "active";
+  const isPast = departureCivil < todayCivil(tz);
+  // historyTag (004 D2): cancelled wins over attended; active+past → attended; else null
+  // (active/upcoming). For coordless Stays read on the History path, callers omit clientTz so tz
+  // falls back to UTC — keeping History membership stable across devices (R5).
+  const historyTag: OwnerStayDTO["historyTag"] =
+    status === "cancelled" ? "cancelled" : isPast ? "attended" : null;
   return {
     id: row.id,
     city: row.city,
@@ -80,8 +87,8 @@ function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
     numMen: row.numMen,
     bringsSeferTorah: row.bringsSeferTorah,
     prayerNeeds: PrayerNeedsSchema.parse(row.prayerNeeds),
-    status: row.status === "cancelled" ? "cancelled" : "active",
-    isPast: departureCivil < todayCivil(tz),
+    status,
+    isPast,
     coversShabbat: coversShabbat(row.arrivalDate, row.departureDate, tz),
     contactName: row.contactName,
     contactPhone: row.contactPhone,
@@ -89,6 +96,7 @@ function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
     groupMembers: row.groupMembers,
     notes: row.notes,
     folderId: row.folderId,
+    historyTag,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
   };

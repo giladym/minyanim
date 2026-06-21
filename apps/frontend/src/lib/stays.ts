@@ -6,8 +6,9 @@ import type {
 } from "@minyanim/shared";
 import { api } from "./api";
 
-/** Query key for the caller's Stay list (the single cache the dashboard reads). */
-export const STAYS_KEY = ["stays"] as const;
+/** Query key for the active-dashboard Stay list. Parameterized by scope (004 D13) — History uses
+ * `["stays","history"]` with an InfiniteData shape (see `useStaysInfinite`). */
+export const STAYS_KEY = ["stays", "active"] as const;
 
 /** The device IANA timezone, sent on read/create/edit so the server can run the temporal check
  * (and derive `isPast`) for Stays that have no coordinates (D3). */
