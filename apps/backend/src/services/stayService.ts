@@ -19,6 +19,9 @@ import {
 // 003 (D12/R9): after a Stay cancel/edit, reconcile any commitments linked to it (auto-withdraw
 // when the Stay no longer covers the event date). 002 service → 003 service is the intended seam.
 import { reconcileCommitmentsForStay } from "./commitmentService";
+// 004 (R7/D6): assigning a Stay to a folder must verify the caller owns it (FK alone is not enough
+// — a foreign folder row exists, so the FK passes). Throws NotFound, never leaking existence.
+import { assertFolderOwned } from "./folderService";
 
 /** Normalize an epoch-ms instant to a Date at UTC midnight of its UTC civil date (D4). */
 function toUtcMidnight(epochMs: number): Date {
@@ -118,6 +121,7 @@ export async function createStay(
   const departure = toUtcMidnight(input.departureDate);
   const tz = resolveTz(input.lat, input.lng, clientTz);
   assertNotPast(arrival, tz, "arrivalDate");
+  if (input.folderId != null) await assertFolderOwned(db, userId, input.folderId);
 
   const now = new Date();
   const row = await repoCreate(db, {
@@ -190,6 +194,8 @@ export async function updateStay(
 ): Promise<OwnerStayDTO | null> {
   const existing = await repoGet(db, userId, id);
   if (!existing) return null;
+  // Assigning/moving to a folder: verify ownership before the write (R7). null = move to Unfiled.
+  if (input.folderId != null) await assertFolderOwned(db, userId, input.folderId);
 
   const lat = input.lat !== undefined ? input.lat : existing.lat;
   const lng = input.lng !== undefined ? input.lng : existing.lng;
