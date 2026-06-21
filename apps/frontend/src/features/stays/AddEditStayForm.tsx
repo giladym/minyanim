@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import {
   CreateStayInput,
   type CreateStayInputType,
@@ -75,7 +75,14 @@ const DETAIL_ERROR_FIELDS = new Set([
  *
  * @param stayId When present, the form edits an existing Stay (PATCH); otherwise it creates one.
  */
-export function AddEditStayForm({ stayId }: { stayId?: string }) {
+export function AddEditStayForm({
+  stayId,
+  duplicateFromId,
+}: {
+  stayId?: string;
+  /** When set (create mode), prefill from this source Stay with cleared dates (004 D9). */
+  duplicateFromId?: string;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isEdit = Boolean(stayId);
@@ -142,16 +149,17 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
     [arrival, departure],
   );
 
-  // Smart defaults: pre-fill contact (name + first phone) from the profile (D12). Create only.
+  // Smart defaults: pre-fill contact (name + first phone) from the profile (D12). Fresh-create
+  // only — skipped when editing or duplicating (the source Stay's contact is used instead).
   useEffect(() => {
-    if (isEdit) return;
+    if (isEdit || duplicateFromId) return;
     getProfile()
       .then((p) => {
         setContactName((prev) => prev || p.name);
         setContactPhone((prev) => prev || p.phones[0]?.e164 || "");
       })
       .catch(() => {});
-  }, [isEdit]);
+  }, [isEdit, duplicateFromId]);
 
   // Edit: seed the form from the existing Stay — exactly ONCE. Guard with a ref so a later
   // re-render that re-runs this effect (e.g. `t` changing identity on a language switch) can't
@@ -179,6 +187,31 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
       })
       .catch(() => setSubmitError(t("stays.loadError")));
   }, [stayId, t]);
+
+  // Duplicate: prefill from a source Stay (D9) — everything EXCEPT dates, which the user re-picks.
+  // Once-guarded like the edit seed; distinct from it (create mode, dates intentionally cleared).
+  const duplicated = useRef(false);
+  useEffect(() => {
+    if (stayId || !duplicateFromId || duplicated.current) return;
+    duplicated.current = true;
+    getStay(duplicateFromId)
+      .then((s) => {
+        setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
+        setNumMen(s.numMen);
+        setBringsSeferTorah(s.bringsSeferTorah);
+        setPrayerNeeds(s.prayerNeeds);
+        setAddressPrivate(s.addressPrivate ?? "");
+        setGroupMembers(s.groupMembers ?? "");
+        setNotes(s.notes ?? "");
+        setContactName(s.contactName ?? "");
+        setContactPhone(s.contactPhone ?? "");
+        setContactEmail(s.contactEmail ?? "");
+        setFolderId(s.folderId ?? null);
+        if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
+        // Dates are intentionally left empty — the duplicate is for a new trip.
+      })
+      .catch(() => setSubmitError(t("stays.loadError")));
+  }, [stayId, duplicateFromId, t]);
 
   const payload: CreateStayInputType = useMemo(
     () => ({
@@ -524,9 +557,10 @@ function Card({ children }: { children: ReactNode }) {
   return <section className="rounded-2xl border border-line bg-surface p-5">{children}</section>;
 }
 
-/** Route entry for `/stays/new` — creates a new Stay. */
+/** Route entry for `/stays/new` — creates a new Stay (optionally a duplicate via `?from=`). */
 export function AddStayPage() {
-  return <AddEditStayForm />;
+  const { from } = useSearch({ from: "/authed/stays/new" });
+  return <AddEditStayForm duplicateFromId={from} />;
 }
 
 /** Route entry for `/stays/$id/edit` — edits the Stay named by the route param. */

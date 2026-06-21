@@ -10,6 +10,7 @@ import {
   listStayHistory as svcHistory,
   updateStay as svcUpdate,
   cancelStay as svcCancel,
+  permanentlyDeleteStay as svcPermanentDelete,
 } from "../services/stayService";
 
 /**
@@ -99,4 +100,16 @@ export async function cancelStayController(db: Db, userId: string, id: string, c
   const ok = await svcCancel(db, userId, id);
   if (!ok) throw NotFound();
   return { ok: true };
+}
+
+/** Permanently hard-delete a cancelled stay (confirm-guarded; `stay.not_cancelled` otherwise). */
+export async function permanentDeleteStayController(
+  db: Db,
+  userId: string,
+  id: string,
+  confirm: boolean,
+) {
+  if (confirm !== true) throw new AppError(400, ERROR_CODES.CONFIRM_REQUIRED, "confirm");
+  await svcPermanentDelete(db, userId, id);
+  return { ok: true as const };
 }

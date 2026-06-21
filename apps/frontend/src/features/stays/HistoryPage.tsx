@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import type { OwnerStayDTO } from "@minyanim/shared";
-import { useStaysInfinite } from "../../lib/stays";
+import { useStaysInfinite, usePermanentDeleteStay } from "../../lib/stays";
 
 /** Format a stored UTC-midnight epoch as a localized civil date (no time-of-day). */
 function formatDate(epoch: number, locale: string): string {
@@ -36,6 +36,8 @@ export function HistoryPage() {
   const locale = i18n.resolvedLanguage ?? "he";
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useStaysInfinite();
+  const permaDelete = usePermanentDeleteStay();
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const stays = useMemo(() => data?.pages.flatMap((p) => p.stays) ?? [], [data]);
   const groups = useMemo(() => groupByYear(stays), [stays]);
@@ -63,7 +65,7 @@ export function HistoryPage() {
               <ul className="flex flex-col gap-3">
                 {g.stays.map((s) => (
                   <li key={s.id}>
-                    <HistoryStayCard stay={s} locale={locale} />
+                    <HistoryStayCard stay={s} locale={locale} onDelete={() => setConfirmingId(s.id)} />
                   </li>
                 ))}
               </ul>
@@ -82,12 +84,54 @@ export function HistoryPage() {
           {isFetchingNextPage ? t("history.loading") : t("history.loadMore")}
         </button>
       )}
+
+      {confirmingId && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("history.deleteTitle")}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-6"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-6">
+            <h2 className="mb-2 text-lg font-extrabold text-clay-ink">{t("history.deleteTitle")}</h2>
+            <p className="mb-4 text-sm text-muted">{t("history.deleteWarn")}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="rounded-lg bg-clay-ink px-4 py-2 text-sm font-extrabold text-on-clay"
+                onClick={() => {
+                  permaDelete.mutate(confirmingId);
+                  setConfirmingId(null);
+                }}
+              >
+                {t("history.deleteConfirm")}
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border border-line px-4 py-2 text-sm font-bold text-ink"
+                onClick={() => setConfirmingId(null)}
+              >
+                {t("folders.cancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/** A single History Stay row: location, dates, and an attended/cancelled tag. */
-function HistoryStayCard({ stay, locale }: { stay: OwnerStayDTO; locale: string }) {
+/** A single History Stay row: location, dates, an attended/cancelled tag, and actions (duplicate;
+ * permanent-delete for cancelled stays only — D8/D9). */
+function HistoryStayCard({
+  stay,
+  locale,
+  onDelete,
+}: {
+  stay: OwnerStayDTO;
+  locale: string;
+  onDelete: () => void;
+}) {
   const { t } = useTranslation();
   const cancelled = stay.historyTag === "cancelled";
   return (
@@ -109,6 +153,24 @@ function HistoryStayCard({ stay, locale }: { stay: OwnerStayDTO; locale: string 
         >
           {cancelled ? t("history.cancelled") : t("history.attended")}
         </span>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          to="/stays/new"
+          search={{ from: stay.id }}
+          className="rounded-lg border border-line px-4 py-2 text-sm font-bold text-ink"
+        >
+          {t("history.duplicate")}
+        </Link>
+        {cancelled && (
+          <button
+            type="button"
+            className="rounded-lg border border-clay-ink px-4 py-2 text-sm font-bold text-clay-ink"
+            onClick={onDelete}
+          >
+            {t("history.deletePermanently")}
+          </button>
+        )}
       </div>
     </article>
   );

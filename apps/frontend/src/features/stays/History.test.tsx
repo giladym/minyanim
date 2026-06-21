@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OwnerStayDTO } from "@minyanim/shared";
@@ -13,12 +13,15 @@ let infinite: {
   isFetchingNextPage: boolean;
 };
 
+const permaDeleteMutate = vi.fn();
+
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
 
 vi.mock("../../lib/stays", () => ({
   useStaysInfinite: () => infinite,
+  usePermanentDeleteStay: () => ({ mutate: permaDeleteMutate }),
 }));
 
 import { HistoryPage } from "./HistoryPage";
@@ -95,5 +98,17 @@ describe("HistoryPage (US2 — display, tags, year groups, infinite scroll)", ()
     render(<HistoryPage />);
     expect(screen.getByText("אין עדיין שהיות בהיסטוריה.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "טען עוד" })).not.toBeInTheDocument();
+  });
+
+  it("offers permanent-delete for a cancelled stay only, behind a confirm dialog", async () => {
+    const user = userEvent.setup();
+    render(<HistoryPage />);
+    // s1 is attended (no delete button), s2 is cancelled (delete offered).
+    const deleteButtons = screen.getAllByRole("button", { name: "מחיקה לצמיתות" });
+    expect(deleteButtons).toHaveLength(1);
+    await user.click(deleteButtons[0]!);
+    const dialog = await screen.findByRole("dialog", { name: "מחיקה לצמיתות" });
+    await user.click(within(dialog).getByRole("button", { name: "מחיקה לצמיתות" }));
+    expect(permaDeleteMutate).toHaveBeenCalledWith("s2");
   });
 });

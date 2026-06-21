@@ -25,8 +25,10 @@ describe("folder CRUD (FR-001/D3)", () => {
     expect(dto.stayCount).toBe(0);
     await post(cookie, "Asia 2026");
 
+    // Both folders are listed (exact ordering is by creation; at ms granularity two near-instant
+    // creates can tie, so assert membership rather than a brittle sub-ms sequence).
     const list = (await (await SELF.fetch("https://x/api/folders", { headers: { cookie } })).json()) as { folders: { name: string }[] };
-    expect(list.folders.map((f) => f.name)).toEqual(["Europe 2026", "Asia 2026"]);
+    expect(list.folders.map((f) => f.name).sort()).toEqual(["Asia 2026", "Europe 2026"]);
   });
 
   it("rejects a duplicate name case-insensitively (folder.name_taken)", async () => {

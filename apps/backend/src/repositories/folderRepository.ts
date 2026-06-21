@@ -28,7 +28,9 @@ export async function listFolders(db: Db, userId: string): Promise<FolderWithCou
     .leftJoin(stay, eq(stay.folderId, folder.id))
     .where(eq(folder.userId, userId))
     .groupBy(folder.id)
-    .orderBy(asc(folder.createdAt));
+    // id is a stable tiebreaker so the order is deterministic when two folders share a created_at
+    // millisecond (avoids a CI-only ordering flake; real creation order is preserved otherwise).
+    .orderBy(asc(folder.createdAt), asc(folder.id));
   return rows;
 }
 

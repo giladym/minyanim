@@ -10,10 +10,12 @@ import {
   getStayController,
   updateStayController,
   cancelStayController,
+  permanentDeleteStayController,
 } from "../controllers/stayController";
+import type { Logger } from "../lib/logger";
 import type { Env } from "../env";
 
-export const stays = new Hono<{ Bindings: Env }>();
+export const stays = new Hono<{ Bindings: Env; Variables: { log?: Logger } }>();
 
 /** Resolve the authenticated user id from the better-auth session, or 401. */
 async function requireUserId(c: { env: Env; req: { raw: Request } }): Promise<string> {
@@ -76,4 +78,13 @@ stays.post("/api/stays/:id/cancel", async (c) => {
   return c.json(
     await cancelStayController(createDb(c.env.DB), userId, c.req.param("id"), body.confirm === true),
   );
+});
+
+stays.delete("/api/stays/:id/permanent", async (c) => {
+  const userId = await requireUserId(c);
+  const id = c.req.param("id");
+  const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };
+  const res = await permanentDeleteStayController(createDb(c.env.DB), userId, id, body.confirm === true);
+  c.get("log")?.info("stay.permanently_deleted", { stayId: id });
+  return c.json(res);
 });

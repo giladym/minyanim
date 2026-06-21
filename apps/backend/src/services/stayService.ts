@@ -16,6 +16,7 @@ import {
   listStaysForHistory as repoHistory,
   updateStay as repoUpdate,
   cancelStay as repoCancel,
+  hardDeleteStay as repoHardDelete,
   type StayRow,
   type HistoryCursor,
 } from "../repositories/stayRepository";
@@ -315,4 +316,18 @@ export async function cancelStay(db: Db, userId: string, id: string): Promise<bo
   const ok = await repoCancel(db, userId, id);
   if (ok) await reconcileCommitmentsForStay(db, id);
   return ok;
+}
+
+/**
+ * Permanently hard-delete a stay (004 D8). Allowed ONLY when the stay is cancelled
+ * (`stay.not_cancelled` otherwise); 404 if missing/not owned. Linked `commitment.stay_id` rows are
+ * SET NULL via the FK (003 data stays consistent). The confirm guard is enforced by the controller.
+ */
+export async function permanentlyDeleteStay(db: Db, userId: string, id: string): Promise<void> {
+  const existing = await repoGet(db, userId, id);
+  if (!existing) throw new AppError(404, ERROR_CODES.RESOURCE_NOT_FOUND);
+  if (existing.status !== "cancelled") {
+    throw new AppError(400, ERROR_CODES.STAY_NOT_CANCELLED, "status");
+  }
+  await repoHardDelete(db, userId, id);
 }

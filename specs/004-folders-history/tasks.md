@@ -119,14 +119,14 @@ cannot be permanently deleted.
 
 ### Tests for User Story 3
 
-- [ ] T034 [P] [US3] Backend permanent-delete test in `apps/backend/test/stay-permanent.test.ts`: cancelled → hard-deleted; non-cancelled (active/attended) → `stay.not_cancelled`; missing `confirm` → `confirm.required`; not-owned → `404`; linked `commitment.stay_id` SET NULL. (SC-006/D8)
-- [ ] T035 [P] [US3] Frontend test: duplicate prefill (location/men/needs/contact/notes/folder copied, **dates cleared**) in `AddEditStayForm.test.tsx`; permanent-delete confirm dialog in `History.test.tsx`.
+- [x] T034 [P] [US3] Backend permanent-delete test in `apps/backend/test/stay-permanent.test.ts`: cancelled → hard-deleted; non-cancelled (active/attended) → `stay.not_cancelled`; missing `confirm` → `confirm.required`; not-owned → `404`; linked `commitment.stay_id` SET NULL. (SC-006/D8)
+- [x] T035 [P] [US3] Frontend test: duplicate prefill (location/men/needs/contact/notes/folder copied, **dates cleared**) in `AddEditStayForm.test.tsx`; permanent-delete confirm dialog in `History.test.tsx`.
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] `apps/backend/src/services/stayService.ts` + `routes/stays.ts`: `permanentDelete` — hard `DELETE` iff `status='cancelled'` (`stay.not_cancelled` else), confirm-guarded; `DELETE /api/stays/:id/permanent`. Structured log `stay.permanently_deleted`. (D8)
-- [ ] T037 [US3] Extend `apps/frontend/src/router.tsx` `staysNewRoute.validateSearch` with `?from=<stayId>`; `AddStayPage` prefills from `getStay(from)` with cleared dates incl. `folderId` (distinct from the edit `seeded` path). (D9/R9)
-- [ ] T038 [US3] `apps/frontend/src/features/stays/HistoryPage.tsx`: a "delete permanently" action (cancelled only) + confirm dialog; `lib/stays.ts` `permanentDelete` mutation invalidating `["stays","history"]`; a "duplicate" action on the Stay card linking to `/stays/new?from=`. (D8/D9)
+- [x] T036 [US3] `apps/backend/src/services/stayService.ts` + `routes/stays.ts`: `permanentDelete` — hard `DELETE` iff `status='cancelled'` (`stay.not_cancelled` else), confirm-guarded; `DELETE /api/stays/:id/permanent`. Structured log `stay.permanently_deleted`. (D8)
+- [x] T037 [US3] Extend `apps/frontend/src/router.tsx` `staysNewRoute.validateSearch` with `?from=<stayId>`; `AddStayPage` prefills from `getStay(from)` with cleared dates incl. `folderId` (distinct from the edit `seeded` path). (D9/R9)
+- [x] T038 [US3] `apps/frontend/src/features/stays/HistoryPage.tsx`: a "delete permanently" action (cancelled only) + confirm dialog; `lib/stays.ts` `permanentDelete` mutation invalidating `["stays","history"]`; a "duplicate" action on the Stay card linking to `/stays/new?from=`. (D8/D9)
 
 **Checkpoint**: All three stories independently functional.
 
@@ -135,7 +135,7 @@ cannot be permanently deleted.
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [ ] T039 [P] i18n he+en parity in `apps/frontend/src/i18n/`: `folders.{title,create,rename,delete,deleteWarn,nameTaken,unfiled}`, `history.{title,attended,cancelled,empty,loadMore}`, + the 004 error messages; ensure the existing he/en parity test passes. (FR-009/R12)
-- [ ] T040 [P] Structured logs (Workers Observability, no Winston) via the existing `createLogger` / `c.get("log")` pattern (as `index.ts` + the me/stays services already do): `folder.created`, `folder.deleted`, `stay.permanently_deleted`. (R12)
+- [x] T040 [P] Structured logs (Workers Observability, no Winston) via the existing `createLogger` / `c.get("log")` pattern (as `index.ts` + the me/stays services already do): `folder.created`, `folder.deleted`, `stay.permanently_deleted`. (R12)
 - [ ] T041 [P] e2e `apps/frontend/e2e/`: Playwright + axe-core for folder management + History — WCAG 2.1 AA, RTL, keyboard, ≥44px targets, `aria-live` (SC-007/FR-009).
 - [ ] T042 Run `specs/004-folders-history/quickstart.md` scenarios 1–4 against `pnpm dev`; fix any drift. Update `CLAUDE.md` (mark 004 complete) only at merge time.
 

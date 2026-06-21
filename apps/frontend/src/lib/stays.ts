@@ -61,6 +61,13 @@ export const cancelStay = (id: string) =>
     body: JSON.stringify({ confirm: true }),
   });
 
+/** DELETE /api/stays/{id}/permanent — hard-delete a cancelled Stay (confirm-guarded, D8). */
+export const permanentDeleteStay = (id: string) =>
+  api<{ ok: true }>(`/stays/${id}/permanent`, {
+    method: "DELETE",
+    body: JSON.stringify({ confirm: true }),
+  });
+
 /** TanStack Query hook for the dashboard list. */
 export function useStays() {
   return useQuery({ queryKey: STAYS_KEY, queryFn: listStays });
@@ -73,6 +80,15 @@ export function useStaysInfinite() {
     queryFn: ({ pageParam }) => listStayHistory(pageParam),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: HistoryPage) => last.nextCursor ?? undefined,
+  });
+}
+
+/** Permanent-delete mutation (History). Invalidates the history cache on settle (D8). */
+export function usePermanentDeleteStay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: permanentDeleteStay,
+    onSettled: () => qc.invalidateQueries({ queryKey: HISTORY_KEY }),
   });
 }
 

@@ -9,9 +9,10 @@ import {
   renameFolderController,
   deleteFolderController,
 } from "../controllers/folderController";
+import type { Logger } from "../lib/logger";
 import type { Env } from "../env";
 
-export const folders = new Hono<{ Bindings: Env }>();
+export const folders = new Hono<{ Bindings: Env; Variables: { log?: Logger } }>();
 
 /** Resolve the authenticated user id from the better-auth session, or 401. (mirrors routes/stays) */
 async function requireUserId(c: { env: Env; req: { raw: Request } }): Promise<string> {
@@ -34,7 +35,9 @@ folders.post("/api/folders", async (c) => {
       400,
     );
   }
-  return c.json(await createFolderController(createDb(c.env.DB), userId, parsed.data.name), 201);
+  const dto = await createFolderController(createDb(c.env.DB), userId, parsed.data.name);
+  c.get("log")?.info("folder.created", { folderId: dto.id });
+  return c.json(dto, 201);
 });
 
 folders.patch("/api/folders/:id", async (c) => {
@@ -53,8 +56,9 @@ folders.patch("/api/folders/:id", async (c) => {
 
 folders.delete("/api/folders/:id", async (c) => {
   const userId = await requireUserId(c);
+  const id = c.req.param("id");
   const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };
-  return c.json(
-    await deleteFolderController(createDb(c.env.DB), userId, c.req.param("id"), body.confirm === true),
-  );
+  const res = await deleteFolderController(createDb(c.env.DB), userId, id, body.confirm === true);
+  c.get("log")?.info("folder.deleted", { folderId: id });
+  return c.json(res);
 });

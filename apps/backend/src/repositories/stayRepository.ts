@@ -87,6 +87,16 @@ export async function updateStay(
   return rows[0] ?? null;
 }
 
+/** Hard-delete an owned stay (004 D8). Returns true if a row was removed. Linked
+ * `commitment.stay_id` rows are SET NULL via the FK. */
+export async function hardDeleteStay(db: Db, userId: string, id: string): Promise<boolean> {
+  const rows = await db
+    .delete(stay)
+    .where(and(eq(stay.id, id), eq(stay.userId, userId)))
+    .returning({ id: stay.id });
+  return rows.length > 0;
+}
+
 /** Soft-cancel an owned stay (status → 'cancelled'); returns true if a row was affected. */
 export async function cancelStay(db: Db, userId: string, id: string): Promise<boolean> {
   const rows = await db
