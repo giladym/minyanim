@@ -17,6 +17,9 @@ import {
   useFlagMinyan,
   type AnyMinyanDTO,
 } from "../../lib/events";
+import { useMinyanZmanim } from "../../lib/zmanim";
+import { useProfile } from "../../lib/profile";
+import { ZmanimSection } from "../stays/ZmanimSection";
 
 const STATUS_CLS: Record<MinyanStatus, string> = {
   ready: "text-teal-ink",
@@ -162,6 +165,11 @@ export function MinyanDetail() {
   const { data: m, isLoading } = useMinyan(id);
   const cancel = useCancelMinyan(id);
   const update = useUpdateMinyan(id);
+  const { data: profile } = useProfile();
+  // Shabbat zmanim only for a Saturday-dated minyan (UTC weekday = civil weekday by storage
+  // convention); the endpoint also enforces this server-side (D9).
+  const isShabbat = !!m && new Date(m.eventDate).getUTCDay() === 6;
+  const zmanimQuery = useMinyanZmanim(id, isShabbat);
 
   if (isLoading) return <p className="p-6 text-muted" dir="rtl">{t("discovery.loading")}</p>;
   if (!m) return <p className="p-6 text-muted" dir="rtl">{t("stays.loadError")}</p>;
@@ -197,6 +205,18 @@ export function MinyanDetail() {
           {t("minyanDetail.shareWhatsApp")}
         </a>
       </div>
+
+      {isShabbat && (
+        <section className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
+          <h2 className="text-lg font-extrabold text-ink">{t("zmanim.title")}</h2>
+          <ZmanimSection
+            data={zmanimQuery.data}
+            isLoading={zmanimQuery.isLoading}
+            isError={zmanimQuery.isError}
+            havdalahOpinion={profile?.havdalahOpinion ?? "geonim"}
+          />
+        </section>
+      )}
 
       {m.status !== "cancelled" && m.status !== "completed" && <CommitSection id={id} m={m} />}
 
