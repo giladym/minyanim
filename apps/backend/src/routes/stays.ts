@@ -5,14 +5,17 @@ import { createDb } from "../db/client";
 import { Unauthorized } from "../lib/errors";
 import {
   listStaysController,
+  listHistoryController,
   createStayController,
   getStayController,
   updateStayController,
   cancelStayController,
+  permanentDeleteStayController,
 } from "../controllers/stayController";
+import type { Logger } from "../lib/logger";
 import type { Env } from "../env";
 
-export const stays = new Hono<{ Bindings: Env }>();
+export const stays = new Hono<{ Bindings: Env; Variables: { log?: Logger } }>();
 
 /** Resolve the authenticated user id from the better-auth session, or 401. */
 async function requireUserId(c: { env: Env; req: { raw: Request } }): Promise<string> {
@@ -28,7 +31,14 @@ function clientTz(c: { req: { header(name: string): string | undefined } }): str
 
 stays.get("/api/stays", async (c) => {
   const userId = await requireUserId(c);
-  return c.json(await listStaysController(createDb(c.env.DB), userId, clientTz(c)));
+  const db = createDb(c.env.DB);
+  // scope=history → paginated past+cancelled; default scope=active → upcoming/in-progress (D1).
+  if (c.req.query("scope") === "history") {
+    const limitRaw = Number(c.req.query("limit"));
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 50) : undefined;
+    return c.json(await listHistoryController(db, userId, c.req.query("cursor"), limit));
+  }
+  return c.json(await listStaysController(db, userId, clientTz(c)));
 });
 
 stays.post("/api/stays", async (c) => {
@@ -68,4 +78,13 @@ stays.post("/api/stays/:id/cancel", async (c) => {
   return c.json(
     await cancelStayController(createDb(c.env.DB), userId, c.req.param("id"), body.confirm === true),
   );
+});
+
+stays.delete("/api/stays/:id/permanent", async (c) => {
+  const userId = await requireUserId(c);
+  const id = c.req.param("id");
+  const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };
+  const res = await permanentDeleteStayController(createDb(c.env.DB), userId, id, body.confirm === true);
+  c.get("log")?.info("stay.permanently_deleted", { stayId: id });
+  return c.json(res);
 });

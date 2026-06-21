@@ -1,13 +1,22 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type {
   CreateStayInputType,
   UpdateStayInputType,
   OwnerStayDTO,
+  HistoryPage,
 } from "@minyanim/shared";
 import { api } from "./api";
 
-/** Query key for the caller's Stay list (the single cache the dashboard reads). */
-export const STAYS_KEY = ["stays"] as const;
+/** Query key for the active-dashboard Stay list. Parameterized by scope (004 D13) — History uses
+ * `["stays","history"]` with an InfiniteData shape (see `useStaysInfinite`). */
+export const STAYS_KEY = ["stays", "active"] as const;
+/** Query key for the cursor-paginated History list (InfiniteData shape). */
+export const HISTORY_KEY = ["stays", "history"] as const;
 
 /** The device IANA timezone, sent on read/create/edit so the server can run the temporal check
  * (and derive `isPast`) for Stays that have no coordinates (D3). */
@@ -15,9 +24,15 @@ function clientTimezoneHeader(): Record<string, string> {
   return { "X-Client-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone };
 }
 
-/** GET /api/stays — caller's Stays, server-sorted nearest-first (active + past, no cancelled). */
+/** GET /api/stays?scope=active — caller's upcoming/in-progress Stays, nearest-first (D1). */
 export const listStays = () =>
-  api<{ stays: OwnerStayDTO[] }>("/stays", { headers: clientTimezoneHeader() }).then((r) => r.stays);
+  api<{ stays: OwnerStayDTO[] }>("/stays?scope=active", { headers: clientTimezoneHeader() }).then((r) => r.stays);
+
+/** GET /api/stays?scope=history — one page of past + cancelled Stays, newest-departure first. */
+export const listStayHistory = (cursor?: string) =>
+  api<HistoryPage>(`/stays?scope=history${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, {
+    headers: clientTimezoneHeader(),
+  });
 
 /** POST /api/stays — create a Stay. */
 export const createStay = (input: CreateStayInputType) =>
@@ -46,9 +61,35 @@ export const cancelStay = (id: string) =>
     body: JSON.stringify({ confirm: true }),
   });
 
+/** DELETE /api/stays/{id}/permanent — hard-delete a cancelled Stay (confirm-guarded, D8). */
+export const permanentDeleteStay = (id: string) =>
+  api<{ ok: true }>(`/stays/${id}/permanent`, {
+    method: "DELETE",
+    body: JSON.stringify({ confirm: true }),
+  });
+
 /** TanStack Query hook for the dashboard list. */
 export function useStays() {
   return useQuery({ queryKey: STAYS_KEY, queryFn: listStays });
+}
+
+/** Infinite-scroll hook for History — pages keyed by `nextCursor` (InfiniteData shape, D13). */
+export function useStaysInfinite() {
+  return useInfiniteQuery({
+    queryKey: HISTORY_KEY,
+    queryFn: ({ pageParam }) => listStayHistory(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: HistoryPage) => last.nextCursor ?? undefined,
+  });
+}
+
+/** Permanent-delete mutation (History). Invalidates the history cache on settle (D8). */
+export function usePermanentDeleteStay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: permanentDeleteStay,
+    onSettled: () => qc.invalidateQueries({ queryKey: HISTORY_KEY }),
+  });
 }
 
 /** Create mutation. Invalidates the list on settle so the new Stay appears (SC-002). */
@@ -84,7 +125,8 @@ export function useUpdateStay() {
   });
 }
 
-/** Cancel mutation with optimistic removal from the active list (SC-002 <2s), rollback on error. */
+/** Cancel mutation with optimistic removal from the active list (SC-002 <2s), rollback on error.
+ * A cancelled Stay moves to History, so the history cache is invalidated on settle too (D2). */
 export function useCancelStay() {
   const qc = useQueryClient();
   return useMutation({
@@ -103,6 +145,9 @@ export function useCancelStay() {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(STAYS_KEY, ctx.previous);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: STAYS_KEY }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: STAYS_KEY });
+      void qc.invalidateQueries({ queryKey: HISTORY_KEY });
+    },
   });
 }

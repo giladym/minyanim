@@ -25,6 +25,11 @@ export const ERROR_CODES = {
   PARTY_SIZE_INVALID: "party_size.invalid",
   NOT_COMMITTED: "not_committed",
   EVENT_TIME_INVALID: "event.time_invalid",
+  // 004 — Folders & History.
+  FOLDER_NAME_TAKEN: "folder.name_taken",
+  FOLDER_NAME_REQUIRED: "folder.name_required",
+  FOLDER_NAME_TOO_LONG: "folder.name_too_long",
+  STAY_NOT_CANCELLED: "stay.not_cancelled",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;

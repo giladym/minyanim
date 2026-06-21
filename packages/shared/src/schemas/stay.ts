@@ -21,6 +21,13 @@ export const StayStatusSchema = z.enum(["active", "cancelled"]);
 export type StayStatus = z.infer<typeof StayStatusSchema>;
 
 /**
+ * Which slice of a user's Stays to read (004 D1). `active` = the dashboard (upcoming/in-progress);
+ * `history` = past + cancelled, cursor-paginated. Membership is derived in-service, not stored.
+ */
+export const StayScope = z.enum(["active", "history"]);
+export type StayScopeType = z.infer<typeof StayScope>;
+
+/**
  * Create-Stay request body (shared SSOT). STRUCTURAL rules only — the temporal "not in the
  * past" check is destination-timezone-aware and runs server-side (T013). Dates are date-only
  * epoch-ms at UTC midnight of the civil date (D4).
@@ -107,18 +114,33 @@ export interface OwnerStayDTO {
   groupMembers: string | null;
   notes: string | null;
   folderId: string | null;
+  /**
+   * History tag (004 D2), derived in `toOwnerDTO`: `cancelled` if the Stay is cancelled, else
+   * `attended` if past, else `null` (active/upcoming). Owner-only — omitted from `PublicStayDTO`.
+   */
+  historyTag: "attended" | "cancelled" | null;
   createdAt: number;
   updatedAt: number;
 }
 
 /**
  * Public Stay representation (003). Structurally OMITS the private fields so they can never
- * leak even when a response is hand-built (D8).
+ * leak even when a response is hand-built (D8); also omits the owner-only `historyTag` (004 D11).
  */
 export type PublicStayDTO = Omit<
   OwnerStayDTO,
-  "addressPrivate" | "contactPhone" | "contactEmail"
+  "addressPrivate" | "contactPhone" | "contactEmail" | "historyTag"
 >;
+
+/**
+ * A page of History Stays (004 D10). `nextCursor` is an opaque base64 token
+ * (`${departureDateMs}_${id}`) or `null` when the source is exhausted. Hand-built by the
+ * controller (like `toOwnerResponse`) — not a Zod schema.
+ */
+export interface HistoryPage {
+  stays: OwnerStayDTO[];
+  nextCursor: string | null;
+}
 
 /**
  * Project an owner DTO to its public form by structurally stripping the private fields

@@ -80,6 +80,24 @@ export const phoneNumber = sqliteTable(
   (t) => [index("phone_user_idx").on(t.userId)],
 );
 
+// ── Feature 004: Folders ─────────────────────────────────────────────────────
+// A user-owned grouping of that user's Stays (D3). Cascades on user delete; the Stays survive
+// (their folder_id is SET NULL — "Unfiled" — D4). Per-user case-insensitive name uniqueness is
+// enforced by a raw NOCASE unique index added in the migration (Drizzle can't express COLLATE).
+export const folder = sqliteTable(
+  "folder",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [index("folder_user_idx").on(t.userId)],
+);
+
 // A user's presence at a place over a date range (002). Owned by a user; cascades on user delete.
 // Dates are stored as date-only epoch-ms at UTC midnight of the civil date (D4); compared via the
 // destination-tz civil-date algorithm (D3), never numerically.
@@ -106,7 +124,9 @@ export const stay = sqliteTable(
     contactEmail: text("contact_email"),
     groupMembers: text("group_members"),
     notes: text("notes"),
-    folderId: text("folder_id"),
+    // 004 D4: "Unfiled" = NULL. ON DELETE SET NULL reassigns a deleted folder's Stays to Unfiled
+    // in a single DELETE (no app-side loop, no interactive txn).
+    folderId: text("folder_id").references(() => folder.id, { onDelete: "set null" }),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
@@ -115,6 +135,10 @@ export const stay = sqliteTable(
     index("stay_user_arrival_idx").on(t.userId, t.arrivalDate),
     // 003 (D15 geospatial seam): bounding-box scan for cross-user "potential" aggregation.
     index("stay_lat_lng_idx").on(t.lat, t.lng),
+    // 004: browse-by-folder (D6) and History keyset (id in the index so the
+    // (departure_date DESC, id DESC) tiebreaker doesn't filesort — R5).
+    index("stay_user_folder_idx").on(t.userId, t.folderId),
+    index("stay_user_departure_idx").on(t.userId, t.departureDate, t.id),
   ],
 );
 

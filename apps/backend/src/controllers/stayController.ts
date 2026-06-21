@@ -7,8 +7,10 @@ import {
   createStay as svcCreate,
   getStay as svcGet,
   listStays as svcList,
+  listStayHistory as svcHistory,
   updateStay as svcUpdate,
   cancelStay as svcCancel,
+  permanentlyDeleteStay as svcPermanentDelete,
 } from "../services/stayService";
 
 /**
@@ -38,15 +40,27 @@ function toOwnerResponse(dto: OwnerStayDTO): OwnerStayDTO {
     groupMembers: dto.groupMembers,
     notes: dto.notes,
     folderId: dto.folderId,
+    historyTag: dto.historyTag,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
   };
 }
 
-/** List the user's active stays (nearest-first). */
+/** List the user's active-dashboard stays (upcoming/in-progress, nearest-first). */
 export async function listStaysController(db: Db, userId: string, clientTz?: string) {
   const stays = await svcList(db, userId, clientTz);
   return { stays: stays.map(toOwnerResponse) };
+}
+
+/** A page of the user's History (past + cancelled, newest-first, cursor-paginated). */
+export async function listHistoryController(
+  db: Db,
+  userId: string,
+  cursor?: string,
+  limit?: number,
+) {
+  const page = await svcHistory(db, userId, cursor, limit);
+  return { stays: page.stays.map(toOwnerResponse), nextCursor: page.nextCursor };
 }
 
 /** Create a stay. */
@@ -86,4 +100,16 @@ export async function cancelStayController(db: Db, userId: string, id: string, c
   const ok = await svcCancel(db, userId, id);
   if (!ok) throw NotFound();
   return { ok: true };
+}
+
+/** Permanently hard-delete a cancelled stay (confirm-guarded; `stay.not_cancelled` otherwise). */
+export async function permanentDeleteStayController(
+  db: Db,
+  userId: string,
+  id: string,
+  confirm: boolean,
+) {
+  if (confirm !== true) throw new AppError(400, ERROR_CODES.CONFIRM_REQUIRED, "confirm");
+  await svcPermanentDelete(db, userId, id);
+  return { ok: true as const };
 }

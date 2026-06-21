@@ -4,6 +4,7 @@ import {
   type CreateStayInputType,
   type UpdateStayInputType,
   type OwnerStayDTO,
+  type HistoryPage,
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
 import { AppError } from "../lib/errors";
@@ -12,13 +13,19 @@ import {
   createStay as repoCreate,
   getStayById as repoGet,
   listStays as repoList,
+  listStaysForHistory as repoHistory,
   updateStay as repoUpdate,
   cancelStay as repoCancel,
+  hardDeleteStay as repoHardDelete,
   type StayRow,
+  type HistoryCursor,
 } from "../repositories/stayRepository";
 // 003 (D12/R9): after a Stay cancel/edit, reconcile any commitments linked to it (auto-withdraw
 // when the Stay no longer covers the event date). 002 service → 003 service is the intended seam.
 import { reconcileCommitmentsForStay } from "./commitmentService";
+// 004 (R7/D6): assigning a Stay to a folder must verify the caller owns it (FK alone is not enough
+// — a foreign folder row exists, so the FK passes). Throws NotFound, never leaking existence.
+import { assertFolderOwned } from "./folderService";
 
 /** Normalize an epoch-ms instant to a Date at UTC midnight of its UTC civil date (D4). */
 function toUtcMidnight(epochMs: number): Date {
@@ -68,6 +75,13 @@ function assertNotPast(date: Date, tz: string | null, field: string): void {
 function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
   const tz = resolveTz(row.lat, row.lng, clientTz) ?? "UTC";
   const departureCivil = civilDate(row.departureDate, "UTC");
+  const status = row.status === "cancelled" ? "cancelled" : "active";
+  const isPast = departureCivil < todayCivil(tz);
+  // historyTag (004 D2): cancelled wins over attended; active+past → attended; else null
+  // (active/upcoming). For coordless Stays read on the History path, callers omit clientTz so tz
+  // falls back to UTC — keeping History membership stable across devices (R5).
+  const historyTag: OwnerStayDTO["historyTag"] =
+    status === "cancelled" ? "cancelled" : isPast ? "attended" : null;
   return {
     id: row.id,
     city: row.city,
@@ -80,8 +94,8 @@ function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
     numMen: row.numMen,
     bringsSeferTorah: row.bringsSeferTorah,
     prayerNeeds: PrayerNeedsSchema.parse(row.prayerNeeds),
-    status: row.status === "cancelled" ? "cancelled" : "active",
-    isPast: departureCivil < todayCivil(tz),
+    status,
+    isPast,
     coversShabbat: coversShabbat(row.arrivalDate, row.departureDate, tz),
     contactName: row.contactName,
     contactPhone: row.contactPhone,
@@ -89,6 +103,7 @@ function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
     groupMembers: row.groupMembers,
     notes: row.notes,
     folderId: row.folderId,
+    historyTag,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
   };
@@ -110,6 +125,7 @@ export async function createStay(
   const departure = toUtcMidnight(input.departureDate);
   const tz = resolveTz(input.lat, input.lng, clientTz);
   assertNotPast(arrival, tz, "arrivalDate");
+  if (input.folderId != null) await assertFolderOwned(db, userId, input.folderId);
 
   const now = new Date();
   const row = await repoCreate(db, {
@@ -154,7 +170,9 @@ export async function getStay(
 }
 
 /**
- * List the user's active stays, nearest-first, as owner DTOs.
+ * List the user's ACTIVE-dashboard stays (004 D1): `status='active'` AND not past
+ * (upcoming/in-progress), nearest-first. Past-active stays move to History — so they're filtered
+ * out here in-service (`isPast` is tz-derived, not a SQL column).
  *
  * @param clientTz The viewer's `X-Client-Timezone`, threaded into `isPast` for coordless stays.
  */
@@ -164,7 +182,72 @@ export async function listStays(
   clientTz?: string,
 ): Promise<OwnerStayDTO[]> {
   const rows = await repoList(db, userId);
-  return rows.map((row) => toOwnerDTO(row, clientTz));
+  return rows.map((row) => toOwnerDTO(row, clientTz)).filter((s) => !s.isPast);
+}
+
+/** Default History page size (004 D10). The repo over-fetches a +1 probe to detect a next page. */
+const HISTORY_PAGE_SIZE = 20;
+/** Max coarse batches to scan per page request — a safety bound on the refine loop. */
+const HISTORY_MAX_BATCHES = 20;
+
+/** Encode a kept row's keyset position as an opaque cursor: base64 `${departureMs}_${id}`. */
+function encodeCursor(dto: OwnerStayDTO): string {
+  return btoa(`${dto.departureDate}_${dto.id}`);
+}
+
+/** Decode a cursor back to its keyset components, or null if absent/malformed. */
+function decodeCursor(cursor?: string): HistoryCursor | null {
+  if (!cursor) return null;
+  try {
+    const [ms, id] = atob(cursor).split("_");
+    const departureMs = Number(ms);
+    if (!id || !Number.isFinite(departureMs)) return null;
+    return { departureMs, id };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The History page (004 D2/D10/R5): past (`attended`) + cancelled stays, newest-departure first,
+ * keyset-paginated. Because `isPast`/`historyTag` are tz-derived in-service (not SQL), the coarse
+ * SQL over-fetches, this refines by `historyTag != null`, and the cursor is re-derived from the
+ * last KEPT row — looping over batches until `pageSize + 1` kept rows accumulate (the +1 proves a
+ * next page) or the source is exhausted, so pages are complete + non-duplicated (SC-005).
+ *
+ * Coordless stays are mapped WITHOUT `clientTz` → their `isPast` pins to UTC, keeping History
+ * membership stable across devices (R5/ARC-10).
+ */
+export async function listStayHistory(
+  db: Db,
+  userId: string,
+  cursor?: string,
+  limit: number = HISTORY_PAGE_SIZE,
+): Promise<HistoryPage> {
+  // Coarse boundary: tomorrow's UTC midnight (today_utc + 1 day) — inclusive of anything that the
+  // tz-aware refine might still keep, never excluding a real history row.
+  const now = new Date();
+  const boundary = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+
+  const kept: OwnerStayDTO[] = [];
+  let coarse = decodeCursor(cursor);
+  let exhausted = false;
+  for (let batch = 0; kept.length <= limit && !exhausted && batch < HISTORY_MAX_BATCHES; batch++) {
+    const rows = await repoHistory(db, userId, boundary, coarse, limit + 1);
+    if (rows.length === 0) break;
+    for (const row of rows) {
+      const dto = toOwnerDTO(row); // no clientTz → coordless pins to UTC (R5)
+      if (dto.historyTag !== null) kept.push(dto);
+    }
+    const last = rows[rows.length - 1]!;
+    coarse = { departureMs: last.departureDate.getTime(), id: last.id };
+    if (rows.length < limit + 1) exhausted = true; // SQL returned a short batch → source done
+  }
+
+  const hasMore = kept.length > limit;
+  const stays = kept.slice(0, limit);
+  const nextCursor = hasMore && stays.length > 0 ? encodeCursor(stays[stays.length - 1]!) : null;
+  return { stays, nextCursor };
 }
 
 /**
@@ -182,6 +265,8 @@ export async function updateStay(
 ): Promise<OwnerStayDTO | null> {
   const existing = await repoGet(db, userId, id);
   if (!existing) return null;
+  // Assigning/moving to a folder: verify ownership before the write (R7). null = move to Unfiled.
+  if (input.folderId != null) await assertFolderOwned(db, userId, input.folderId);
 
   const lat = input.lat !== undefined ? input.lat : existing.lat;
   const lng = input.lng !== undefined ? input.lng : existing.lng;
@@ -231,4 +316,18 @@ export async function cancelStay(db: Db, userId: string, id: string): Promise<bo
   const ok = await repoCancel(db, userId, id);
   if (ok) await reconcileCommitmentsForStay(db, id);
   return ok;
+}
+
+/**
+ * Permanently hard-delete a stay (004 D8). Allowed ONLY when the stay is cancelled
+ * (`stay.not_cancelled` otherwise); 404 if missing/not owned. Linked `commitment.stay_id` rows are
+ * SET NULL via the FK (003 data stays consistent). The confirm guard is enforced by the controller.
+ */
+export async function permanentlyDeleteStay(db: Db, userId: string, id: string): Promise<void> {
+  const existing = await repoGet(db, userId, id);
+  if (!existing) throw new AppError(404, ERROR_CODES.RESOURCE_NOT_FOUND);
+  if (existing.status !== "cancelled") {
+    throw new AppError(400, ERROR_CODES.STAY_NOT_CANCELLED, "status");
+  }
+  await repoHardDelete(db, userId, id);
 }

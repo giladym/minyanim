@@ -5,6 +5,7 @@ import { createAuth } from "./auth";
 import { me } from "./routes/me";
 import { calendar } from "./routes/calendar";
 import { stays } from "./routes/stays";
+import { folders } from "./routes/folders";
 import { geo } from "./routes/geo";
 import { discovery } from "./routes/discovery";
 import { events } from "./routes/events";
@@ -45,6 +46,8 @@ app.route("/", me);
 app.route("/", calendar);
 // Stays (CRUD) — auth-guarded, layered route→controller→service→repository. (002)
 app.route("/", stays);
+// Folders (CRUD) — auth-guarded; Stays assign via folder_id, delete reassigns to Unfiled. (004)
+app.route("/", folders);
 // Geocoding proxy (auth + rate-limited) — keeps the MapTiler key server-side. (002)
 app.route("/", geo);
 // Discovery (auth-guarded) — per-Shabbat potential + hosted minyanim in an area. (003 US1)

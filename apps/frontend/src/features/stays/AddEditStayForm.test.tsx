@@ -8,10 +8,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const navigate = vi.fn();
 const createMutate = vi.fn();
 const updateMutate = vi.fn();
+const getStayMock = vi.fn();
+const createFolderMock = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
   useParams: () => ({ id: "stay_1" }),
+  useSearch: () => ({}),
 }));
 
 vi.mock("../../lib/profile", () => ({
@@ -23,7 +26,17 @@ vi.mock("../../lib/profile", () => ({
 vi.mock("../../lib/stays", () => ({
   useCreateStay: () => ({ isPending: false, mutateAsync: createMutate }),
   useUpdateStay: () => ({ isPending: false, mutateAsync: updateMutate }),
-  getStay: vi.fn(),
+  getStay: (...args: unknown[]) => getStayMock(...args),
+}));
+
+vi.mock("../../lib/folders", () => ({
+  useFolders: () => ({
+    data: [
+      { id: "fld_a", name: "אירופה 2026", stayCount: 2, createdAt: 0 },
+      { id: "fld_b", name: "אסיה", stayCount: 0, createdAt: 1 },
+    ],
+  }),
+  useCreateFolder: () => ({ isPending: false, mutateAsync: createFolderMock }),
 }));
 
 import { AddEditStayForm } from "./AddEditStayForm";
@@ -158,6 +171,130 @@ describe("AddEditStayForm — smart defaults & disclosure", () => {
     expect(screen.queryByLabelText("כתובת מדויקת")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "פרטים נוספים" }));
     expect(screen.getByLabelText("כתובת מדויקת")).toBeInTheDocument();
+  });
+});
+
+describe("AddEditStayForm — folder assignment (004 US1 / R10)", () => {
+  it("includes the selected folderId in the submitted payload", async () => {
+    createMutate.mockResolvedValue({ id: "stay_new" });
+    const user = userEvent.setup();
+    render(<AddEditStayForm />);
+    await fillLocationManually(user, "לונדון", "בריטניה");
+    await fillDates(user, "2099-01-10", "2099-01-12");
+    await user.selectOptions(screen.getByLabelText("תיקייה"), "fld_a");
+    await user.click(submitButton());
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(expect.objectContaining({ folderId: "fld_a" }));
+  });
+
+  it("defaults folderId to null (Unfiled) when none is chosen", async () => {
+    createMutate.mockResolvedValue({ id: "stay_new" });
+    const user = userEvent.setup();
+    render(<AddEditStayForm />);
+    await fillLocationManually(user, "לונדון", "בריטניה");
+    await fillDates(user, "2099-01-10", "2099-01-12");
+    await user.click(submitButton());
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(expect.objectContaining({ folderId: null }));
+  });
+
+  it("seeds folderId from the loaded Stay on edit", async () => {
+    getStayMock.mockResolvedValue({
+      id: "stay_1",
+      city: "פריז",
+      country: "צרפת",
+      lat: null,
+      lng: null,
+      arrivalDate: Date.UTC(2099, 0, 10),
+      departureDate: Date.UTC(2099, 0, 12),
+      numMen: 3,
+      bringsSeferTorah: false,
+      prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
+      status: "active",
+      isPast: false,
+      coversShabbat: false,
+      contactName: null,
+      contactPhone: null,
+      contactEmail: null,
+      groupMembers: null,
+      notes: null,
+      folderId: "fld_b",
+      historyTag: null,
+      createdAt: 0,
+      updatedAt: 0,
+    });
+    render(<AddEditStayForm stayId="stay_1" />);
+    await waitFor(() => expect(screen.getByLabelText("תיקייה")).toHaveValue("fld_b"));
+  });
+
+  it("inline-creates a folder and assigns it to the new Stay", async () => {
+    createMutate.mockResolvedValue({ id: "stay_new" });
+    createFolderMock.mockResolvedValue({ id: "fld_new", name: "חדשה", stayCount: 0, createdAt: 2 });
+    const user = userEvent.setup();
+    render(<AddEditStayForm />);
+    await fillLocationManually(user, "לונדון", "בריטניה");
+    await fillDates(user, "2099-01-10", "2099-01-12");
+    await user.click(screen.getByRole("button", { name: "תיקייה חדשה" }));
+    await user.type(screen.getByLabelText("תיקייה חדשה"), "חדשה");
+    await user.click(screen.getByRole("button", { name: "יצירה" }));
+    await waitFor(() => expect(createFolderMock).toHaveBeenCalledWith("חדשה"));
+    await user.click(submitButton());
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(expect.objectContaining({ folderId: "fld_new" }));
+  });
+});
+
+describe("AddEditStayForm — duplicate prefill (004 US3 / D9)", () => {
+  const source = {
+    id: "stay_src",
+    city: "ברצלונה",
+    country: "ספרד",
+    lat: 41.39,
+    lng: 2.16,
+    arrivalDate: Date.UTC(2025, 0, 10),
+    departureDate: Date.UTC(2025, 0, 12),
+    numMen: 7,
+    bringsSeferTorah: true,
+    prayerNeeds: { weekday: { shacharit: true, mincha: false, maariv: false } },
+    status: "active",
+    isPast: true,
+    coversShabbat: false,
+    contactName: "מקור",
+    contactPhone: null,
+    contactEmail: null,
+    groupMembers: null,
+    notes: null,
+    folderId: "fld_a",
+    historyTag: "attended",
+    createdAt: 0,
+    updatedAt: 0,
+  };
+
+  it("prefills details + folder from the source with CLEARED dates, then saves a new Stay", async () => {
+    getStayMock.mockResolvedValue(source);
+    createMutate.mockResolvedValue({ id: "stay_dup" });
+    const user = userEvent.setup();
+    render(<AddEditStayForm duplicateFromId="stay_src" />);
+
+    // Details copied; dates cleared (empty inputs).
+    await waitFor(() => expect(screen.getByLabelText("כמה גברים בקבוצה (כולל אותך)")).toHaveValue(7));
+    expect(screen.getByLabelText("תיקייה")).toHaveValue("fld_a");
+    expect(screen.getByLabelText("תאריך הגעה")).toHaveValue("");
+    expect(screen.getByLabelText("תאריך עזיבה")).toHaveValue("");
+
+    // Set fresh future dates and save — a normal create with the copied content + new dates.
+    await fillDates(user, "2099-03-01", "2099-03-05");
+    await user.click(submitButton());
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        city: "ברצלונה",
+        numMen: 7,
+        folderId: "fld_a",
+        arrivalDate: Date.UTC(2099, 2, 1),
+        departureDate: Date.UTC(2099, 2, 5),
+      }),
+    );
   });
 });
 

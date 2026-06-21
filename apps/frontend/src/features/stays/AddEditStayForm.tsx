@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import {
   CreateStayInput,
   type CreateStayInputType,
@@ -8,6 +8,7 @@ import {
 } from "@minyanim/shared";
 import { getProfile } from "../../lib/profile";
 import { getStay, useCreateStay, useUpdateStay } from "../../lib/stays";
+import { useFolders, useCreateFolder } from "../../lib/folders";
 import { ApiError } from "../../lib/api";
 import { LocationPicker, type LocationValue } from "./LocationPicker";
 import { PrayerNeeds } from "./PrayerNeeds";
@@ -74,7 +75,14 @@ const DETAIL_ERROR_FIELDS = new Set([
  *
  * @param stayId When present, the form edits an existing Stay (PATCH); otherwise it creates one.
  */
-export function AddEditStayForm({ stayId }: { stayId?: string }) {
+export function AddEditStayForm({
+  stayId,
+  duplicateFromId,
+}: {
+  stayId?: string;
+  /** When set (create mode), prefill from this source Stay with cleared dates (004 D9). */
+  duplicateFromId?: string;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isEdit = Boolean(stayId);
@@ -96,6 +104,10 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderError, setNewFolderError] = useState("");
 
   const [showDetails, setShowDetails] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -127,6 +139,8 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
 
   const create = useCreateStay();
   const update = useUpdateStay();
+  const { data: folders } = useFolders();
+  const createFolder = useCreateFolder();
   const busy = create.isPending || update.isPending;
 
   // Date-driven Shabbat affordance: show the note only when the range covers a Fri/Sat (FR-009).
@@ -135,16 +149,17 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
     [arrival, departure],
   );
 
-  // Smart defaults: pre-fill contact (name + first phone) from the profile (D12). Create only.
+  // Smart defaults: pre-fill contact (name + first phone) from the profile (D12). Fresh-create
+  // only — skipped when editing or duplicating (the source Stay's contact is used instead).
   useEffect(() => {
-    if (isEdit) return;
+    if (isEdit || duplicateFromId) return;
     getProfile()
       .then((p) => {
         setContactName((prev) => prev || p.name);
         setContactPhone((prev) => prev || p.phones[0]?.e164 || "");
       })
       .catch(() => {});
-  }, [isEdit]);
+  }, [isEdit, duplicateFromId]);
 
   // Edit: seed the form from the existing Stay — exactly ONCE. Guard with a ref so a later
   // re-render that re-runs this effect (e.g. `t` changing identity on a language switch) can't
@@ -167,10 +182,36 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
         setContactName(s.contactName ?? "");
         setContactPhone(s.contactPhone ?? "");
         setContactEmail(s.contactEmail ?? "");
+        setFolderId(s.folderId ?? null);
         if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
       })
       .catch(() => setSubmitError(t("stays.loadError")));
   }, [stayId, t]);
+
+  // Duplicate: prefill from a source Stay (D9) — everything EXCEPT dates, which the user re-picks.
+  // Once-guarded like the edit seed; distinct from it (create mode, dates intentionally cleared).
+  const duplicated = useRef(false);
+  useEffect(() => {
+    if (stayId || !duplicateFromId || duplicated.current) return;
+    duplicated.current = true;
+    getStay(duplicateFromId)
+      .then((s) => {
+        setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
+        setNumMen(s.numMen);
+        setBringsSeferTorah(s.bringsSeferTorah);
+        setPrayerNeeds(s.prayerNeeds);
+        setAddressPrivate(s.addressPrivate ?? "");
+        setGroupMembers(s.groupMembers ?? "");
+        setNotes(s.notes ?? "");
+        setContactName(s.contactName ?? "");
+        setContactPhone(s.contactPhone ?? "");
+        setContactEmail(s.contactEmail ?? "");
+        setFolderId(s.folderId ?? null);
+        if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
+        // Dates are intentionally left empty — the duplicate is for a new trip.
+      })
+      .catch(() => setSubmitError(t("stays.loadError")));
+  }, [stayId, duplicateFromId, t]);
 
   const payload: CreateStayInputType = useMemo(
     () => ({
@@ -189,9 +230,9 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
       contactEmail: contactEmail || null,
       groupMembers: groupMembers || null,
       notes: notes || null,
-      folderId: null,
+      folderId,
     }),
-    [location, addressPrivate, arrival, departure, numMen, bringsSeferTorah, prayerNeeds, contactName, contactPhone, contactEmail, groupMembers, notes],
+    [location, addressPrivate, arrival, departure, numMen, bringsSeferTorah, prayerNeeds, contactName, contactPhone, contactEmail, groupMembers, notes, folderId],
   );
 
   function applyApiError(err: unknown) {
@@ -330,6 +371,85 @@ export function AddEditStayForm({ stayId }: { stayId?: string }) {
         </Card>
 
         <Card>
+          <label className="block">
+            <span className={labelCls}>{t("folders.label")}</span>
+            {creatingFolder ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <input
+                    className={fieldCls}
+                    value={newFolderName}
+                    maxLength={60}
+                    autoFocus
+                    aria-label={t("folders.newLabel")}
+                    placeholder={t("folders.newPlaceholder")}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    disabled={createFolder.isPending || !newFolderName.trim()}
+                    className="shrink-0 rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay disabled:opacity-60"
+                    onClick={async () => {
+                      setNewFolderError("");
+                      try {
+                        const f = await createFolder.mutateAsync(newFolderName.trim());
+                        setFolderId(f.id);
+                        setNewFolderName("");
+                        setCreatingFolder(false);
+                      } catch (err) {
+                        setNewFolderError(
+                          err instanceof ApiError && err.body.errors[0]?.code
+                            ? err.body.errors[0].code
+                            : "server.error",
+                        );
+                      }
+                    }}
+                  >
+                    {t("folders.create")}
+                  </button>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-xl border border-line px-3 py-2.5 text-sm font-bold text-ink"
+                    onClick={() => {
+                      setCreatingFolder(false);
+                      setNewFolderError("");
+                    }}
+                  >
+                    {t("folders.cancel")}
+                  </button>
+                </div>
+                {newFolderError && (
+                  <span role="alert" className={errCls}>{t(`errors.${newFolderError}`)}</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <select
+                  className={fieldCls}
+                  value={folderId ?? ""}
+                  aria-label={t("folders.label")}
+                  onChange={(e) => setFolderId(e.target.value || null)}
+                >
+                  <option value="">{t("folders.unfiled")}</option>
+                  {(folders ?? []).map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-xl border border-clay px-4 py-2.5 text-sm font-bold text-clay"
+                  onClick={() => setCreatingFolder(true)}
+                >
+                  {t("folders.createInline")}
+                </button>
+              </div>
+            )}
+          </label>
+        </Card>
+
+        <Card>
           <button
             type="button"
             className="flex w-full items-center justify-between text-start text-sm font-bold text-clay"
@@ -437,9 +557,10 @@ function Card({ children }: { children: ReactNode }) {
   return <section className="rounded-2xl border border-line bg-surface p-5">{children}</section>;
 }
 
-/** Route entry for `/stays/new` — creates a new Stay. */
+/** Route entry for `/stays/new` — creates a new Stay (optionally a duplicate via `?from=`). */
 export function AddStayPage() {
-  return <AddEditStayForm />;
+  const { from } = useSearch({ from: "/authed/stays/new" });
+  return <AddEditStayForm duplicateFromId={from} />;
 }
 
 /** Route entry for `/stays/$id/edit` — edits the Stay named by the route param. */
