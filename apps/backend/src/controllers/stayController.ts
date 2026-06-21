@@ -7,6 +7,7 @@ import {
   createStay as svcCreate,
   getStay as svcGet,
   listStays as svcList,
+  listStayHistory as svcHistory,
   updateStay as svcUpdate,
   cancelStay as svcCancel,
 } from "../services/stayService";
@@ -44,10 +45,21 @@ function toOwnerResponse(dto: OwnerStayDTO): OwnerStayDTO {
   };
 }
 
-/** List the user's active stays (nearest-first). */
+/** List the user's active-dashboard stays (upcoming/in-progress, nearest-first). */
 export async function listStaysController(db: Db, userId: string, clientTz?: string) {
   const stays = await svcList(db, userId, clientTz);
   return { stays: stays.map(toOwnerResponse) };
+}
+
+/** A page of the user's History (past + cancelled, newest-first, cursor-paginated). */
+export async function listHistoryController(
+  db: Db,
+  userId: string,
+  cursor?: string,
+  limit?: number,
+) {
+  const page = await svcHistory(db, userId, cursor, limit);
+  return { stays: page.stays.map(toOwnerResponse), nextCursor: page.nextCursor };
 }
 
 /** Create a stay. */

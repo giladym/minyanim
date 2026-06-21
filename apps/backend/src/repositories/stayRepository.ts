@@ -1,6 +1,9 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, lt, or } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { stay } from "../db/schema";
+
+/** Keyset cursor for History pagination: the last row's (departure_date epoch-ms, id). */
+export type HistoryCursor = { departureMs: number; id: string };
 
 /** A stay row as stored (Drizzle handles the JSON + timestamp + boolean round-trips). */
 export type StayRow = typeof stay.$inferSelect;
@@ -30,6 +33,40 @@ export async function listStays(db: Db, userId: string): Promise<StayRow[]> {
     .from(stay)
     .where(and(eq(stay.userId, userId), eq(stay.status, "active")))
     .orderBy(asc(stay.arrivalDate));
+}
+
+/**
+ * Coarse keyset page for History (004 R4/R5). Inclusively matches rows that COULD be history —
+ * `status='cancelled'` OR `departure_date` before `boundary` (today_utc + 1 day, a buffer so the
+ * in-service tz-aware `isPast` refine never excludes a row this SQL dropped). Ordered
+ * `(departure_date DESC, id DESC)` over `stay_user_departure_idx`; `cursor` (if given) returns only
+ * rows strictly after it. The caller over-fetches, refines by `historyTag`, and re-derives the
+ * cursor from the last KEPT row.
+ */
+export async function listStaysForHistory(
+  db: Db,
+  userId: string,
+  boundary: Date,
+  cursor: HistoryCursor | null,
+  limit: number,
+): Promise<StayRow[]> {
+  const coarse = or(eq(stay.status, "cancelled"), lt(stay.departureDate, boundary));
+  const conds = [eq(stay.userId, userId), coarse];
+  if (cursor) {
+    const cDate = new Date(cursor.departureMs);
+    conds.push(
+      or(
+        lt(stay.departureDate, cDate),
+        and(eq(stay.departureDate, cDate), lt(stay.id, cursor.id)),
+      )!,
+    );
+  }
+  return db
+    .select()
+    .from(stay)
+    .where(and(...conds))
+    .orderBy(desc(stay.departureDate), desc(stay.id))
+    .limit(limit);
 }
 
 /**

@@ -5,6 +5,7 @@ import { createDb } from "../db/client";
 import { Unauthorized } from "../lib/errors";
 import {
   listStaysController,
+  listHistoryController,
   createStayController,
   getStayController,
   updateStayController,
@@ -28,7 +29,14 @@ function clientTz(c: { req: { header(name: string): string | undefined } }): str
 
 stays.get("/api/stays", async (c) => {
   const userId = await requireUserId(c);
-  return c.json(await listStaysController(createDb(c.env.DB), userId, clientTz(c)));
+  const db = createDb(c.env.DB);
+  // scope=history → paginated past+cancelled; default scope=active → upcoming/in-progress (D1).
+  if (c.req.query("scope") === "history") {
+    const limitRaw = Number(c.req.query("limit"));
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 50) : undefined;
+    return c.json(await listHistoryController(db, userId, c.req.query("cursor"), limit));
+  }
+  return c.json(await listStaysController(db, userId, clientTz(c)));
 });
 
 stays.post("/api/stays", async (c) => {

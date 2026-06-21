@@ -22,6 +22,7 @@ const owner: OwnerStayDTO = {
   groupMembers: null,
   notes: null,
   folderId: null,
+  historyTag: null,
   createdAt: Date.UTC(2026, 0, 1),
   updatedAt: Date.UTC(2026, 0, 1),
 };
@@ -36,5 +37,9 @@ describe("PublicStayDTO (private-field non-exposure, FR-007/D8)", () => {
     // Non-private fields survive.
     expect(keys).toContain("city");
     expect(keys).toContain("contactName");
+  });
+
+  it("omits the owner-only historyTag from the public projection (004 D11)", () => {
+    expect(Object.keys(toPublicStayDTO(owner))).not.toContain("historyTag");
   });
 });
