@@ -15,6 +15,11 @@ function isJerusalem(lat: number, lng: number): boolean {
   return Math.abs(lat - 31.78) <= 0.15 && Math.abs(lng - 35.21) <= 0.15;
 }
 
+/** The candle-lighting offset (minutes before sunset) for a location: 40 for Jerusalem, else 18. */
+export function candleLightingOffsetMinutes(lat: number, lng: number): number {
+  return isJerusalem(lat, lng) ? 40 : 18;
+}
+
 /** "YYYY-MM-DD" → a UTC-midnight Date (the civil-date convention used throughout the app). */
 function civilToUtcDate(civil: string): Date {
   return new Date(`${civil}T00:00:00.000Z`);
