@@ -155,6 +155,12 @@ export function DiscoveryPage() {
         </div>
       </section>
 
+      {center && !params && (
+        <p role="status" className="rounded-xl bg-chip px-4 py-3 text-sm font-semibold text-ink">
+          {t("discovery.pickDatesHint")}
+        </p>
+      )}
+
       {params && (
         <>
           <section aria-live="polite" className="flex flex-col gap-3">

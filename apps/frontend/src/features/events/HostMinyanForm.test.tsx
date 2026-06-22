@@ -4,9 +4,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const navigate = vi.fn();
 const mutateAsync = vi.fn();
+const search = vi.fn(() => ({}) as Record<string, unknown>);
+const getStayMock = vi.fn();
 
-vi.mock("@tanstack/react-router", () => ({ useNavigate: () => navigate }));
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => navigate, useSearch: () => search() }));
 vi.mock("../../lib/events", () => ({ useHostMinyan: () => ({ mutateAsync, isPending: false }) }));
+vi.mock("../../lib/stays", () => ({ getStay: (id: string) => getStayMock(id) }));
 // Stub the heavy LocationPicker (map + geo) with a button that sets a valid coord location.
 vi.mock("../stays/LocationPicker", () => ({
   LocationPicker: ({ onChange }: { onChange: (v: unknown) => void }) => (
@@ -17,7 +20,10 @@ vi.mock("../stays/LocationPicker", () => ({
 import { HostMinyanForm } from "./HostMinyanForm";
 import "../../i18n";
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  search.mockReturnValue({}); // default: no ?fromStay prefill
+});
 
 describe("HostMinyanForm", () => {
   it("hosts a minyan with a services array and navigates to its detail page", async () => {
@@ -47,5 +53,20 @@ describe("HostMinyanForm", () => {
     await user.click(screen.getByRole("button", { name: "אירוח המניין" }));
     expect(mutateAsync).not.toHaveBeenCalled();
     expect(screen.getByText("יש להזין עיר ומדינה.")).toBeInTheDocument();
+  });
+
+  it("pre-fills the date with the stay's first Shabbat when arrived via ?fromStay (#4)", async () => {
+    // 14–16 Jul 2026: the covered Saturday is 18 Jul? No — 11 Jul is Sat; range 14–16 has no Sat.
+    // Use 13–19 Jul 2026 which covers Sat 18 Jul 2026.
+    search.mockReturnValue({ fromStay: "stay_1" });
+    getStayMock.mockResolvedValue({
+      city: "קרקוב", country: "פולין", lat: 50.06, lng: 19.94,
+      arrivalDate: Date.UTC(2026, 6, 13), departureDate: Date.UTC(2026, 6, 19),
+      bringsSeferTorah: true,
+    });
+    render(<HostMinyanForm />);
+    await waitFor(() => expect(getStayMock).toHaveBeenCalledWith("stay_1"));
+    // First Saturday in the range (18 Jul 2026) seeds the date input.
+    await waitFor(() => expect(screen.getByLabelText("תאריך")).toHaveValue("2026-07-18"));
   });
 });

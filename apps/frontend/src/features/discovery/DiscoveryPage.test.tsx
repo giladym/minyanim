@@ -11,6 +11,8 @@ vi.mock("../../lib/geo", () => ({
 
 const useDiscovery = vi.fn();
 vi.mock("../../lib/discovery", () => ({ useDiscovery: (p: unknown) => useDiscovery(p) }));
+// DiscoveryMap reads the runtime tile key; stub it so the optional map stays hidden in tests.
+vi.mock("../../lib/config", () => ({ useMaptilerTileKey: () => undefined }));
 // No pre-fill seed in these tests (the search params come from the FR-019 link in real use).
 vi.mock("@tanstack/react-router", () => ({
   useSearch: () => ({}),
@@ -48,7 +50,7 @@ describe("DiscoveryPage", () => {
     await user.type(screen.getByLabelText("מתאריך"), "2027-08-01");
     await user.type(screen.getByLabelText("עד תאריך"), "2027-08-31");
 
-    // Potential bucket + hosted minyan render.
+    // Minyan in the area bucket + hosted minyan render.
     expect(await screen.findByText("2027-08-07")).toBeInTheDocument();
     expect(screen.getByText(/11 גברים/)).toBeInTheDocument();
     expect(screen.getByText("זקופנה, פולין")).toBeInTheDocument();
@@ -60,6 +62,16 @@ describe("DiscoveryPage", () => {
   it("shows nothing until a center and dates are chosen", () => {
     useDiscovery.mockReturnValue({ data: undefined, isFetching: false });
     render(<DiscoveryPage />);
-    expect(screen.queryByText("פוטנציאל")).not.toBeInTheDocument();
+    expect(screen.queryByText("מניינים באזור")).not.toBeInTheDocument();
+  });
+
+  it("prompts to pick dates once a city is chosen but dates are missing (#3 clarity)", async () => {
+    useDiscovery.mockReturnValue({ data: undefined, isFetching: false });
+    const user = userEvent.setup();
+    render(<DiscoveryPage />);
+    await user.type(screen.getByLabelText("חיפוש עיר"), "Zako");
+    await user.click(await screen.findByRole("button", { name: "Zakopane, Poland" }));
+    // City picked, no dates yet → an explicit hint explains why nothing is searched.
+    expect(await screen.findByText(/בחרו תאריך הגעה ועזיבה/)).toBeInTheDocument();
   });
 });

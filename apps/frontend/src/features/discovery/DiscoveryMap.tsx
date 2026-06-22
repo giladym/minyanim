@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicMinyanDTO, BeitChabadPinDTO } from "@minyanim/shared";
+import { useMaptilerTileKey } from "../../lib/config";
 
 type MapLib = typeof import("maplibre-gl");
 type MapInstance = InstanceType<MapLib["Map"]>;
@@ -55,7 +56,7 @@ export function DiscoveryMap({
   // Flips true once the (async) map is created, so the markers effect — which may run before the
   // map finishes loading — re-runs and actually places the pins on first load.
   const [ready, setReady] = useState(false);
-  const tileKey = import.meta.env.VITE_MAPTILER_TILE_KEY as string | undefined;
+  const tileKey = useMaptilerTileKey();
 
   // Create the map once (lazy import keeps MapLibre out of the initial bundle).
   useEffect(() => {

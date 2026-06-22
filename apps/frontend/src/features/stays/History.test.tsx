@@ -96,7 +96,7 @@ describe("HistoryPage (US2 — display, tags, year groups, infinite scroll)", ()
     infinite.data = { pages: [{ stays: [], nextCursor: null }] };
     infinite.hasNextPage = false;
     render(<HistoryPage />);
-    expect(screen.getByText("אין עדיין שהיות בהיסטוריה.")).toBeInTheDocument();
+    expect(screen.getByText("אין עדיין מיקומים בהיסטוריה.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "טען עוד" })).not.toBeInTheDocument();
   });
 

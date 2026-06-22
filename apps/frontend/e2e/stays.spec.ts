@@ -24,7 +24,7 @@ async function createStay(
   opts: { city: string; country: string; arrivalDays: number; departureDays: number; numMen?: number },
 ) {
   await page.goto("/stays/new");
-  await page.getByRole("button", { name: /הזנת עיר ומדינה ידנית|Enter city and country manually/ }).click();
+  await page.getByRole("button", { name: /הכנס עיר ידנית|Enter city manually/ }).click();
   await page.getByLabel(/^עיר$|^City$/).fill(opts.city);
   await page.getByLabel(/^מדינה$|^Country$/).fill(opts.country);
   await page.getByLabel(/תאריך הגעה|Arrival date/).fill(dateInput(opts.arrivalDays));
@@ -35,15 +35,15 @@ async function createStay(
     // Controlled number input: confirm the value settled before submitting.
     await expect(men).toHaveValue(String(opts.numMen));
   }
-  await page.getByRole("button", { name: /שמירת שהייה|Save stay/ }).click();
+  await page.getByRole("button", { name: /שמירת מיקום|Save location/ }).click();
   await page.waitForURL(/\/stays(\?|$)/);
 }
 
 test("empty state shows explainer + a single prominent CTA", async ({ page }) => {
   await signIn(page);
   await page.goto("/stays");
-  await expect(page.getByText(/עדיין לא רשמתם שהייה|haven't registered a stay/)).toBeVisible();
-  const cta = page.getByRole("link", { name: /הוסף שהייה|Add a stay/ });
+  await expect(page.getByText(/עדיין לא רשמתם מיקום|haven't registered a location/)).toBeVisible();
+  const cta = page.getByRole("link", { name: /הוסף מיקום|Add a location/ });
   await expect(cta).toBeVisible();
   await cta.click();
   await expect(page).toHaveURL(/\/stays\/new/);
@@ -53,8 +53,9 @@ test("create a Stay (manual entry) → it appears on the dashboard", async ({ pa
   await signIn(page);
   await createStay(page, { city: "לונדון", country: "בריטניה", arrivalDays: 10, departureDays: 12 });
   await expect(page.getByRole("heading", { name: "לונדון, בריטניה" })).toBeVisible();
-  // Success toast is announced after the redirect.
-  await expect(page.getByRole("status")).toBeVisible();
+  // After a create, the just-saved card confirms ("המיקום נשמר") and promotes hosting a minyan (#4).
+  await expect(page.getByText("המיקום נשמר")).toBeVisible();
+  await expect(page.getByText(/רוצים מניין כאן|Want a minyan here/)).toBeVisible();
 });
 
 test("dashboard lists Stays nearest-first", async ({ page }) => {
@@ -93,11 +94,11 @@ test("edit a Stay → the change is reflected", async ({ page }) => {
 test("cancel a Stay → it leaves the active list", async ({ page }) => {
   await signIn(page);
   await createStay(page, { city: "רומא", country: "איטליה", arrivalDays: 6, departureDays: 9 });
-  await page.getByRole("button", { name: /ביטול שהייה|Cancel stay/ }).first().click();
+  await page.getByRole("button", { name: /ביטול מיקום|Cancel location/ }).first().click();
   // Confirmation dialog (Profile danger-zone pattern).
-  await page.getByRole("button", { name: /כן, בטל את השהייה|Yes, cancel the stay/ }).click();
+  await page.getByRole("button", { name: /כן, בטל את המיקום|Yes, cancel the location/ }).click();
   await expect(page.getByRole("heading", { name: "רומא, איטליה" })).toHaveCount(0);
-  await expect(page.getByText(/עדיין לא רשמתם שהייה|haven't registered a stay/)).toBeVisible();
+  await expect(page.getByText(/עדיין לא רשמתם מיקום|haven't registered a location/)).toBeVisible();
 });
 
 test("WCAG 2.1 AA: dashboard with a Stay is axe-clean", async ({ page }) => {
@@ -111,7 +112,7 @@ test("WCAG 2.1 AA: dashboard with a Stay is axe-clean", async ({ page }) => {
 test("WCAG 2.1 AA: the add-Stay form is axe-clean and RTL", async ({ page }) => {
   await signIn(page);
   await page.goto("/stays/new");
-  await expect(page.getByRole("heading", { name: /שהייה חדשה|New stay/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /מיקום חדש|New location/ })).toBeVisible();
   // Form is rendered RTL (Hebrew-first).
   await expect(page.locator("div[dir='rtl']").first()).toBeVisible();
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
@@ -122,7 +123,7 @@ test("keyboard: the add (+) shortcut reaches the form, fields are tabbable", asy
   await signIn(page);
   await page.goto("/stays/new");
   // The search box is focusable and the manual-entry toggle is keyboard-operable.
-  await page.getByRole("button", { name: /הזנת עיר ומדינה ידנית|Enter city and country manually/ }).focus();
+  await page.getByRole("button", { name: /הכנס עיר ידנית|Enter city manually/ }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel(/^עיר$|^City$/)).toBeVisible();
   await page.getByLabel(/^עיר$|^City$/).focus();

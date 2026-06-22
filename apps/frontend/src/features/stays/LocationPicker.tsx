@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { GeoResult } from "@minyanim/shared";
 import { reverseGeocode, searchPlaces, searchPlacesPrecise } from "../../lib/geo";
 import { ApiError } from "../../lib/api";
+import { useMaptilerTileKey } from "../../lib/config";
 
 /** The location subset of a Stay the picker resolves. lat/lng are null in manual mode. */
 export interface LocationValue {
@@ -265,7 +266,7 @@ function PickableMap({
   // Keep the latest onPick without re-initializing the map when the callback identity changes.
   const onPickRef = useRef(onPick);
   onPickRef.current = onPick;
-  const tileKey = import.meta.env.VITE_MAPTILER_TILE_KEY as string | undefined;
+  const tileKey = useMaptilerTileKey();
 
   // Initialize the map exactly once (mount). Dynamic import keeps MapLibre out of the initial bundle.
   useEffect(() => {

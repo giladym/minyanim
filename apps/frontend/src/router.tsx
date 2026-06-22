@@ -99,7 +99,15 @@ const discoveryRoute = createRoute({
   component: lazyRouteComponent(() => import("./features/discovery/DiscoveryPage"), "DiscoveryPage"),
 });
 // Host a Minyan (003 US2) — auth-guarded.
-const minyanNewRoute = createRoute({ getParentRoute: () => authedLayout, path: "/minyan/new", component: lazyRouteComponent(() => import("./features/events/HostMinyanForm"), "HostMinyanForm") });
+const minyanNewRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/minyan/new",
+  // Optional ?fromStay=<id> pre-fills the host form from a saved location (005-followup #4).
+  validateSearch: (s): { fromStay?: string } => ({
+    fromStay: typeof s.fromStay === "string" ? s.fromStay : undefined,
+  }),
+  component: lazyRouteComponent(() => import("./features/events/HostMinyanForm"), "HostMinyanForm"),
+});
 // Notifications inbox (003 US5).
 const notificationsRoute = createRoute({ getParentRoute: () => authedLayout, path: "/notifications", component: lazyRouteComponent(() => import("./features/notifications/NotificationsInbox"), "NotificationsInbox") });
 // Minyan detail (003 US2) — PUBLIC (root-level) so the WhatsApp join link works pre-auth (D13).

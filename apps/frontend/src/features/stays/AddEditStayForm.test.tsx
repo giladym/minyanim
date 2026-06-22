@@ -38,6 +38,8 @@ vi.mock("../../lib/folders", () => ({
   }),
   useCreateFolder: () => ({ isPending: false, mutateAsync: createFolderMock }),
 }));
+// LocationPicker reads the runtime tile key; stub it so the optional map stays hidden in tests.
+vi.mock("../../lib/config", () => ({ useMaptilerTileKey: () => undefined }));
 
 import { AddEditStayForm } from "./AddEditStayForm";
 import "../../i18n";
@@ -155,7 +157,7 @@ describe("AddEditStayForm — smart defaults & disclosure", () => {
     render(<AddEditStayForm />);
     expect(screen.getByLabelText("כמה גברים בקבוצה (כולל אותך)")).toHaveValue(1);
     // Let the async profile prefill settle so its state update isn't an unwrapped act() warning.
-    await screen.findByRole("button", { name: "שמירת שהייה" });
+    await screen.findByRole("button", { name: "שמירת מיקום" });
   });
 
   it("pre-fills contact name from the profile", async () => {
@@ -300,7 +302,7 @@ describe("AddEditStayForm — duplicate prefill (004 US3 / D9)", () => {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function submitButton() {
-  return screen.getByRole("button", { name: "שמירת שהייה" });
+  return screen.getByRole("button", { name: "שמירת מיקום" });
 }
 
 async function fillDates(user: ReturnType<typeof userEvent.setup>, arrival: string, departure: string) {
@@ -313,7 +315,7 @@ async function fillLocationManually(
   city: string,
   country: string,
 ) {
-  await user.click(screen.getByRole("button", { name: "הזנת עיר ומדינה ידנית" }));
+  await user.click(screen.getByRole("button", { name: "הכנס עיר ידנית" }));
   await user.type(screen.getByLabelText("עיר"), city);
   await user.type(screen.getByLabelText("מדינה"), country);
 }

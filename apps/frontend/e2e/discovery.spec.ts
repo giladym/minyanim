@@ -27,7 +27,7 @@ test("discovery page is WCAG-clean (axe) and searchable", async ({ page }) => {
   await pickMockCity(page, /חיפוש עיר|Search a city/);
   await page.getByLabel(/מתאריך|^From$/).fill(dateInput(7));
   await page.getByLabel(/עד תאריך|^To$/).fill(dateInput(40));
-  await expect(page.getByRole("heading", { name: /פוטנציאל|Potential/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /מניינים באזור|Minyan in the area/ })).toBeVisible();
 
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations).toEqual([]);

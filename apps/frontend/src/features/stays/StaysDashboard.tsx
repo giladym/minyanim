@@ -26,10 +26,11 @@ export function StaysDashboard() {
   const [filter, setFilter] = useState<FolderFilterValue>("all");
   const [managing, setManaging] = useState(false);
 
-  // Brief success message after a create/edit redirect; clears the highlight after a moment.
+  // After an EDIT, a brief top flash. After a CREATE (flash=saved), the just-saved card shows an
+  // in-place "form a minyan here" promotion instead (#4), so no top flash for that case.
   useEffect(() => {
-    if (search.flash) {
-      setFlash(search.flash === "updated" ? t("stays.updated") : t("stays.saved"));
+    if (search.flash === "updated") {
+      setFlash(t("stays.updated"));
       const handle = setTimeout(() => setFlash(""), 3000);
       return () => clearTimeout(handle);
     }
@@ -103,6 +104,7 @@ export function StaysDashboard() {
               <StayCard
                 stay={s}
                 highlighted={search.highlight === s.id}
+                justSaved={search.highlight === s.id && search.flash === "saved"}
                 onCancel={setConfirmingId}
                 onMove={(folderId) => move.mutate({ id: s.id, input: { folderId } })}
                 folders={folders ?? []}
