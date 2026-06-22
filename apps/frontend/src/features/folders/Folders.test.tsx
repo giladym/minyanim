@@ -31,7 +31,7 @@ describe("FolderManager (US1 — create/rename/delete)", () => {
   it("lists folders with their active-stay counts", () => {
     render(<FolderManager onClose={vi.fn()} />);
     expect(screen.getByText("אירופה 2026")).toBeInTheDocument();
-    expect(screen.getByText("2 שהיות")).toBeInTheDocument();
+    expect(screen.getByText("2 מיקומים")).toBeInTheDocument();
   });
 
   it("creates a folder", async () => {
