@@ -60,6 +60,14 @@ app.route("/", events);
 // Notifications inbox — list / mark-read. (003 US5; emails sent server-side via waitUntil)
 app.route("/", notifications);
 
+// Public client config (no auth) — the PUBLIC MapTiler tile key for client-side maps, served at
+// runtime so the map needs no build-time var. Only client-safe values; never secrets. (005-followup)
+app.get("/api/config", (c) =>
+  c.json({ maptilerTileKey: c.env.MAPTILER_TILE_KEY ?? "" }, 200, {
+    "cache-control": "public, max-age=300",
+  }),
+);
+
 // Liveness/readiness incl. D1 connectivity. (T027)
 app.get("/api/health", async (c) => {
   try {

@@ -5,3 +5,6 @@ GOOGLE_CLIENT_SECRET=""
 BETTER_AUTH_SECRET=""
 RESEND_API_KEY=""
 MAPTILER_API_KEY=""
+# PUBLIC map-tile key (origin-restricted, usage-capped) — served to the client via GET /api/config.
+# Not a secret, but kept here so all key config lives in one place. Deployed envs set it as a var.
+MAPTILER_TILE_KEY=""
