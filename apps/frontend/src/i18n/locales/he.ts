@@ -280,6 +280,13 @@ export const he = {
       loadError: "טעינת המיקומים נכשלה. נסו לרענן.",
       saved: "המיקום נשמר.",
       updated: "המיקום עודכן.",
+      minyanPromo: {
+        saved: "המיקום נשמר",
+        q: "רוצים מניין כאן?",
+        host: "הוספת מניין",
+        find: "חיפוש מניינים באזור",
+        dismiss: "סגירה",
+      },
       // Card
       men: "{{count}} גברים",
       seferTorah: "ספר תורה",

@@ -27,6 +27,7 @@ function formatDate(epoch: number, locale: string): string {
 export function StayCard({
   stay,
   highlighted,
+  justSaved,
   onCancel,
   onMove,
   folders,
@@ -34,6 +35,8 @@ export function StayCard({
 }: {
   stay: OwnerStayDTO;
   highlighted: boolean;
+  /** True only for the card just created (flash=saved) — shows the "form a minyan here" promo (#4). */
+  justSaved?: boolean;
   onCancel: (id: string) => void;
   /** Reassign this Stay to a folder, or to Unfiled when null (D6). */
   onMove?: (folderId: string | null) => void;
@@ -45,8 +48,10 @@ export function StayCard({
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "he";
   const [showZmanim, setShowZmanim] = useState(false);
+  const [promoDismissed, setPromoDismissed] = useState(false);
   const { data: profile } = useProfile();
   const zmanimQuery = useStayZmanim(stay.id, showZmanim);
+  const showPromo = !!justSaved && !promoDismissed && !stay.isPast;
 
   return (
     <article
@@ -58,6 +63,12 @@ export function StayCard({
         (stay.isPast ? "opacity-60" : "")
       }
     >
+      {showPromo && (
+        <span className="mb-3 inline-flex items-center gap-2 text-sm font-extrabold text-teal-ink">
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-teal text-xs text-on-teal" aria-hidden>✓</span>
+          {t("stays.minyanPromo.saved")}
+        </span>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-extrabold text-ink">
@@ -159,6 +170,38 @@ export function StayCard({
               </select>
             </label>
           )}
+        </div>
+      )}
+
+      {showPromo && (
+        <div className="mt-4 border-t border-dashed border-line2 pt-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-extrabold text-ink">{t("stays.minyanPromo.q")}</p>
+            <button
+              type="button"
+              className="text-sm font-bold text-muted"
+              aria-label={t("stays.minyanPromo.dismiss")}
+              onClick={() => setPromoDismissed(true)}
+            >
+              ×
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            <Link
+              to="/minyan/new"
+              search={{ fromStay: stay.id }}
+              className="rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay"
+            >
+              {t("stays.minyanPromo.host")}
+            </Link>
+            <Link
+              to="/discovery"
+              search={{ lat: stay.lat ?? undefined, lng: stay.lng ?? undefined, city: stay.city, country: stay.country, from: stay.arrivalDate, to: stay.departureDate }}
+              className="rounded-xl border border-teal px-4 py-2.5 text-sm font-extrabold text-teal-ink"
+            >
+              {t("stays.minyanPromo.find")}
+            </Link>
+          </div>
         </div>
       )}
     </article>

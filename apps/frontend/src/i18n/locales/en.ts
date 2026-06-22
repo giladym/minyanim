@@ -280,6 +280,13 @@ export const en = {
       loadError: "Failed to load locations. Please refresh.",
       saved: "Location saved.",
       updated: "Location updated.",
+      minyanPromo: {
+        saved: "Location saved",
+        q: "Want a minyan here?",
+        host: "Add a minyan",
+        find: "Find minyanim nearby",
+        dismiss: "Dismiss",
+      },
       // Card
       men: "{{count}} men",
       seferTorah: "Sefer Torah",

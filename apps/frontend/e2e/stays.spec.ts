@@ -53,8 +53,9 @@ test("create a Stay (manual entry) → it appears on the dashboard", async ({ pa
   await signIn(page);
   await createStay(page, { city: "לונדון", country: "בריטניה", arrivalDays: 10, departureDays: 12 });
   await expect(page.getByRole("heading", { name: "לונדון, בריטניה" })).toBeVisible();
-  // Success toast is announced after the redirect.
-  await expect(page.getByRole("status")).toBeVisible();
+  // After a create, the just-saved card confirms ("המיקום נשמר") and promotes hosting a minyan (#4).
+  await expect(page.getByText("המיקום נשמר")).toBeVisible();
+  await expect(page.getByText(/רוצים מניין כאן|Want a minyan here/)).toBeVisible();
 });
 
 test("dashboard lists Stays nearest-first", async ({ page }) => {

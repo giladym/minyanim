@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { CreateEventInput, type Nusach, type Tefilla } from "@minyanim/shared";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { useHostMinyan } from "../../lib/events";
+import { getStay } from "../../lib/stays";
 import { ApiError } from "../../lib/api";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** The first Saturday (UTC civil weekday 6) within a stay's date range, as "YYYY-MM-DD", or "". */
+function firstShabbat(arrival: number, departure: number): string {
+  for (let t = arrival; t <= departure; t += DAY_MS) {
+    if (new Date(t).getUTCDay() === 6) return new Date(t).toISOString().slice(0, 10);
+  }
+  return "";
+}
 
 const fieldCls =
   "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay";
@@ -41,6 +51,23 @@ export function HostMinyanForm() {
   const [hostNumMen, setHostNumMen] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
+
+  // Pre-fill from a saved location when arrived via the post-save "host a minyan" promotion (#4):
+  // seed the location (city/coords) + the first Shabbat in the stay's range. Once-guarded.
+  const { fromStay } = useSearch({ from: "/authed/minyan/new" });
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!fromStay || prefilled.current) return;
+    prefilled.current = true;
+    getStay(fromStay)
+      .then((s) => {
+        setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
+        const shabbat = firstShabbat(s.arrivalDate, s.departureDate);
+        if (shabbat) setEventDate(shabbat);
+        if (s.bringsSeferTorah) setSeferTorah(true);
+      })
+      .catch(() => {});
+  }, [fromStay]);
 
   function setService(i: number, patch: Partial<ServiceRow>) {
     setServices((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
