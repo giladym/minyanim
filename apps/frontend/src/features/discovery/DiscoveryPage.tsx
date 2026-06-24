@@ -163,18 +163,8 @@ export function DiscoveryPage() {
 
       {params && (
         <>
+          {/* PRIMARY: minyanim you can join here (clickable → detail → join). */}
           <section aria-live="polite" className="flex flex-col gap-3">
-            <h2 className="text-lg font-extrabold text-ink">{t("discovery.potentialTitle")}</h2>
-            {data && data.potential.length === 0 && <p className="text-sm text-muted">{t("discovery.potentialEmpty")}</p>}
-            {data?.potential.map((b) => (
-              <div key={b.shabbat} className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3">
-                <span className="font-semibold text-ink" dir="ltr">{b.shabbat}</span>
-                <span className="text-ink">{t("discovery.potentialMen", { count: b.menCount })}</span>
-              </div>
-            ))}
-          </section>
-
-          <section className="flex flex-col gap-3">
             <h2 className="text-lg font-extrabold text-ink">{t("discovery.minyanimTitle")}</h2>
             {data && (
               <DiscoveryMap
@@ -187,6 +177,22 @@ export function DiscoveryPage() {
             {data && data.minyanim.length === 0 && <p className="text-sm text-muted">{t("discovery.minyanimEmpty")}</p>}
             {data?.minyanim.map((m) => <MinyanRow key={m.id} m={m} />)}
             {isFetching && !data && <p className="text-sm text-muted">{t("discovery.loading")}</p>}
+          </section>
+
+          {/* SECONDARY: travelers in the area (potential) — an opportunity to host, not a join list. */}
+          <section className="flex flex-col gap-3">
+            <h2 className="text-lg font-extrabold text-ink">{t("discovery.potentialTitle")}</h2>
+            <p className="text-sm text-muted">{t("discovery.potentialHint")}</p>
+            {data && data.potential.length === 0 && <p className="text-sm text-muted">{t("discovery.potentialEmpty")}</p>}
+            {data?.potential.map((b) => (
+              <div key={b.shabbat} className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3">
+                <span className="font-semibold text-ink" dir="ltr">{b.shabbat}</span>
+                <span className="text-ink">{t("discovery.potentialMen", { count: b.menCount })}</span>
+              </div>
+            ))}
+            <Link to="/minyan/new" className="self-start rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay">
+              {t("discovery.hostCta")}
+            </Link>
           </section>
         </>
       )}
@@ -204,6 +210,7 @@ function MinyanRow({ m }: { m: PublicMinyanDTO }) {
         <span className={`text-sm font-bold ${STATUS_CLS[m.status]}`}>{t(`minyanStatus.${m.status}`)}</span>
       </div>
       <p className="text-sm text-muted">{t(`nusach.${m.nusach}`)} · {tefillot}</p>
+      <span className="text-sm font-bold text-clay">{t("discovery.joinCta")} ›</span>
       <p className="text-sm font-semibold text-ink">
         {t("discovery.committed", { count: m.committedMen })}
         {m.missingForReady.menShort > 0 && ` — ${t("discovery.moreNeeded", { count: m.missingForReady.menShort })}`}

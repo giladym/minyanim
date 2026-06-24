@@ -57,6 +57,9 @@ describe("DiscoveryPage", () => {
     expect(screen.getByText(/8\/10 נרשמו/)).toBeInTheDocument();
     // Missing Ba'al Korei surfaced (FR-006).
     await waitFor(() => expect(screen.getByText(/בעל קורא/)).toBeInTheDocument());
+    // The joinable minyan row shows a clear join affordance; the potential section offers hosting.
+    expect(screen.getByText(/להצטרפות/)).toBeInTheDocument();
+    expect(screen.getByText("ארגון מניין כאן")).toBeInTheDocument();
   });
 
   it("shows nothing until a center and dates are chosen", () => {

@@ -8,9 +8,12 @@ import { RouteAnnouncer } from "./RouteAnnouncer";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 import { useNotifications } from "../lib/notifications";
 
+// Finding a minyan is the app's primary action — it's the center FAB, not a side tab. The four
+// side tabs flank it: locations · history | FAB | notifications · profile. Adding a location is a
+// secondary action that lives on the My-Locations dashboard CTA.
 const NAV = [
-  { href: "/discovery", key: "nav.discovery" },
   { href: "/stays", key: "nav.stays" },
+  { href: "/stays/history", key: "nav.history" },
   { href: "/notifications", key: "nav.notifications" },
   { href: "/profile", key: "nav.profile" },
 ];
@@ -84,8 +87,11 @@ export function AppShell() {
         {NAV.slice(0, 2).map((n) => (
           <NavItem key={n.href} href={n.href} label={t(n.key)} active={path === n.href} />
         ))}
-        <a href="/stays/new" aria-label={t("nav.add")} className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-clay text-2xl font-light text-on-clay shadow-lg">
-          +
+        <a href="/discovery" aria-label={t("nav.searchMinyan")} className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-clay text-on-clay shadow-lg">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.5" y1="16.5" x2="21" y2="21" />
+          </svg>
         </a>
         {NAV.slice(2).map((n) => (
           <NavItem key={n.href} href={n.href} label={t(n.key)} active={path === n.href} badge={n.href === "/notifications" ? unread : 0} />
