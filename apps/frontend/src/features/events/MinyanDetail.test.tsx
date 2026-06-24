@@ -70,6 +70,29 @@ describe("MinyanDetail — commit UI", () => {
     expect(screen.queryByRole("button", { name: "הצטרפות" })).not.toBeInTheDocument();
   });
 
+  it("shows the contact roster: WhatsApp/email per member, organizer badge, no buttons for self", () => {
+    useMinyan.mockReturnValue({
+      data: {
+        ...base, addressPrivate: "Secret 1",
+        hostContact: { name: "אבי", phone: "+972501112222", email: "avi@x.com" },
+        participants: [
+          { userId: "host1", name: "אבי", numMen: 9, phone: "+972501112222", email: "avi@x.com", isHost: true },
+          { userId: "viewer", name: "אני", numMen: 2, phone: "+972503334444", email: null },
+        ],
+        myRoles: { baalTefila: false, baalKorei: false },
+      },
+      isLoading: false,
+    });
+    render(<MinyanDetail />);
+    expect(screen.getByText("מי מגיע")).toBeInTheDocument();
+    expect(screen.getByText("מארגן")).toBeInTheDocument(); // host badge
+    // Host (not the viewer) gets an actionable WhatsApp deep link.
+    const wa = screen.getByRole("link", { name: /וואטסאפ — אבי/ });
+    expect(wa).toHaveAttribute("href", "https://wa.me/972501112222");
+    // The viewer's own row exposes no contact buttons.
+    expect(screen.queryByRole("link", { name: /וואטסאפ — אני/ })).not.toBeInTheDocument();
+  });
+
   it("host sees host controls and no join/commit UI", () => {
     useMinyan.mockReturnValue({
       data: { ...base, addressPrivate: "Secret 1", hostContact: { name: "דוד", phone: null, email: "d@x.com" }, participants: [], myRoles: { baalTefila: false, baalKorei: false }, isHost: true },

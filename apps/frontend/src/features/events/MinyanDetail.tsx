@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, Link } from "@tanstack/react-router";
 import type { MinyanStatus, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
-import type { EventRole, PublicMinyanDTO } from "@minyanim/shared";
+import type { EventRole, ParticipantInfo, PublicMinyanDTO } from "@minyanim/shared";
 import { authClient } from "../../lib/auth-client";
 import {
   useMinyan,
@@ -159,10 +159,72 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
 
 /** Minyan detail page (US2). Server returns the viewer-appropriate shape; this renders public,
  * committed-participant (address + participants), and host (cancel / Sefer-Torah toggle) views. */
+/** Phone (E.164) → bare digits for a wa.me deep link. */
+function waDigits(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
+/** Contact affordances for a co-participant — WhatsApp (primary), call, email. Committed-only data
+ * (the backend never sends contact in the public projection); lets members coordinate the minyan. */
+function ContactButtons({ p }: { p: ParticipantInfo }) {
+  const { t } = useTranslation();
+  const btn = "inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold";
+  if (!p.phone && !p.email) return <span className="text-xs text-faint">{t("minyanDetail.noContact")}</span>;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {p.phone && (
+        <a className={`${btn} bg-whatsapp text-on-whatsapp`} href={`https://wa.me/${waDigits(p.phone)}`} target="_blank" rel="noopener noreferrer" aria-label={`${t("minyanDetail.contactWhatsapp")} — ${p.name}`}>
+          {t("minyanDetail.contactWhatsapp")}
+        </a>
+      )}
+      {p.phone && (
+        <a className={`${btn} border border-line text-ink`} dir="ltr" href={`tel:${p.phone}`} aria-label={`${t("minyanDetail.contactCall")} — ${p.name}`}>
+          {p.phone}
+        </a>
+      )}
+      {p.email && (
+        <a className={`${btn} border border-line text-ink`} href={`mailto:${p.email}`} aria-label={`${t("minyanDetail.contactEmail")} — ${p.name}`}>
+          {t("minyanDetail.contactEmail")}
+        </a>
+      )}
+    </div>
+  );
+}
+
+/** The committed roster with per-person contact (host badged "organizer"; no buttons for yourself). */
+function ParticipantRoster({ participants, viewerId }: { participants: ParticipantInfo[]; viewerId?: string }) {
+  const { t } = useTranslation();
+  const sorted = [...participants].sort((a, b) => Number(b.isHost) - Number(a.isHost));
+  return (
+    <div className="flex flex-col gap-3">
+      <h3 className="text-sm font-extrabold text-ink">{t("minyanDetail.whoIsComing")}</h3>
+      <ul className="flex flex-col gap-2.5">
+        {sorted.map((p) => {
+          const isSelf = p.userId === viewerId;
+          return (
+            <li key={p.userId} className="rounded-xl border border-line px-3.5 py-3">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="font-bold text-ink">
+                  {p.name}
+                  {p.isHost && <span className="ms-2 rounded-full bg-clay-soft px-2 py-0.5 text-xs font-bold text-clay-ink">{t("minyanDetail.organizer")}</span>}
+                  {isSelf && <span className="ms-2 text-xs font-normal text-muted">({t("minyanDetail.you")})</span>}
+                </span>
+                <span className="text-xs text-muted">{t("stays.men", { count: p.numMen })}</span>
+              </div>
+              {!isSelf && <ContactButtons p={p} />}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function MinyanDetail() {
   const { t } = useTranslation();
   const { id } = useParams({ from: "/minyan/$id" });
   const { data: m, isLoading } = useMinyan(id);
+  const { data: session } = authClient.useSession();
   const cancel = useCancelMinyan(id);
   const update = useUpdateMinyan(id);
   const { data: profile } = useProfile();
@@ -227,8 +289,7 @@ export function MinyanDetail() {
           <h2 className="font-extrabold text-ink">{t("minyanDetail.details")}</h2>
           {m.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {m.addressPrivate}</p>}
           {m.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {m.addressNotes}</p>}
-          <p className="text-sm text-muted">{t("minyanDetail.host")}: {m.hostContact.name}{m.hostContact.phone ? ` · ${m.hostContact.phone}` : ""}</p>
-          <p className="text-sm text-muted">{t("minyanDetail.participants", { count: m.participants.length })}</p>
+          <ParticipantRoster participants={m.participants} viewerId={session?.user?.id} />
         </div>
       ) : (
         <p className="text-xs text-muted">{t("minyanDetail.commitToSeeAddress")}</p>
