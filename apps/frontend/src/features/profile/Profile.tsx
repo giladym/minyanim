@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Profile, Language, HavdalahOpinion } from "@minyanim/shared";
 import { getProfile, patchProfile, addPhone, deletePhone, deleteAccount } from "../../lib/profile";
+import { ApiError } from "../../lib/api";
+import { PhoneInput } from "./PhoneInput";
 import { useTheme, type Theme } from "../../theme/ThemeProvider";
 import { authClient } from "../../lib/auth-client";
 
@@ -46,8 +48,17 @@ export function ProfilePage() {
   async function add() {
     setPhoneErr("");
     if (!E164.test(phone)) { setPhoneErr(t("profile.invalidPhone")); return; }
-    await addPhone({ e164: phone, label: label || null });
-    setPhone(""); setLabel(""); load();
+    try {
+      await addPhone({ e164: phone, label: label || null });
+      setPhone(""); setLabel(""); load();
+    } catch (err) {
+      // Surface server-side failures instead of swallowing them (was a silent no-op before).
+      setPhoneErr(
+        err instanceof ApiError && err.body.errors[0]?.code
+          ? t(`errors.${err.body.errors[0].code}`)
+          : t("profile.invalidPhone"),
+      );
+    }
   }
 
   return (
@@ -106,10 +117,16 @@ export function ProfilePage() {
             </li>
           ))}
         </ul>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input className={field} dir="ltr" value={phone} aria-label={t("profile.phones")} placeholder={t("profile.phonePlaceholder")} onChange={(e) => setPhone(e.target.value)} />
-          <input className={field} value={label} aria-label={t("profile.phoneLabel")} placeholder={t("profile.phoneLabel")} onChange={(e) => setLabel(e.target.value)} />
-          <button className="rounded-lg bg-clay px-4 py-2.5 font-extrabold text-on-clay" onClick={() => void add()}>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <PhoneInput onChange={setPhone} />
+            <input className={field + " sm:max-w-[10rem]"} value={label} aria-label={t("profile.phoneLabel")} placeholder={t("profile.phoneLabel")} onChange={(e) => setLabel(e.target.value)} />
+          </div>
+          <button
+            className="self-start rounded-lg bg-clay px-4 py-2.5 font-extrabold text-on-clay disabled:opacity-50"
+            disabled={!E164.test(phone)}
+            onClick={() => void add()}
+          >
             {t("profile.addPhone")}
           </button>
         </div>
