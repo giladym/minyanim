@@ -90,6 +90,7 @@ async function withParticipantFields(ctx: Ctx, m: MinyanJoined, base: PublicMiny
       numMen: p.numMen,
       email: p.email,
       phone: phones.get(p.userId) ?? null,
+      isHost: p.userId === m.hostUserId,
     })),
     myRoles,
   };

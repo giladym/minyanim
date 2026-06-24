@@ -85,13 +85,16 @@ export interface MissingForReady {
   baalKorei: boolean;
 }
 
-/** A co-participant as seen by another committed participant (D4). */
+/** A co-participant as seen by another committed participant (D4). Contact (phone/email) is
+ * visible to fellow committed participants so they can coordinate — never in the public view. */
 export interface ParticipantInfo {
   userId: string;
   name: string;
   numMen: number;
   phone: string | null;
   email: string | null;
+  /** True for the host's own commitment (badged "organizer" in the roster). */
+  isHost?: boolean;
 }
 
 /**
