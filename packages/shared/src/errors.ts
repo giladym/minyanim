@@ -13,6 +13,7 @@ export const ERROR_CODES = {
   DATE_IN_PAST: "date.in_past",
   DATE_RANGE_INVALID: "date.range_invalid",
   NUM_MEN_TOO_LOW: "num_men.too_low",
+  NUM_MEN_TOO_HIGH: "num_men.too_high",
   CONFIRM_REQUIRED: "confirm.required",
   GEO_UNAVAILABLE: "geo.unavailable",
   GEO_INVALID_COORDS: "geo.invalid_coords",

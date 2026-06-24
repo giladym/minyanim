@@ -106,10 +106,12 @@ export const en = {
     },
     notFound: { title: "Page not found", body: "The page you're looking for doesn't exist or has moved.", home: "Back to home" },
     errors: {
+      "name.required": "Please enter a name.",
       "location.required": "Please enter a city and country.",
       "date.in_past": "The arrival date is already in the past at the destination.",
       "date.range_invalid": "The departure date must be on or after the arrival date.",
       "num_men.too_low": "Please enter at least one man.",
+      "num_men.too_high": "That number is too high.",
       "confirm.required": "Explicit confirmation is required.",
       "geo.unavailable": "The location lookup service is unavailable right now. You can enter a city and country manually.",
       "geo.invalid_coords": "That map point is invalid. Please pick another spot.",

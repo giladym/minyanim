@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -106,17 +106,13 @@ describe("AddEditStayForm — validation (create)", () => {
     expect(createMutate).not.toHaveBeenCalled();
   });
 
-  it("rejects a man count below 1 with num_men.too_low", async () => {
-    const user = userEvent.setup();
+  it("clamps the man count to 1..1000 (no 0 / NaN / huge reaches the server)", () => {
     render(<AddEditStayForm />);
-    await fillLocationManually(user, "לונדון", "בריטניה");
-    await fillDates(user, "2099-01-10", "2099-01-12");
     const men = screen.getByLabelText("כמה גברים בקבוצה (כולל אותך)");
-    await user.clear(men);
-    await user.type(men, "0");
-    await user.click(submitButton());
-    expect(await screen.findByText(HE["num_men.too_low"])).toBeInTheDocument();
-    expect(createMutate).not.toHaveBeenCalled();
+    fireEvent.change(men, { target: { value: "0" } });
+    expect(men).toHaveValue(1); // floors at 1
+    fireEvent.change(men, { target: { value: "9999" } });
+    expect(men).toHaveValue(1000); // caps at 1000
   });
 
   it("submits a valid Stay and navigates to the dashboard highlighted", async () => {

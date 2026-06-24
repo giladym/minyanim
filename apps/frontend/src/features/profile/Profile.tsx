@@ -20,6 +20,7 @@ export function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [label, setLabel] = useState("");
   const [phoneErr, setPhoneErr] = useState("");
+  const [saveErr, setSaveErr] = useState("");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   function load() {
@@ -29,21 +30,38 @@ export function ProfilePage() {
 
   if (!p) return null;
 
+  /** Persist a profile patch, surfacing any failure instead of swallowing it (was silent). */
+  async function patch(input: Parameters<typeof patchProfile>[0]): Promise<boolean> {
+    setSaveErr("");
+    try {
+      setP(await patchProfile(input));
+      return true;
+    } catch (err) {
+      setSaveErr(
+        err instanceof ApiError && err.body.errors[0]?.code
+          ? t(`errors.${err.body.errors[0].code}`)
+          : t("auth.error"),
+      );
+      return false;
+    }
+  }
   async function saveName() {
-    setP(await patchProfile({ name }));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+    if (!name.trim()) { setSaveErr(t("errors.name.required")); return; }
+    if (await patch({ name })) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    }
   }
   async function changeLanguage(language: Language) {
-    setP(await patchProfile({ language }));
-    void i18n.changeLanguage(language);
+    if (await patch({ language })) void i18n.changeLanguage(language);
   }
   async function changeTheme(theme: Theme) {
+    const prev = p!.theme as Theme;
     setTheme(theme);
-    setP(await patchProfile({ theme }));
+    if (!(await patch({ theme }))) setTheme(prev); // revert the optimistic theme on failure
   }
   async function changeHavdalahOpinion(havdalahOpinion: HavdalahOpinion) {
-    setP(await patchProfile({ havdalahOpinion }));
+    await patch({ havdalahOpinion });
   }
   async function add() {
     setPhoneErr("");
@@ -64,6 +82,8 @@ export function ProfilePage() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
       <h1 className="text-2xl font-extrabold">{t("profile.title")}</h1>
+
+      {saveErr && <p role="alert" className="rounded-lg bg-clay-soft px-4 py-2.5 text-sm font-bold text-clay-ink">{saveErr}</p>}
 
       <section className={card}>
         <label className="mb-1.5 block text-sm font-bold">{t("profile.name")}</label>

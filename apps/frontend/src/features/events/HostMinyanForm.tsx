@@ -109,8 +109,13 @@ export function HostMinyanForm() {
       const dto = await host.mutateAsync(parsed.data);
       void navigate({ to: "/minyan/$id", params: { id: dto.id } });
     } catch (err) {
-      if (err instanceof ApiError && err.body.errors[0]) setErrors({ [err.body.errors[0].field ?? "form"]: err.body.errors[0].code });
-      else setSubmitError(t("auth.error"));
+      if (err instanceof ApiError && Array.isArray(err.body.errors) && err.body.errors.length) {
+        // Map ALL field errors (not just the first), matching the Stay form.
+        const next: Record<string, string> = {};
+        for (const e2 of err.body.errors) if (e2.field) next[e2.field] = e2.code;
+        setErrors(next);
+        if (err.body.errors.some((e2) => !e2.field)) setSubmitError(t("auth.error"));
+      } else setSubmitError(t("auth.error"));
     }
   }
 
@@ -190,7 +195,7 @@ export function HostMinyanForm() {
           </label>
           <label className="block">
             <span className={labelCls}>{t("host.numMen")}</span>
-            <input type="number" min={1} className={fieldCls} value={hostNumMen} aria-label={t("host.numMen")} aria-invalid={!!errors.hostNumMen} onChange={(e) => setHostNumMen(Number(e.target.value))} />
+            <input type="number" min={1} max={50} className={fieldCls} value={hostNumMen} aria-label={t("host.numMen")} aria-invalid={!!errors.hostNumMen} onChange={(e) => setHostNumMen(Math.min(50, Math.max(1, Math.floor(Number(e.target.value)) || 1)))} />
             {fieldError("hostNumMen")}
           </label>
           <label className="block">
