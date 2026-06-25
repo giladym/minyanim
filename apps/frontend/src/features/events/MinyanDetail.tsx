@@ -92,12 +92,26 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
   const navigate = useNavigate();
   const [numMen, setNumMen] = useState(1);
   const [conflict, setConflict] = useState(false);
+  const [actionErr, setActionErr] = useState("");
   const commit = useCommit(id);
   const change = useChangeCommitment(id);
   const withdraw = useWithdraw(id);
 
   const { data: session } = authClient.useSession();
   if (isOwner(m)) return null; // host is auto-committed; uses host controls
+
+  /** Clamp the party-size input to a valid 1–50 integer (no NaN/0/over-max reaching the server). */
+  const clampMen = (v: string) => Math.min(50, Math.max(1, Math.floor(Number(v)) || 1));
+  const codeMsg = (err: unknown) =>
+    err instanceof ApiError && err.body.errors[0]?.code ? t(`errors.${err.body.errors[0].code}`) : t("auth.error");
+  async function runChange() {
+    setActionErr("");
+    try { await change.mutateAsync(numMen); } catch (err) { setActionErr(codeMsg(err)); }
+  }
+  async function runWithdraw() {
+    setActionErr("");
+    try { await withdraw.mutateAsync(); } catch (err) { setActionErr(codeMsg(err)); }
+  }
 
   const committed = hasPrivate(m); // participant view ⇒ already joined
   const fieldCls = "w-24 rounded-xl border border-line2 bg-surface px-3 py-2.5 text-ink outline-none focus:border-clay";
@@ -120,25 +134,29 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
       <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
         <h2 className="font-extrabold text-ink">{t("commit.youreIn")}</h2>
         <div className="flex items-center gap-2">
-          <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(Number(e.target.value))} />
-          <button type="button" className="rounded-xl border border-clay px-4 py-2.5 font-bold text-clay disabled:opacity-60" disabled={change.isPending} onClick={() => change.mutate(numMen)}>
+          <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(clampMen(e.target.value))} />
+          <button type="button" className="rounded-xl border border-clay px-4 py-2.5 font-bold text-clay disabled:opacity-60" disabled={change.isPending} onClick={() => void runChange()}>
             {t("commit.updateSize")}
           </button>
-          <button type="button" className="rounded-xl px-3 py-2.5 font-bold text-clay-ink disabled:opacity-60" disabled={withdraw.isPending} onClick={() => withdraw.mutate()}>
+          <button type="button" className="rounded-xl px-3 py-2.5 font-bold text-clay-ink disabled:opacity-60" disabled={withdraw.isPending} onClick={() => void runWithdraw()}>
             {t("commit.withdraw")}
           </button>
         </div>
+        {actionErr && <p role="alert" className="text-sm font-semibold text-clay-ink">{actionErr}</p>}
       </div>
     );
   }
 
   async function join() {
+    setActionErr("");
     try {
       const r = await commit.mutateAsync(numMen);
       setConflict(r.conflict);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         void navigate({ to: "/sign-in", search: { redirect: `/minyan/${id}` } });
+      } else {
+        setActionErr(codeMsg(err)); // duplicate / cancelled / completed / party-size — was silent
       }
     }
   }
@@ -147,12 +165,13 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
     <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
       <h2 className="font-extrabold text-ink">{t("commit.joinTitle")}</h2>
       <div className="flex items-center gap-2">
-        <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(Number(e.target.value))} />
+        <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(clampMen(e.target.value))} />
         <button type="button" className="rounded-xl bg-clay px-5 py-2.5 font-extrabold text-on-clay disabled:opacity-60" disabled={commit.isPending} onClick={join}>
           {t("commit.join")}
         </button>
       </div>
       {conflict && <p role="alert" className="text-sm font-semibold text-clay-ink">{t("commit.conflictWarning")}</p>}
+      {actionErr && <p role="alert" className="text-sm font-semibold text-clay-ink">{actionErr}</p>}
     </div>
   );
 }

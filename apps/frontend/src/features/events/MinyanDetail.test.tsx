@@ -12,15 +12,16 @@ vi.mock("../../lib/auth-client", () => ({ authClient: { useSession: () => ({ dat
 
 const useMinyan = vi.fn();
 const commitMutateAsync = vi.fn();
-const withdrawMutate = vi.fn();
+const changeMutateAsync = vi.fn();
+const withdrawMutateAsync = vi.fn();
 const noop = { mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false };
 vi.mock("../../lib/events", () => ({
   useMinyan: () => useMinyan(),
   useCancelMinyan: () => noop,
   useUpdateMinyan: () => noop,
   useCommit: () => ({ mutateAsync: commitMutateAsync, isPending: false }),
-  useChangeCommitment: () => noop,
-  useWithdraw: () => ({ mutate: withdrawMutate, isPending: false }),
+  useChangeCommitment: () => ({ mutateAsync: changeMutateAsync, isPending: false }),
+  useWithdraw: () => ({ mutateAsync: withdrawMutateAsync, isPending: false }),
   useClaimRole: () => noop,
   useReleaseRole: () => noop,
   useFlagMinyan: () => ({ mutate: vi.fn(), isPending: false, isSuccess: false }),
@@ -91,6 +92,19 @@ describe("MinyanDetail — commit UI", () => {
     expect(wa).toHaveAttribute("href", "https://wa.me/972501112222");
     // The viewer's own row exposes no contact buttons.
     expect(screen.queryByRole("link", { name: /וואטסאפ — אני/ })).not.toBeInTheDocument();
+  });
+
+  it("surfaces a server error when updating party size (no longer silent)", async () => {
+    const { ApiError } = await import("../../lib/api");
+    changeMutateAsync.mockRejectedValue(new ApiError(400, { errors: [{ field: null, code: "party_size.invalid" }] }));
+    useMinyan.mockReturnValue({
+      data: { ...base, addressPrivate: "Secret 1", hostContact: { name: "דוד", phone: null, email: "d@x.com" }, participants: [{ userId: "viewer", name: "אני", numMen: 2, phone: null, email: null }], myRoles: { baalTefila: false, baalKorei: false } },
+      isLoading: false,
+    });
+    const user = userEvent.setup();
+    render(<MinyanDetail />);
+    await user.click(screen.getByRole("button", { name: "עדכון" }));
+    expect(await screen.findByText(/מספר גברים תקין/)).toBeInTheDocument();
   });
 
   it("host sees host controls and no join/commit UI", () => {

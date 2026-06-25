@@ -346,11 +346,12 @@ export function AddEditStayForm({
             <input
               type="number"
               min={1}
+              max={1000}
               className={fieldCls}
               value={numMen}
               aria-label={t("stays.numMen")}
               aria-invalid={!!errors.numMen}
-              onChange={(e) => setNumMen(Number(e.target.value))}
+              onChange={(e) => setNumMen(Math.min(1000, Math.max(1, Math.floor(Number(e.target.value)) || 1)))}
             />
             {fieldError("numMen")}
           </label>

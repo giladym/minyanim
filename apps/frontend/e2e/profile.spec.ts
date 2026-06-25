@@ -12,8 +12,8 @@ test("profile page: renders, adds a phone, axe AA clean", async ({ page }) => {
   await page.goto("/profile");
   await expect(page.getByRole("heading", { name: /הפרופיל שלי|My profile/ })).toBeVisible();
 
-  // Add a phone number and see it listed.
-  await page.getByPlaceholder(/\+972501234567|\+972/).fill("+972501234999");
+  // Add a phone: pick a country (defaults to Israel/+972) + a local number → normalized to E.164.
+  await page.getByLabel(/מספר טלפון|Phone number/).fill("0501234999");
   await page.getByRole("button", { name: /הוספת מספר|Add number/ }).click();
   await expect(page.getByText("+972501234999")).toBeVisible();
 
