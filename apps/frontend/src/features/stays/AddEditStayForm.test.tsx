@@ -196,6 +196,27 @@ describe("AddEditStayForm — folder assignment (004 US1 / R10)", () => {
     expect(createMutate).toHaveBeenCalledWith(expect.objectContaining({ folderId: null }));
   });
 
+  it("assigns an inline-created folder when EDITING (the reported bug)", async () => {
+    getStayMock.mockResolvedValue({
+      id: "stay_1", city: "פריז", country: "צרפת", lat: null, lng: null,
+      arrivalDate: Date.UTC(2099, 0, 10), departureDate: Date.UTC(2099, 0, 12), numMen: 3,
+      bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
+      status: "active", isPast: false, coversShabbat: false, contactName: null, contactPhone: null,
+      contactEmail: null, groupMembers: null, notes: null, folderId: null, historyTag: null, createdAt: 0, updatedAt: 0,
+    });
+    createFolderMock.mockResolvedValue({ id: "fld_new", name: "טיול", stayCount: 0, createdAt: 9 });
+    updateMutate.mockResolvedValue({ id: "stay_1" });
+    const user = userEvent.setup();
+    render(<AddEditStayForm stayId="stay_1" />);
+    await waitFor(() => expect(screen.getByLabelText("תיקייה")).toHaveValue("")); // seeded: no folder
+    await user.click(screen.getByRole("button", { name: "תיקייה חדשה" }));
+    await user.type(screen.getByLabelText("תיקייה חדשה"), "טיול");
+    await user.click(screen.getByRole("button", { name: "יצירה" }));
+    await user.click(screen.getByRole("button", { name: "שמירת שינויים" }));
+    await waitFor(() => expect(updateMutate).toHaveBeenCalledTimes(1));
+    expect(updateMutate).toHaveBeenCalledWith({ id: "stay_1", input: expect.objectContaining({ folderId: "fld_new" }) });
+  });
+
   it("seeds folderId from the loaded Stay on edit", async () => {
     getStayMock.mockResolvedValue({
       id: "stay_1",
