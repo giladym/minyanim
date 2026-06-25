@@ -1,11 +1,12 @@
 import { z } from "zod";
 
-/** Quorum-event notification kinds (D6). */
+/** Notification kinds (D6). `minyan_nearby` = a new minyan was hosted near your active location. */
 export const NotificationKindSchema = z.enum([
   "quorum_reached",
   "near_quorum",
   "quorum_lost",
   "cancelled",
+  "minyan_nearby",
 ]);
 export type NotificationKind = z.infer<typeof NotificationKindSchema>;
 

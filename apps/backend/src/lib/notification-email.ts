@@ -46,6 +46,11 @@ const COPY: Record<NotificationKind, Record<Lang, { subject: string; heading: st
     he: { subject: "המניין בוטל · מניין", heading: "המניין בוטל", body: (c) => `המניין ב${c.city}, ${c.country} בוטל על ידי המארח.`, cta: "לגילוי מניינים נוספים" },
     en: { subject: "Minyan cancelled · Minyan", heading: "The minyan was cancelled", body: (c) => `The minyan in ${c.city}, ${c.country} was cancelled by its host.`, cta: "Discover other minyanim" },
   },
+  // In-app only today (no email is sent for this kind) — present so the COPY map covers every kind.
+  minyan_nearby: {
+    he: { subject: "מניין חדש באזור · מניין", heading: "מניין חדש באזור", body: (c) => `נפתח מניין חדש ב${c.city}, ${c.country} בתאריך שאתם שוהים שם.`, cta: "לצפייה והצטרפות" },
+    en: { subject: "New minyan nearby · Minyan", heading: "A new minyan nearby", body: (c) => `A new minyan was created in ${c.city}, ${c.country} while you have a location there.`, cta: "View & join" },
+  },
 };
 
 /** Language-driven email shell (parameterizes `lib/email-templates.ts#shell`'s dir/lang). */

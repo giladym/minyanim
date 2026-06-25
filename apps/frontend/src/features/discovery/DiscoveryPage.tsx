@@ -185,14 +185,23 @@ export function DiscoveryPage() {
             <p className="text-sm text-muted">{t("discovery.potentialHint")}</p>
             {data && data.potential.length === 0 && <p className="text-sm text-muted">{t("discovery.potentialEmpty")}</p>}
             {data?.potential.map((b) => (
-              <div key={b.shabbat} className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3">
+              <div key={b.shabbat} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3">
                 <span className="font-semibold text-ink" dir="ltr">{b.shabbat}</span>
                 <span className="text-ink">{t("discovery.potentialMen", { count: b.menCount })}</span>
+                <Link
+                  to="/minyan/new"
+                  search={{ lat: center!.lat, lng: center!.lng, city: center!.city, country: center!.country, date: b.shabbat, nearby: b.menCount }}
+                  className="rounded-xl bg-clay px-4 py-2 text-sm font-extrabold text-on-clay"
+                >
+                  {t("discovery.hostCta")}
+                </Link>
               </div>
             ))}
-            <Link to="/minyan/new" className="self-start rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay">
-              {t("discovery.hostCta")}
-            </Link>
+            {data && data.potential.length === 0 && (
+              <Link to="/minyan/new" className="self-start rounded-xl border border-clay px-4 py-2.5 text-sm font-bold text-clay">
+                {t("discovery.hostCta")}
+              </Link>
+            )}
           </section>
         </>
       )}

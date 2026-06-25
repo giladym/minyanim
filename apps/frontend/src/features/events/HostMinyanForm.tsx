@@ -52,22 +52,31 @@ export function HostMinyanForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
 
-  // Pre-fill from a saved location when arrived via the post-save "host a minyan" promotion (#4):
-  // seed the location (city/coords) + the first Shabbat in the stay's range. Once-guarded.
-  const { fromStay } = useSearch({ from: "/authed/minyan/new" });
+  // Pre-fill the host form. Two sources, both once-guarded:
+  //  • ?fromStay=<id> — the post-save "host a minyan" promotion (#4): location + first Shabbat.
+  //  • lat/lng/city/country/date/nearby — the discovery "organize a minyan here" button: the
+  //    searched location + that Shabbat, plus how many nearby people will be notified on save.
+  const search = useSearch({ from: "/authed/minyan/new" });
+  const { fromStay, lat, lng, city, country, date, nearby } = search;
   const prefilled = useRef(false);
   useEffect(() => {
-    if (!fromStay || prefilled.current) return;
-    prefilled.current = true;
-    getStay(fromStay)
-      .then((s) => {
-        setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
-        const shabbat = firstShabbat(s.arrivalDate, s.departureDate);
-        if (shabbat) setEventDate(shabbat);
-        if (s.bringsSeferTorah) setSeferTorah(true);
-      })
-      .catch(() => {});
-  }, [fromStay]);
+    if (prefilled.current) return;
+    if (fromStay) {
+      prefilled.current = true;
+      getStay(fromStay)
+        .then((s) => {
+          setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
+          const shabbat = firstShabbat(s.arrivalDate, s.departureDate);
+          if (shabbat) setEventDate(shabbat);
+          if (s.bringsSeferTorah) setSeferTorah(true);
+        })
+        .catch(() => {});
+    } else if (lat != null && lng != null) {
+      prefilled.current = true;
+      setLocation({ city: city ?? "", country: country ?? "", lat, lng });
+      if (date) setEventDate(date);
+    }
+  }, [fromStay, lat, lng, city, country, date]);
 
   function setService(i: number, patch: Partial<ServiceRow>) {
     setServices((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -124,6 +133,11 @@ export function HostMinyanForm() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5" dir="rtl">
       <h1 className="text-2xl font-extrabold text-ink">{t("host.title")}</h1>
+      {nearby != null && nearby > 0 && (
+        <p role="status" className="rounded-xl bg-teal-soft px-4 py-3 text-sm font-semibold text-teal-ink">
+          {t("host.nearbyNotice", { count: nearby })}
+        </p>
+      )}
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
         <section className="rounded-2xl border border-line bg-surface p-5">
           <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} precise />

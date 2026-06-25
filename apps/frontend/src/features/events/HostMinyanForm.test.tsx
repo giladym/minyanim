@@ -55,6 +55,14 @@ describe("HostMinyanForm", () => {
     expect(screen.getByText("יש להזין עיר ומדינה.")).toBeInTheDocument();
   });
 
+  it("prefills location + date and shows the nearby-notify notice from discovery params", async () => {
+    search.mockReturnValue({ lat: 48.2082, lng: 16.3738, city: "וינה", country: "אוסטריה", date: "2030-01-05", nearby: 11 });
+    render(<HostMinyanForm />);
+    await waitFor(() => expect(screen.getByLabelText("תאריך")).toHaveValue("2030-01-05"));
+    expect(screen.getByText(/11 אנשים עם מיקום באזור/)).toBeInTheDocument();
+    expect(getStayMock).not.toHaveBeenCalled(); // discovery path doesn't fetch a stay
+  });
+
   it("pre-fills the date with the stay's first Shabbat when arrived via ?fromStay (#4)", async () => {
     // 14–16 Jul 2026: the covered Saturday is 18 Jul? No — 11 Jul is Sat; range 14–16 has no Sat.
     // Use 13–19 Jul 2026 which covers Sat 18 Jul 2026.

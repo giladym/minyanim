@@ -18,6 +18,7 @@ import {
 } from "../repositories/eventRepository";
 import {
   activeStaysInBbox,
+  activeStayUserIdsCoveringDate,
   coordlessActiveStays,
   beitChabadInBbox,
   type Bbox,
@@ -31,6 +32,12 @@ export function bboxFrom(lat: number, lng: number, radiusKm: number): Bbox {
   const latDelta = radiusKm / 111;
   const lngDelta = radiusKm / (111 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01));
   return { minLat: lat - latDelta, maxLat: lat + latDelta, minLng: lng - lngDelta, maxLng: lng + lngDelta };
+}
+
+/** User ids (excluding the host) with an active Stay within the discovery radius of (lat,lng) whose
+ * range covers `date` — the people to notify when a minyan is hosted there. */
+export function usersWithStaysNear(db: Db, lat: number, lng: number, date: Date, excludeUserId: string): Promise<string[]> {
+  return activeStayUserIdsCoveringDate(db, bboxFrom(lat, lng, DISCOVERY_RADIUS_KM), date, excludeUserId);
 }
 
 /** Bucket active Stays into per-Shabbat potential within [from, to] (D2/R3). */
