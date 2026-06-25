@@ -43,23 +43,25 @@ export function PhoneInput({ onChange, defaultIso = "IL" }: { onChange: (e164: s
     onChange(digits ? `+${dial}${digits}` : "");
   }
 
+  // dir="ltr": phone numbers read left→right, so the row is always country (left) → number
+  // (right), even on the RTL Hebrew page. min-w-0 lets the number field shrink instead of
+  // overflowing the card on narrow screens.
   return (
-    <div className="flex flex-1 gap-2">
+    <div dir="ltr" className="flex min-w-0 flex-1 items-stretch gap-2">
       <select
-        className={`${fieldCls} max-w-[9rem] flex-shrink-0`}
+        className={`${fieldCls} w-32 shrink-0 truncate`}
         value={iso}
         aria-label={t("profile.country")}
         onChange={(e) => { setIso(e.target.value); emit(e.target.value, national); }}
       >
         {countries.map((c) => (
-          <option key={c.iso} value={c.iso}>{c.name} (+{c.dial})</option>
+          <option key={c.iso} value={c.iso}>+{c.dial} {c.name}</option>
         ))}
       </select>
       <input
-        className={`${fieldCls} flex-1`}
+        className={`${fieldCls} min-w-0 flex-1`}
         type="tel"
         inputMode="tel"
-        dir="ltr"
         value={national}
         aria-label={t("profile.phoneNumber")}
         placeholder={t("profile.phoneNumberPlaceholder")}
