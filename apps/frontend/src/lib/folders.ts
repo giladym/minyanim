@@ -38,6 +38,11 @@ export function useCreateFolder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createFolder,
+    // Insert the new folder into the cache immediately so a <select> bound to it has a matching
+    // <option> right away — otherwise (refetch still in flight) the option is missing and the
+    // just-made selection can't render/hold (the inline-create-in-edit-form bug).
+    onSuccess: (folder) =>
+      qc.setQueryData<FolderDTO[]>(FOLDERS_KEY, (old) => (old ? [...old, folder] : [folder])),
     onSettled: () => invalidateFoldersAndStays(qc),
   });
 }
