@@ -11,6 +11,20 @@ interface NotifyInfo {
 }
 
 /**
+ * Notify people with an active location near a newly-hosted minyan (in-app only — no email, to
+ * avoid unsolicited mail). Best-effort: errors are logged, never thrown (the host already succeeded).
+ */
+export async function onMinyanCreated(ctx: Ctx, eventId: string, recipientUserIds: string[]): Promise<void> {
+  if (recipientUserIds.length === 0) return;
+  try {
+    await repo.insertNotifications(ctx.db, eventId, "minyan_nearby", recipientUserIds);
+    ctx.log.info("notification.fanout", { eventId, kind: "minyan_nearby", recipientCount: recipientUserIds.length });
+  } catch (e) {
+    ctx.log.warn("notification.nearby_failed", { eventId, err: String(e) });
+  }
+}
+
+/**
  * Fan out a notification: write in-app rows SYNCHRONOUSLY (the source of truth), then defer the
  * emails past the response via `ctx.defer` (R8). Each email is isolated in try/catch so one bad
  * address never aborts the batch; failures are logged, not thrown.

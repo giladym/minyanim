@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, isNull, sql } from "drizzle-orm";
+import { and, eq, gte, lte, ne, isNull, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { stay, beitChabadPin } from "../db/schema";
 
@@ -25,6 +25,35 @@ const POTENTIAL_COLS = {
   arrivalDate: stay.arrivalDate,
   departureDate: stay.departureDate,
 } as const;
+
+/**
+ * Distinct user ids with an ACTIVE Stay inside the bbox whose date range COVERS `date`
+ * (arrival ≤ date ≤ departure), excluding `excludeUserId`. The recipient cohort to notify when a
+ * minyan is hosted nearby on that Shabbat (FR: host→nearby notification).
+ */
+export async function activeStayUserIdsCoveringDate(
+  db: Db,
+  b: Bbox,
+  date: Date,
+  excludeUserId: string,
+): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ userId: stay.userId })
+    .from(stay)
+    .where(
+      and(
+        eq(stay.status, "active"),
+        gte(stay.lat, b.minLat),
+        lte(stay.lat, b.maxLat),
+        gte(stay.lng, b.minLng),
+        lte(stay.lng, b.maxLng),
+        lte(stay.arrivalDate, date),
+        gte(stay.departureDate, date),
+        ne(stay.userId, excludeUserId),
+      ),
+    );
+  return rows.map((r) => r.userId);
+}
 
 /** Active Stays with coordinates inside the bounding box (the indexed bbox scan, R2). */
 export async function activeStaysInBbox(db: Db, b: Bbox): Promise<PotentialStay[]> {

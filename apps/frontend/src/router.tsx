@@ -102,9 +102,16 @@ const discoveryRoute = createRoute({
 const minyanNewRoute = createRoute({
   getParentRoute: () => authedLayout,
   path: "/minyan/new",
-  // Optional ?fromStay=<id> pre-fills the host form from a saved location (005-followup #4).
-  validateSearch: (s): { fromStay?: string } => ({
+  // Pre-fill the host form: ?fromStay=<id> (from a saved location), or lat/lng/city/country/date
+  // /nearby from the discovery "organize a minyan here" button (potential → host).
+  validateSearch: (s): { fromStay?: string; lat?: number; lng?: number; city?: string; country?: string; date?: string; nearby?: number } => ({
     fromStay: typeof s.fromStay === "string" ? s.fromStay : undefined,
+    lat: typeof s.lat === "number" ? s.lat : undefined,
+    lng: typeof s.lng === "number" ? s.lng : undefined,
+    city: typeof s.city === "string" ? s.city : undefined,
+    country: typeof s.country === "string" ? s.country : undefined,
+    date: typeof s.date === "string" ? s.date : undefined,
+    nearby: typeof s.nearby === "number" ? s.nearby : undefined,
   }),
   component: lazyRouteComponent(() => import("./features/events/HostMinyanForm"), "HostMinyanForm"),
 });

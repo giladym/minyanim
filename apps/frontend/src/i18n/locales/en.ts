@@ -210,6 +210,7 @@ export const en = {
     },
     host: {
       title: "Host a minyan",
+      nearbyNotice: "{{count}} people with a location nearby will be notified when you save the minyan.",
       addressPrivate: "Specific address",
       addressPlaceholder: "e.g. Marriott Hotel, 19 Słomińskiego St, room 2",
       addressHint: "The exact address — shown only to people who join this minyan. Search the address or click the precise spot on the map to drop an accurate pin.",
@@ -264,6 +265,7 @@ export const en = {
         near_quorum: "Almost a minyan — a few more needed",
         quorum_lost: "Dropped below 10 men",
         cancelled: "A minyan was cancelled",
+        minyan_nearby: "A new minyan opened near you",
       },
     },
     commit: {

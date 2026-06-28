@@ -16,7 +16,8 @@ import * as repo from "../repositories/eventRepository";
 import type { MinyanJoined } from "../repositories/eventRepository";
 import { recipientsForEvent, eventNotifyContext } from "../repositories/notificationRepository";
 import { userRolesForEvent } from "../repositories/roleRepository";
-import { onCancelled } from "./notificationService";
+import { onCancelled, onMinyanCreated } from "./notificationService";
+import { usersWithStaysNear } from "./discoveryService";
 
 function toUtcMidnight(epochMs: number): Date {
   const d = new Date(epochMs);
@@ -159,6 +160,9 @@ export async function hostMinyan(ctx: Ctx, userId: string, input: CreateEventInp
     { id: `cmt_${crypto.randomUUID()}`, eventId: id, userId, numMen: input.hostNumMen, stayId: null, createdAt: now, updatedAt: now },
   );
   ctx.log.info("event.hosted", { eventId: id });
+  // Notify people with an active location near this minyan's place + date (in-app; host excluded).
+  const nearby = await usersWithStaysNear(ctx.db, input.lat, input.lng, eventDate, userId);
+  await onMinyanCreated(ctx, id, nearby);
   return (await getMinyan(ctx, userId, id)) as OwnerMinyanDTO;
 }
 
