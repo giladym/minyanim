@@ -1,0 +1,1 @@
+ALTER TABLE `event` ADD `address_notes` text;

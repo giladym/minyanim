@@ -1,22 +1,25 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (none) → 1.0.0
-New constitution — initial ratification.
+Version change: 1.0.0 → 1.1.0  (MINOR — new standards section + expanded tech stack)
 
-Added sections:
-  - Core Principles (5 principles)
-  - Tech Stack Constraints
-  - Branching & Development Workflow
-  - Governance
+Added:
+  - Section "Architecture & Engineering Standards" (two-app monorepo, layered backend,
+    shared package, contract-first, secrets policy, logging, error handling, comments, KISS)
+Modified:
+  - "Tech Stack Constraints" expanded: two-app split, TanStack, Hono, Drizzle, service
+    binding, Tailwind v4. Detailed HOW + rationale recorded in docs/adr/.
 
 Templates reviewed:
-  - .specify/templates/plan-template.md  ✅ aligned (no changes needed)
-  - .specify/templates/spec-template.md  ✅ aligned (no changes needed)
-  - .specify/templates/tasks-template.md ✅ aligned (no changes needed)
+  - .specify/templates/plan-template.md  ✅ aligned
+  - .specify/templates/spec-template.md  ✅ aligned
+  - .specify/templates/tasks-template.md ✅ aligned
 
-Deferred TODOs:
-  - RATIFICATION_DATE set to today (2026-06-17); no prior date exists.
+Companion docs (non-binding HOW / rationale):
+  - docs/architecture.md, docs/adr/*, docs/secrets.md, docs/integrations/*
+
+Prior report (1.0.0): initial ratification — Core Principles, Tech Stack, Branching,
+Governance. RATIFICATION_DATE 2026-06-17.
 -->
 
 # Minyanim Constitution
@@ -81,14 +84,50 @@ Every dependency and abstraction MUST be justified by a concrete, present need.
 ## Tech Stack Constraints
 
 The following stack is fixed for this project. Deviations require a constitution amendment.
+Detailed rationale and alternatives live in `docs/adr/`.
 
-- **Frontend**: React (latest stable) — no meta-framework lock-in unless justified in
-  a feature spec.
-- **Server / API**: Cloudflare Workers (edge runtime, no Node.js APIs).
-- **Database**: Cloudflare D1 (SQLite). Cloudflare KV for ephemeral / session data.
-- **Hosting / CDN**: Cloudflare Pages for static assets; Workers for API routes.
-- **Styling**: Tailwind CSS with RTL plugin enabled.
+- **Structure**: a **pnpm + Turborepo monorepo** with two deployable applications —
+  `apps/frontend` and `apps/backend` — plus `packages/shared`.
+- **Frontend**: React (latest stable) as a Vite SPA on **Cloudflare Workers Static Assets**;
+  **TanStack Router** (routing) + **TanStack Query** (server-state/caching). No meta-framework
+  (no TanStack Start / SSR framework) unless justified in a feature spec.
+- **Backend / API**: **Hono** on Cloudflare Workers (edge runtime, no Node.js APIs).
+- **FE↔BE wiring**: the frontend Worker calls the backend Worker via a **Service Binding**
+  (same origin to the browser → first-party cookies, no CORS).
+- **Database**: Cloudflare D1 (SQLite) via **Drizzle ORM** (use `db.batch` — D1 has no
+  interactive transactions). Cloudflare KV for ephemeral data.
+- **Styling**: **Tailwind CSS v4** with logical properties (RTL-first).
 - **Language**: TypeScript throughout — `strict` mode, no `any` escapes without comment.
+
+## Architecture & Engineering Standards
+
+Binding standards for both applications. The "how" (specific config) lives in `docs/`.
+
+- **Backend layering**: requests flow **router → controller → service → repository**
+  (data access via Drizzle). Services hold business logic; controllers do I/O mapping;
+  repositories isolate the ORM. Keep layers thin — do not add a layer a route does not need.
+- **Contract-first**: request/response payloads are **Zod schemas in `packages/shared`** —
+  the single source of truth. The backend exposes them via **`@hono/zod-openapi`** and serves
+  **Swagger UI** (`@hono/swagger-ui`); the frontend imports the shared types directly.
+- **Internationalization**: NO hard-coded user-facing strings — every string MUST come from
+  the i18n layer (Hebrew primary). (Reinforces Principle I.)
+- **Theming**: NO hard-coded colors — use design tokens / CSS variables only
+  (see `design/DESIGN-SYSTEM.md`). Themes MUST be layered and extensible.
+- **Secrets**: secrets are accessed only via the Worker **`env` binding** — `.dev.vars`
+  locally, `wrangler secret put` / Secrets Store in production. Secrets MUST NOT live in
+  `.env`, in `wrangler.jsonc` `[vars]`, or in client code. Frontend public config uses
+  `VITE_`-prefixed `.env` values only (these are public). See `docs/secrets.md`.
+- **Logging**: structured JSON via a shared logger util → Cloudflare Workers Logs /
+  Observability (Logpush optional). **Winston/Node loggers are forbidden** (incompatible with
+  the Workers runtime).
+- **Error handling**: a centralized error handler + a typed application-error hierarchy;
+  responses use the shared error schema. No swallowed errors; every error is logged with a
+  request id.
+- **Comments**: **JSDoc on exported symbols only**, concise — explain *why*, not *what*
+  (types and good names carry the *what*). No long narration.
+- **KISS**: prefer the simplest design that meets the need; let trivial endpoints stay thin.
+- **Testing**: backend via `@cloudflare/vitest-pool-workers`; frontend via Vitest +
+  Testing Library; e2e + the WCAG AA gate via Playwright + `@axe-core/playwright`.
 
 ## Branching & Development Workflow
 
@@ -113,4 +152,4 @@ All PRs and code reviews MUST verify compliance with the five core principles.
 Complexity that violates a principle MUST be documented in the plan's Complexity
 Tracking table with a justification.
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-17 | **Last Amended**: 2026-06-17
+**Version**: 1.1.0 | **Ratified**: 2026-06-17 | **Last Amended**: 2026-06-18

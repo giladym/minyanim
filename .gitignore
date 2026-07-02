@@ -18,8 +18,23 @@ out/
 .env.*.local
 .env.production
 
+# Personal/private scratch (holds real credentials — never commit)
+.private
+.private/
+
+# Cloudflare / Wrangler secrets & build
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.wrangler/
+
+# Monorepo task cache
+.turbo/
+
 # Claude Code — may contain auth tokens / credentials
 .claude/settings.local.json
+# Local-scope MCP config (may hold tokens) — keep committed .mcp.json secret-free
+.mcp.local.json
 
 # OS
 .DS_Store

@@ -1,0 +1,571 @@
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import {
+  CreateStayInput,
+  type CreateStayInputType,
+  type PrayerNeeds as PrayerNeedsValue,
+} from "@minyanim/shared";
+import { getProfile } from "../../lib/profile";
+import { getStay, useCreateStay, useUpdateStay } from "../../lib/stays";
+import { useFolders, useCreateFolder } from "../../lib/folders";
+import { ApiError } from "../../lib/api";
+import { LocationPicker, type LocationValue } from "./LocationPicker";
+import { PrayerNeeds } from "./PrayerNeeds";
+
+const fieldCls =
+  "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay";
+const labelCls = "mb-1.5 block text-sm font-bold text-ink";
+const errCls = "mt-1 block text-sm font-semibold text-clay-ink";
+
+/** Convert a native date input value ("YYYY-MM-DD") to epoch-ms at UTC midnight of that civil
+ * date (D4). Empty string yields NaN so the schema flags the missing field. */
+function dateInputToEpoch(v: string): number {
+  if (!v) return Number.NaN;
+  return Date.parse(`${v}T00:00:00.000Z`);
+}
+
+/** Convert a stored UTC-midnight epoch back to a native date input value ("YYYY-MM-DD"). */
+function epochToDateInput(epoch: number): string {
+  if (!Number.isFinite(epoch)) return "";
+  return new Date(epoch).toISOString().slice(0, 10);
+}
+
+/**
+ * Whether the civil-date range ["YYYY-MM-DD", "YYYY-MM-DD"] overlaps a Friday or Saturday — the
+ * client-side mirror of the server's coversShabbat heuristic (D7). Dates are treated as civil and
+ * parsed at UTC midnight, so `getUTCDay() ∈ {5, 6}` is the civil weekday. Returns false until
+ * both dates are valid and ordered. */
+function rangeCoversShabbat(arrival: string, departure: string): boolean {
+  const start = dateInputToEpoch(arrival);
+  const end = dateInputToEpoch(departure);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return false;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  for (let t = start; t <= end; t += DAY_MS) {
+    const day = new Date(t).getUTCDay();
+    if (day === 5 || day === 6) return true;
+  }
+  return false;
+}
+
+const emptyPrayerNeeds: PrayerNeedsValue = {
+  weekday: { shacharit: false, mincha: false, maariv: false },
+};
+
+/** Field-keyed validation errors (code strings rendered via t(`errors.${code}`)). */
+type FieldErrors = Record<string, string>;
+
+/** Error keys that live behind the "more details" disclosure — used to auto-expand it on a failed
+ * submit so the flagged field is actually visible (and focusable). */
+const DETAIL_ERROR_FIELDS = new Set([
+  "addressPrivate",
+  "groupMembers",
+  "notes",
+  "contactName",
+  "contactPhone",
+  "contactEmail",
+]);
+
+/**
+ * Create/Edit Stay form (FR-001/FR-006). Required fields: location (via LocationPicker),
+ * arrival/departure dates, number of men. Smart defaults pre-fill contact from the profile and
+ * num_men=1. Optional fields are collapsed behind a "more details" disclosure. Validates on
+ * submit against the shared CreateStayInput; Zod issue messages are error codes rendered as
+ * Hebrew text. On success returns to the dashboard with the affected Stay highlighted.
+ *
+ * @param stayId When present, the form edits an existing Stay (PATCH); otherwise it creates one.
+ */
+export function AddEditStayForm({
+  stayId,
+  duplicateFromId,
+}: {
+  stayId?: string;
+  /** When set (create mode), prefill from this source Stay with cleared dates (004 D9). */
+  duplicateFromId?: string;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const isEdit = Boolean(stayId);
+
+  const [location, setLocation] = useState<LocationValue>({
+    city: "",
+    country: "",
+    lat: null,
+    lng: null,
+  });
+  const [arrival, setArrival] = useState("");
+  const [departure, setDeparture] = useState("");
+  const [numMen, setNumMen] = useState(1);
+  const [bringsSeferTorah, setBringsSeferTorah] = useState(false);
+  const [prayerNeeds, setPrayerNeeds] = useState<PrayerNeedsValue>(emptyPrayerNeeds);
+  const [addressPrivate, setAddressPrivate] = useState("");
+  const [groupMembers, setGroupMembers] = useState("");
+  const [notes, setNotes] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderError, setNewFolderError] = useState("");
+
+  const [showDetails, setShowDetails] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [submitError, setSubmitError] = useState("");
+  // Bumped on every failed submit so the focus effect re-runs even if the same fields are still
+  // invalid (the errors object can be referentially equal across two failed attempts).
+  const [failedAttempt, setFailedAttempt] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const errorCount = Object.keys(errors).length;
+
+  // Soft past-floor for the date pickers: one day back, mirroring the server's ±1-day tolerance
+  // for coordinate-less stays. A hard `today` floor would wrongly block a "today at destination"
+  // arrival for a user traveling west (e.g. IL → US), so we leave a one-day buffer. This is a UX
+  // affordance only — the server stays authoritative for the timezone-correct "not in the past"
+  // rule, and the schema enforces departure ≥ arrival regardless of what the picker allows.
+  const pastFloor = useMemo(() => epochToDateInput(Date.now() - 24 * 60 * 60 * 1000), []);
+
+  // After a failed submit, move focus to the first invalid field (and scroll it into view) so the
+  // user is taken straight to what needs fixing — keeps the always-enabled submit button usable
+  // while making the validation errors impossible to miss.
+  useEffect(() => {
+    if (failedAttempt === 0) return;
+    const first = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    if (first) {
+      first.focus();
+      first.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    }
+  }, [failedAttempt]);
+
+  const create = useCreateStay();
+  const update = useUpdateStay();
+  const { data: folders } = useFolders();
+  const createFolder = useCreateFolder();
+  const busy = create.isPending || update.isPending;
+
+  // Date-driven Shabbat affordance: show the note only when the range covers a Fri/Sat (FR-009).
+  const coversShabbat = useMemo(
+    () => rangeCoversShabbat(arrival, departure),
+    [arrival, departure],
+  );
+
+  // Smart defaults: pre-fill contact (name + first phone) from the profile (D12). Fresh-create
+  // only — skipped when editing or duplicating (the source Stay's contact is used instead).
+  useEffect(() => {
+    if (isEdit || duplicateFromId) return;
+    getProfile()
+      .then((p) => {
+        setContactName((prev) => prev || p.name);
+        setContactPhone((prev) => prev || p.phones[0]?.e164 || "");
+      })
+      .catch(() => {});
+  }, [isEdit, duplicateFromId]);
+
+  // Edit: seed the form from the existing Stay — exactly ONCE. Guard with a ref so a later
+  // re-render that re-runs this effect (e.g. `t` changing identity on a language switch) can't
+  // re-fetch and clobber edits the user has already made.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (!stayId || seeded.current) return;
+    seeded.current = true;
+    getStay(stayId)
+      .then((s) => {
+        setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
+        setArrival(epochToDateInput(s.arrivalDate));
+        setDeparture(epochToDateInput(s.departureDate));
+        setNumMen(s.numMen);
+        setBringsSeferTorah(s.bringsSeferTorah);
+        setPrayerNeeds(s.prayerNeeds);
+        setAddressPrivate(s.addressPrivate ?? "");
+        setGroupMembers(s.groupMembers ?? "");
+        setNotes(s.notes ?? "");
+        setContactName(s.contactName ?? "");
+        setContactPhone(s.contactPhone ?? "");
+        setContactEmail(s.contactEmail ?? "");
+        setFolderId(s.folderId ?? null);
+        if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
+      })
+      .catch(() => setSubmitError(t("stays.loadError")));
+  }, [stayId, t]);
+
+  // Duplicate: prefill from a source Stay (D9) — everything EXCEPT dates, which the user re-picks.
+  // Once-guarded like the edit seed; distinct from it (create mode, dates intentionally cleared).
+  const duplicated = useRef(false);
+  useEffect(() => {
+    if (stayId || !duplicateFromId || duplicated.current) return;
+    duplicated.current = true;
+    getStay(duplicateFromId)
+      .then((s) => {
+        setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
+        setNumMen(s.numMen);
+        setBringsSeferTorah(s.bringsSeferTorah);
+        setPrayerNeeds(s.prayerNeeds);
+        setAddressPrivate(s.addressPrivate ?? "");
+        setGroupMembers(s.groupMembers ?? "");
+        setNotes(s.notes ?? "");
+        setContactName(s.contactName ?? "");
+        setContactPhone(s.contactPhone ?? "");
+        setContactEmail(s.contactEmail ?? "");
+        setFolderId(s.folderId ?? null);
+        if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
+        // Dates are intentionally left empty — the duplicate is for a new trip.
+      })
+      .catch(() => setSubmitError(t("stays.loadError")));
+  }, [stayId, duplicateFromId, t]);
+
+  const payload: CreateStayInputType = useMemo(
+    () => ({
+      city: location.city,
+      country: location.country,
+      lat: location.lat,
+      lng: location.lng,
+      addressPrivate: addressPrivate || null,
+      arrivalDate: dateInputToEpoch(arrival),
+      departureDate: dateInputToEpoch(departure),
+      numMen,
+      bringsSeferTorah,
+      prayerNeeds,
+      contactName: contactName || null,
+      contactPhone: contactPhone || null,
+      contactEmail: contactEmail || null,
+      groupMembers: groupMembers || null,
+      notes: notes || null,
+      folderId,
+    }),
+    [location, addressPrivate, arrival, departure, numMen, bringsSeferTorah, prayerNeeds, contactName, contactPhone, contactEmail, groupMembers, notes, folderId],
+  );
+
+  function applyApiError(err: unknown) {
+    if (err instanceof ApiError && Array.isArray(err.body.errors)) {
+      const next: FieldErrors = {};
+      for (const e of err.body.errors) if (e.field) next[e.field] = e.code;
+      setErrors((prev) => ({ ...prev, ...next }));
+      if (Object.keys(next).some((k) => DETAIL_ERROR_FIELDS.has(k))) setShowDetails(true);
+      if (Object.keys(next).length > 0) setFailedAttempt((n) => n + 1);
+      if (err.body.errors.some((e) => !e.field)) setSubmitError(t("auth.error"));
+    } else {
+      setSubmitError(t("auth.error"));
+    }
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitError("");
+    // Structural validation against the shared SSOT; Zod message == error code.
+    const parsed = CreateStayInput.safeParse(payload);
+    if (!parsed.success) {
+      const next: FieldErrors = {};
+      for (const issue of parsed.error.issues) {
+        next[issue.path.join(".") || "form"] = issue.message;
+      }
+      setErrors(next);
+      // Reveal the disclosure if a hidden field is at fault, then drive focus to the first error.
+      if (Object.keys(next).some((k) => DETAIL_ERROR_FIELDS.has(k))) setShowDetails(true);
+      setFailedAttempt((n) => n + 1);
+      return;
+    }
+    setErrors({});
+    try {
+      if (isEdit && stayId) {
+        const dto = await update.mutateAsync({ id: stayId, input: parsed.data });
+        navigateToDashboard(dto.id, "updated");
+      } else {
+        const dto = await create.mutateAsync(parsed.data);
+        navigateToDashboard(dto.id, "saved");
+      }
+    } catch (err) {
+      applyApiError(err);
+    }
+  }
+
+  function navigateToDashboard(id: string, flash: "saved" | "updated") {
+    void navigate({ to: "/stays", search: { highlight: id, flash } });
+  }
+
+  const fieldError = (name: string) =>
+    errors[name] ? <span className={errCls}>{t(`errors.${errors[name]}`)}</span> : null;
+
+  return (
+    <div className="mx-auto flex max-w-xl flex-col gap-5" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-extrabold text-ink">
+          {isEdit ? t("stays.editTitle") : t("stays.newTitle")}
+        </h1>
+        <button
+          type="button"
+          className="text-sm font-bold text-clay"
+          onClick={() => void navigate({ to: "/stays" })}
+        >
+          {t("stays.backToList")}
+        </button>
+      </div>
+
+      <form ref={formRef} onSubmit={submit} className="flex flex-col gap-5" noValidate>
+        <Card>
+          <LocationPicker
+            value={location}
+            onChange={setLocation}
+            invalid={!!(errors.city || errors.country)}
+          />
+          {fieldError("city")}
+          {fieldError("country")}
+        </Card>
+
+        <Card>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className={labelCls}>{t("stays.arrivalDate")}</span>
+              <input
+                type="date"
+                className={fieldCls}
+                value={arrival}
+                min={pastFloor}
+                max={departure || undefined}
+                aria-label={t("stays.arrivalDate")}
+                aria-invalid={!!errors.arrivalDate}
+                onChange={(e) => setArrival(e.target.value)}
+              />
+              {fieldError("arrivalDate")}
+            </label>
+            <label className="block">
+              <span className={labelCls}>{t("stays.departureDate")}</span>
+              <input
+                type="date"
+                className={fieldCls}
+                value={departure}
+                min={arrival || pastFloor}
+                aria-label={t("stays.departureDate")}
+                aria-invalid={!!errors.departureDate}
+                onChange={(e) => setDeparture(e.target.value)}
+              />
+              {fieldError("departureDate")}
+            </label>
+          </div>
+          <label className="mt-4 block">
+            <span className={labelCls}>{t("stays.numMen")}</span>
+            <input
+              type="number"
+              min={1}
+              max={1000}
+              className={fieldCls}
+              value={numMen}
+              aria-label={t("stays.numMen")}
+              aria-invalid={!!errors.numMen}
+              onChange={(e) => setNumMen(Math.min(1000, Math.max(1, Math.floor(Number(e.target.value)) || 1)))}
+            />
+            {fieldError("numMen")}
+          </label>
+        </Card>
+
+        <Card>
+          <PrayerNeeds value={prayerNeeds} onChange={setPrayerNeeds} coversShabbat={coversShabbat} />
+          <label className="mt-4 flex min-h-[44px] items-center gap-3 text-ink">
+            <input
+              type="checkbox"
+              className="h-5 w-5"
+              checked={bringsSeferTorah}
+              aria-label={t("stays.bringsSeferTorah")}
+              onChange={(e) => setBringsSeferTorah(e.target.checked)}
+            />
+            {t("stays.bringsSeferTorah")}
+          </label>
+        </Card>
+
+        <Card>
+          <label className="block">
+            <span className={labelCls}>{t("folders.label")}</span>
+            {creatingFolder ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <input
+                    className={fieldCls}
+                    value={newFolderName}
+                    maxLength={60}
+                    autoFocus
+                    aria-label={t("folders.newLabel")}
+                    placeholder={t("folders.newPlaceholder")}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    disabled={createFolder.isPending || !newFolderName.trim()}
+                    className="shrink-0 rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay disabled:opacity-60"
+                    onClick={async () => {
+                      setNewFolderError("");
+                      try {
+                        const f = await createFolder.mutateAsync(newFolderName.trim());
+                        setFolderId(f.id);
+                        setNewFolderName("");
+                        setCreatingFolder(false);
+                      } catch (err) {
+                        setNewFolderError(
+                          err instanceof ApiError && err.body.errors[0]?.code
+                            ? err.body.errors[0].code
+                            : "server.error",
+                        );
+                      }
+                    }}
+                  >
+                    {t("folders.create")}
+                  </button>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-xl border border-line px-3 py-2.5 text-sm font-bold text-ink"
+                    onClick={() => {
+                      setCreatingFolder(false);
+                      setNewFolderError("");
+                    }}
+                  >
+                    {t("folders.cancel")}
+                  </button>
+                </div>
+                {newFolderError && (
+                  <span role="alert" className={errCls}>{t(`errors.${newFolderError}`)}</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <select
+                  className={fieldCls}
+                  value={folderId ?? ""}
+                  aria-label={t("folders.label")}
+                  onChange={(e) => setFolderId(e.target.value || null)}
+                >
+                  <option value="">{t("folders.unfiled")}</option>
+                  {(folders ?? []).map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-xl border border-clay px-4 py-2.5 text-sm font-bold text-clay"
+                  onClick={() => setCreatingFolder(true)}
+                >
+                  {t("folders.createInline")}
+                </button>
+              </div>
+            )}
+          </label>
+        </Card>
+
+        <Card>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between text-start text-sm font-bold text-clay"
+            aria-expanded={showDetails}
+            onClick={() => setShowDetails((v) => !v)}
+          >
+            {t("stays.moreDetails")}
+            <span aria-hidden>{showDetails ? "−" : "+"}</span>
+          </button>
+          {showDetails && (
+            <div className="mt-4 flex flex-col gap-4">
+              <label className="block">
+                <span className={labelCls}>{t("stays.addressPrivate")}</span>
+                <input
+                  className={fieldCls}
+                  value={addressPrivate}
+                  aria-label={t("stays.addressPrivate")}
+                  onChange={(e) => setAddressPrivate(e.target.value)}
+                />
+                <span className="mt-1 block text-xs text-muted">{t("stays.addressPrivacy")}</span>
+              </label>
+              <label className="block">
+                <span className={labelCls}>{t("stays.groupMembers")}</span>
+                <textarea
+                  className={fieldCls}
+                  rows={2}
+                  value={groupMembers}
+                  aria-label={t("stays.groupMembers")}
+                  onChange={(e) => setGroupMembers(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className={labelCls}>{t("stays.notes")}</span>
+                <textarea
+                  className={fieldCls}
+                  rows={2}
+                  value={notes}
+                  aria-label={t("stays.notes")}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className={labelCls}>{t("stays.contactName")}</span>
+                <input
+                  className={fieldCls}
+                  value={contactName}
+                  aria-label={t("stays.contactName")}
+                  onChange={(e) => setContactName(e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className={labelCls}>{t("stays.contactPhone")}</span>
+                <input
+                  className={fieldCls}
+                  dir="ltr"
+                  value={contactPhone}
+                  aria-label={t("stays.contactPhone")}
+                  aria-invalid={!!errors.contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                />
+                {fieldError("contactPhone")}
+              </label>
+              <label className="block">
+                <span className={labelCls}>{t("stays.contactEmail")}</span>
+                <input
+                  type="email"
+                  className={fieldCls}
+                  dir="ltr"
+                  value={contactEmail}
+                  aria-label={t("stays.contactEmail")}
+                  aria-invalid={!!errors.contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                />
+                {fieldError("contactEmail")}
+              </label>
+            </div>
+          )}
+        </Card>
+
+        <p className="text-xs text-muted">{t("stays.formPrivacy")}</p>
+
+        {submitError && (
+          <p role="alert" className="text-sm font-bold text-clay-ink">{submitError}</p>
+        )}
+
+        {errorCount > 0 && (
+          <p role="alert" className="text-sm font-bold text-clay-ink">
+            {t("stays.fixErrors", { count: errorCount })}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full rounded-[14px] bg-clay px-4 py-[15px] font-extrabold text-on-clay transition disabled:opacity-60"
+        >
+          {busy ? t("auth.submitting") : isEdit ? t("stays.saveEdit") : t("stays.saveCreate")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function Card({ children }: { children: ReactNode }) {
+  return <section className="rounded-2xl border border-line bg-surface p-5">{children}</section>;
+}
+
+/** Route entry for `/stays/new` — creates a new Stay (optionally a duplicate via `?from=`). */
+export function AddStayPage() {
+  const { from } = useSearch({ from: "/authed/stays/new" });
+  return <AddEditStayForm duplicateFromId={from} />;
+}
+
+/** Route entry for `/stays/$id/edit` — edits the Stay named by the route param. */
+export function EditStayPage() {
+  const { id } = useParams({ from: "/authed/stays/$id/edit" });
+  return <AddEditStayForm stayId={id} />;
+}

@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* Dark theme keyed on [data-theme="dark"] (set by the no-flash script / ThemeProvider). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Tailwind v4's Preflight no longer sets cursor:pointer on buttons — restore it for enabled
+   interactive controls so they read as clickable. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+/* Jerusalem Stone — AA-corrected tokens (source of truth: design/DESIGN-SYSTEM.md). */
+:root {
+  --bg: #f6f1e7;
+  --header: #f1e8d6;
+  --surface: #fffdf8;
+  --ink: #2b2620;
+  --muted: #676156;
+  --faint: #776c57;
+  --line: #ece2cf;
+  --line2: #e7dcc6;
+  --clay: #a4512e;
+  --clay-soft: #f7e7df;
+  --clay-ink: #a44b2a;
+  --on-clay: #ffffff;
+  --teal: #3f8073;
+  --teal-soft: #e6efe9;
+  --teal-ink: #2f6b5d;
+  --on-teal: #ffffff;
+  --gold: #825916;
+  --gold-soft: #f4e3c6;
+  --chip: #efe6d3;
+  --auth-grad-top: #f0e7d4;
+}
+
+[data-theme="dark"] {
+  --bg: #1b1815;
+  --header: #241f19;
+  --surface: #262019;
+  --ink: #f1ead9;
+  --muted: #a99e8a;
+  --faint: #928775;
+  --line: #332c23;
+  --line2: #3a3127;
+  --clay: #d98a5f;
+  --clay-soft: #3a2820;
+  --clay-ink: #eaa57f;
+  --on-clay: #241812;
+  --teal: #5fa595;
+  --teal-soft: #22302c;
+  --teal-ink: #86c5b6;
+  --on-teal: #10201b;
+  --gold: #dcad57;
+  --gold-soft: #342a17;
+  --chip: #2c2519;
+  --auth-grad-top: #241f19;
+}
+
+/* Expose tokens to Tailwind utilities (bg-bg, text-ink, bg-clay, font-sans, …). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-header: var(--header);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-clay: var(--clay);
+  --color-clay-soft: var(--clay-soft);
+  --color-clay-ink: var(--clay-ink);
+  --color-on-clay: var(--on-clay);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-teal-ink: var(--teal-ink);
+  --color-on-teal: var(--on-teal);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-chip: var(--chip);
+  /* WhatsApp brand color (fixed across light/dark) — for the "Share to WhatsApp" CTA so it's
+     recognizable; kept as a named token rather than a magic hex (constitution: tokens-only).
+     Bright green is light, so the foreground is near-black (≈10:1 contrast) — white text on it
+     is only 1.98:1 and fails WCAG AA (caught by the discovery axe e2e). */
+  --color-whatsapp: #25d366;
+  --color-on-whatsapp: #0b1f16;
+  --font-sans: "Assistant", system-ui, sans-serif;
+}
+
+/* Self-hosted Assistant (GDPR — no Google Fonts hotlinking). Add woff2 to public/fonts/
+   per public/fonts/README.md; until then the system-ui fallback applies. */
+@font-face {
+  font-family: "Assistant";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/assistant-variable.woff2") format("woff2");
+}
