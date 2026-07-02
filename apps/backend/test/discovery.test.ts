@@ -114,5 +114,22 @@ describe("GET /api/discovery", () => {
     expect(m).not.toHaveProperty("hostContact");
     expect(m.services.length).toBe(2);
     expect(body.attribution).toContain("MapTiler");
+    // The caller is NOT the host here (a seeded user is) → not flagged as their own (#2).
+    expect(m.viewerIsHost).toBeFalsy();
+  });
+
+  it("flags the caller's own hosted minyan with viewerIsHost (#2)", async () => {
+    const cookie = await signIn();
+    const SAT = ymd(2030, 1, 5); // 5 Jan 2030 (future ⇒ not completed)
+    await SELF.fetch("https://x/api/events", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify({
+      type: "minyan", city: "London", country: "UK", lat: LON.lat, lng: LON.lng, eventDate: SAT.getTime(),
+      minyan: { nusach: "any", seferTorah: false, services: [{ tefilla: "shacharit", time: "08:30" }] }, hostNumMen: 2,
+    }) });
+
+    const res = await SELF.fetch(`https://x/api/discovery?lat=${LON.lat}&lng=${LON.lng}&from=${ymd(2030, 1, 1).getTime()}&to=${ymd(2030, 1, 31).getTime()}`, { headers: { cookie } });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    const mine = body.minyanim.find((mm: { viewerIsHost?: boolean }) => mm.viewerIsHost);
+    expect(mine).toBeTruthy();
   });
 });

@@ -196,6 +196,8 @@ export const en = {
       potentialMen: "{{count}} men",
       hostCta: "Host a minyan here",
       joinCta: "Join",
+      yourMinyan: "Your minyan",
+      manageCta: "Manage minyan",
       minyanimTitle: "Minyanim in the area",
       minyanimEmpty: "No minyanim hosted here yet — be the first to host one.",
       committed: "{{count}}/10 committed",

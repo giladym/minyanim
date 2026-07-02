@@ -16,7 +16,7 @@ export const discovery = new Hono<{ Bindings: Env; Variables: { log: Logger } }>
  * but requires no Stay of the caller's own (D22). `PublicMinyanDTO` only (address-free, SC-005).
  */
 discovery.get("/api/discovery", async (c) => {
-  await requireUserId(c);
+  const viewerId = await requireUserId(c);
   const parsed = DiscoveryQuery.safeParse(c.req.query());
   if (!parsed.success) {
     return c.json(
@@ -25,7 +25,7 @@ discovery.get("/api/discovery", async (c) => {
     );
   }
   const started = Date.now();
-  const result = await discoverController(createDb(c.env.DB), parsed.data);
+  const result = await discoverController(createDb(c.env.DB), parsed.data, viewerId);
   c.get("log")?.info("discovery.query", {
     durationMs: Date.now() - started,
     minyanimCount: result.minyanim.length,
