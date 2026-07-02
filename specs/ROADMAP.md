@@ -49,9 +49,17 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
    linking by verified email — per 001 clarification); 30-day persistent sessions with a
    shared-device short-session option. Features are auth-method-agnostic — no flow may assume a
    Google identity.
-9. **Contact-info visibility:** a Stay/Minyan participant's name is visible to other
-   participants of the same Minyan; phone/email and specific address are visible only to
-   confirmed participants of the same Minyan, never to the public.
+9. **Contact-info visibility (revised — ADR 0008, post-005):** the goal is to connect people, so
+   contact is **reachable before joining**, gated by a per-user opt-out:
+   - A minyan's **roster (names) + phone** is visible to any **signed-in** viewer, not only
+     committed ones; a **signed-out** visitor sees neither (pure public projection).
+   - **Phone** is shown only for a person who **shares it** (`user.share_phone`, default ON).
+     **Email**, the **exact coordinates**, the **specific address**, and **entry notes** remain
+     **committed-participant / host only**.
+   - The discovery **travelers list** shows each traveler's name + phone (sharers only), including
+     seeded/imported stays via their own `contactName`/`contactPhone`.
+   - Tier ladder: **public → roster (signed-in) → participant (committed) → owner (host)**. This
+     supersedes the original "contact only for confirmed participants" rule (003 SC-005/FR-011).
 10. **Generic event model.** A Minyan is persisted as a generic **`event`** with a **`type`**
     discriminator (`minyan` is the only type in v1), applied throughout the application — D1
     schema, `packages/shared` Zod contracts, services, and the `/api/events` surface. Commitments

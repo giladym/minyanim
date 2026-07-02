@@ -6,8 +6,13 @@ decision 10). 004 added folders (`stay.folder_id` FK ON DELETE SET NULL = "Unfil
 (amended 002 FR-005/011, D1). 005 added per-Shabbat zmanim (candle-lighting + Havdalah) computed
 server-side, detail-scoped (`GET /api/stays/:id/zmanim`, `GET /api/events/:id/zmanim`) + a
 `user.havdalah_opinion` preference; see `specs/005-stay-zmanim/` + ADR 0007 (kosher-zmanim
-server-side containment). NOTE: schema changes ship per feature — the remote dev D1 must be migrated
-on deploy (`pnpm db:migrate:remote`); CI/Workers Builds do NOT auto-migrate. Product decomposition &
+server-side containment). Post-005 contact-visibility change (ADR 0008; migration 0006): contact is
+reachable BEFORE joining — a new `RosterMinyanDTO` tier shows a minyan's roster + phones (of sharers)
+to any signed-in viewer; the discovery travelers list shows name + phone (sharers); a `user.share_phone`
+opt-out (default ON) gates phone everywhere; exact address/coords/entry-notes/email stay committed-only;
+signed-out = pure public. This REVISES 003 SC-005/FR-011 + ROADMAP decision 9 (see those + ADR 0008).
+NOTE: schema changes ship per feature — the remote dev D1 must be migrated on deploy
+(`pnpm db:migrate:remote`); CI/Workers Builds do NOT auto-migrate. Product decomposition &
 shared decisions: `specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
 
 Architecture (constitution v1.1.0 + docs/architecture.md): **pnpm + Turborepo monorepo** —
