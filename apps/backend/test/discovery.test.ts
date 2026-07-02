@@ -1,7 +1,7 @@
 import { SELF, env } from "cloudflare:test";
 import { describe, it, expect } from "vitest";
 import { createDb } from "../src/db/client";
-import { user, stay, event, minyan, commitment } from "../src/db/schema";
+import { user, stay, event, minyan, commitment, phoneNumber } from "../src/db/schema";
 import type { MinyanService } from "@minyanim/shared";
 
 const J = { "content-type": "application/json" };
@@ -131,5 +131,39 @@ describe("GET /api/discovery", () => {
     const body = await res.json();
     const mine = body.minyanim.find((mm: { viewerIsHost?: boolean }) => mm.viewerIsHost);
     expect(mine).toBeTruthy();
+  });
+
+  it("surfaces traveler contact in potential: sharer's phone, imported per-stay contact, opt-out hidden", async () => {
+    const cookie = await signIn();
+    const db = createDb(env.DB);
+    const mkStay = async (userId: string, extra: Record<string, unknown>) =>
+      db.insert(stay).values({
+        id: crypto.randomUUID(), userId, city: "London", country: "UK", lat: 51.51, lng: -0.13,
+        arrivalDate: ymd(2027, 8, 2), departureDate: ymd(2027, 8, 8), numMen: 2, bringsSeferTorah: false,
+        prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } }, status: "active",
+        createdAt: new Date(), updatedAt: new Date(), ...extra,
+      });
+
+    // Registered traveler who shares a phone (default) → phone appears.
+    const sharer = await seedUser(db);
+    await db.insert(phoneNumber).values({ id: crypto.randomUUID(), userId: sharer, e164: "+972501112222", label: null, createdAt: new Date() });
+    await mkStay(sharer, {});
+
+    // Registered traveler who opted OUT + has a phone → phone hidden.
+    const optOut = crypto.randomUUID();
+    await db.insert(user).values({ id: optOut, name: "מסרב", email: `o-${optOut}@example.com`, emailVerified: true, language: "he", theme: "system", sharePhone: false, createdAt: new Date(), updatedAt: new Date() });
+    await db.insert(phoneNumber).values({ id: crypto.randomUUID(), userId: optOut, e164: "+972505556666", label: null, createdAt: new Date() });
+    await mkStay(optOut, {});
+
+    // Imported traveler: a seeded stay carrying its own contact (no account of their own).
+    const importer = await seedUser(db);
+    await mkStay(importer, { contactName: "Imported Guy", contactPhone: "+972999888777" });
+
+    const res = await SELF.fetch(`https://x/api/discovery?lat=${LON.lat}&lng=${LON.lng}&from=${ymd(2027, 8, 1).getTime()}&to=${ymd(2027, 8, 31).getTime()}`, { headers: { cookie } });
+    const body = await res.json();
+    const travelers = body.potential[0].travelers as { name: string; phone: string | null }[];
+    expect(travelers.find((t) => t.phone === "+972501112222")).toBeTruthy(); // sharer
+    expect(travelers.find((t) => t.name === "Imported Guy")?.phone).toBe("+972999888777"); // imported
+    expect(travelers.find((t) => t.name === "מסרב")?.phone).toBeNull(); // opted out
   });
 });

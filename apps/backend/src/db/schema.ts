@@ -16,6 +16,9 @@ export const user = sqliteTable("user", {
   theme: text("theme").notNull().default("system"),
   // 005: which end-of-Shabbat opinion the user sees for Havdalah ('geonim'|'rabbeinu_tam'|'both').
   havdalahOpinion: text("havdalah_opinion").notNull().default("geonim"),
+  // 006: opt-out for sharing the phone with others (minyan roster + travelers list). Default ON so
+  // contact is easy by default; a privacy-conscious user can disable it. Governs phone only.
+  sharePhone: integer("share_phone", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

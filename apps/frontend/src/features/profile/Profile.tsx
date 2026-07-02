@@ -127,6 +127,19 @@ export function ProfilePage() {
 
       <section className={card}>
         <h2 className="mb-3 text-sm font-bold">{t("profile.phones")}</h2>
+        <label className="mb-3 flex min-h-[44px] items-start gap-3 rounded-lg border border-line px-3 py-2.5 text-sm text-ink">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-5 w-5 shrink-0"
+            checked={p.sharePhone}
+            aria-label={t("profile.sharePhone")}
+            onChange={(e) => void patch({ sharePhone: e.target.checked })}
+          />
+          <span>
+            <span className="font-bold">{t("profile.sharePhone")}</span>
+            <span className="mt-0.5 block text-xs text-muted">{t("profile.sharePhoneHint")}</span>
+          </span>
+        </label>
         <ul className="mb-3 flex flex-col gap-2">
           {p.phones.map((ph) => (
             <li key={ph.id} className="flex items-center justify-between rounded-lg border border-line px-3 py-2">

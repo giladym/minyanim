@@ -3,6 +3,7 @@ import {
   type DiscoveryQueryType,
   type DiscoveryResult,
   type PotentialBucket,
+  type TravelerContact,
   type PublicMinyanDTO,
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
@@ -14,6 +15,8 @@ import {
   listMinyanimInBbox,
   committedMenByEvent,
   rolesByEvent,
+  firstPhonesByUser,
+  userCommittedNearby,
   type MinyanJoined,
 } from "../repositories/eventRepository";
 import {
@@ -40,14 +43,24 @@ export function usersWithStaysNear(db: Db, lat: number, lng: number, date: Date,
   return activeStayUserIdsCoveringDate(db, bboxFrom(lat, lng, DISCOVERY_RADIUS_KM), date, excludeUserId);
 }
 
-/** Bucket active Stays into per-Shabbat potential within [from, to] (D2/R3). */
-function bucketPotential(stays: PotentialStay[], from: Date, to: Date): PotentialBucket[] {
-  const byShabbat = new Map<string, { menCount: number; seferTorahCount: number }>();
+/** A traveler's contact: a seeded per-stay contact takes precedence (imported people with no
+ * account); otherwise the owning user's name + phone, the phone only if they share it. */
+function travelerContact(s: PotentialStay, phones: Map<string, string>): TravelerContact {
+  const phone = s.contactPhone ?? (s.ownerSharePhone ? phones.get(s.userId) ?? null : null);
+  return { name: s.contactName ?? s.ownerName, phone, numMen: s.numMen };
+}
+
+/** Bucket active Stays into per-Shabbat potential within [from, to] (D2/R3), attaching each
+ * covering traveler's contact so a signed-in viewer can reach out to form a minyan. */
+function bucketPotential(stays: PotentialStay[], from: Date, to: Date, phones: Map<string, string>): PotentialBucket[] {
+  const byShabbat = new Map<string, { menCount: number; seferTorahCount: number; travelers: TravelerContact[] }>();
   for (const s of stays) {
+    const contact = travelerContact(s, phones);
     for (const shabbat of shabbatSaturdaysInRange(s.arrivalDate, s.departureDate, from, to)) {
-      const cur = byShabbat.get(shabbat) ?? { menCount: 0, seferTorahCount: 0 };
+      const cur = byShabbat.get(shabbat) ?? { menCount: 0, seferTorahCount: 0, travelers: [] };
       cur.menCount += s.numMen;
       if (s.bringsSeferTorah) cur.seferTorahCount += 1;
+      cur.travelers.push(contact);
       byShabbat.set(shabbat, cur);
     }
   }
@@ -115,7 +128,11 @@ export async function discover(db: Db, q: DiscoveryQueryType, viewerId: string |
   if (q.city && q.country) {
     for (const s of await coordlessActiveStays(db, q.city, q.country)) staysById.set(s.id, s);
   }
-  const potential = bucketPotential([...staysById.values()], from, to);
+  const stays = [...staysById.values()];
+  // Owners' first phones (only those who share and have no explicit per-stay contact phone).
+  const phoneUserIds = stays.filter((s) => !s.contactPhone && s.ownerSharePhone).map((s) => s.userId);
+  const ownerPhones = await firstPhonesByUser(db, phoneUserIds);
+  const potential = bucketPotential(stays, from, to, ownerPhones);
 
   // Hosted minyanim (bbox + filters); derive status and drop `completed`.
   let minyanim: PublicMinyanDTO[] = [];
@@ -153,12 +170,21 @@ export async function nearStay(db: Db, userId: string, stayId: string): Promise<
   return discover(db, queryForStay(stay), userId);
 }
 
-/** Batched count of nearby hosted minyanim per active Stay, for the My-Stays dashboard (R15). */
-export async function nearStayCounts(db: Db, userId: string): Promise<Record<string, number>> {
+/** Per-active-Stay dashboard signals (R15): count of nearby hosted minyanim, and whether the user
+ * is already committed to a minyan at that place/time. */
+export async function nearStayCounts(
+  db: Db,
+  userId: string,
+): Promise<{ counts: Record<string, number>; committed: Record<string, boolean> }> {
   const stays = await listStays(db, userId);
   const counts: Record<string, number> = {};
+  const committed: Record<string, boolean> = {};
   for (const s of stays) {
-    counts[s.id] = (await discover(db, queryForStay(s))).minyanim.length;
+    counts[s.id] = (await discover(db, queryForStay(s), userId)).minyanim.length;
+    committed[s.id] =
+      s.lat != null && s.lng != null
+        ? await userCommittedNearby(db, userId, bboxFrom(s.lat, s.lng, DISCOVERY_RADIUS_KM), s.arrivalDate, s.departureDate)
+        : false;
   }
-  return counts;
+  return { counts, committed };
 }

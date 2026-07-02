@@ -43,6 +43,13 @@
       "when": 1782021504198,
       "tag": "0005_workable_kitty_pryde",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1783032835006,
+      "tag": "0006_volatile_timeslip",
+      "breakpoints": true
     }
   ]
 }

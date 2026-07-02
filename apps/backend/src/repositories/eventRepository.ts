@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, inArray, sql, or } from "drizzle-orm";
+import { and, eq, gte, lte, ne, inArray, sql, or } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { event, minyan, commitment, eventRole, user, phoneNumber } from "../db/schema";
 import type { MinyanService, Nusach } from "@minyanim/shared";
@@ -203,7 +203,7 @@ export async function getCommitment(db: Db, eventId: string, userId: string) {
 /** Participants of an event with their display name + email + party size (for the participant view). */
 export async function participantsForEvent(db: Db, eventId: string) {
   return db
-    .select({ userId: commitment.userId, numMen: commitment.numMen, name: user.name, email: user.email })
+    .select({ userId: commitment.userId, numMen: commitment.numMen, name: user.name, email: user.email, sharePhone: user.sharePhone })
     .from(commitment)
     .innerJoin(user, eq(user.id, commitment.userId))
     .where(eq(commitment.eventId, eventId));
@@ -219,6 +219,38 @@ export async function firstPhonesByUser(db: Db, userIds: string[]): Promise<Map<
     .where(inArray(phoneNumber.userId, userIds));
   for (const r of rows) if (!out.has(r.userId)) out.set(r.userId, r.e164);
   return out;
+}
+
+/**
+ * True if the user has a commitment to a non-cancelled event inside the bbox whose date falls in
+ * [from, to] — i.e. they're already in a minyan for a stay at that place/time. Bbox + date only
+ * (coordless stays can't answer this and are treated as "not committed nearby").
+ */
+export async function userCommittedNearby(
+  db: Db,
+  userId: string,
+  b: { minLat: number; maxLat: number; minLng: number; maxLng: number },
+  from: Date,
+  to: Date,
+): Promise<boolean> {
+  const rows = await db
+    .select({ id: commitment.id })
+    .from(commitment)
+    .innerJoin(event, eq(event.id, commitment.eventId))
+    .where(
+      and(
+        eq(commitment.userId, userId),
+        ne(event.status, "cancelled"),
+        gte(event.lat, b.minLat),
+        lte(event.lat, b.maxLat),
+        gte(event.lng, b.minLng),
+        lte(event.lng, b.maxLng),
+        gte(event.eventDate, from),
+        lte(event.eventDate, to),
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
 }
 
 /** Claimed roles per event (batched). Returns a Map eventId → {baalTefila, baalKorei} booleans. */

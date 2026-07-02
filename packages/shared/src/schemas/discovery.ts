@@ -23,11 +23,21 @@ export const DiscoveryQuery = z.object({
 });
 export type DiscoveryQueryType = z.infer<typeof DiscoveryQuery>;
 
+/** A traveler in the area a signed-in viewer can reach out to (to form a minyan). Phone appears
+ * only when the traveler shares it (registered `user.sharePhone`, or a seeded per-stay contact). */
+export interface TravelerContact {
+  name: string;
+  phone: string | null;
+  numMen: number;
+}
+
 /** Per-Shabbat potential bucket (R3). `shabbat` is the Saturday civil date "YYYY-MM-DD". */
 export interface PotentialBucket {
   shabbat: string;
   menCount: number;
   seferTorahCount: number;
+  /** The individual travelers covering this Shabbat, with contact for those who share it. */
+  travelers: TravelerContact[];
 }
 
 /** Static Beit Chabad pin surfaced on the discovery map (D18). Informational only (not joinable). */

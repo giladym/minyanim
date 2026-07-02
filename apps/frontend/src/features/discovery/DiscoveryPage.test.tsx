@@ -24,7 +24,13 @@ import { DiscoveryPage } from "./DiscoveryPage";
 import "../../i18n";
 
 const RESULT = {
-  potential: [{ shabbat: "2027-08-07", menCount: 11, seferTorahCount: 2 }],
+  potential: [{
+    shabbat: "2027-08-07", menCount: 11, seferTorahCount: 2,
+    travelers: [
+      { name: "יוסי", phone: "+972501112233", numMen: 2 },
+      { name: "אורח פרטי", phone: null, numMen: 1 },
+    ],
+  }],
   minyanim: [
     {
       id: "evt_1", type: "minyan", city: "זקופנה", country: "פולין", lat: 49.3, lng: 19.95,
@@ -60,6 +66,11 @@ describe("DiscoveryPage", () => {
     // The joinable minyan row shows a clear join affordance; the potential section offers hosting.
     expect(screen.getByText(/להצטרפות/)).toBeInTheDocument();
     expect(screen.getByText("ארגון מניין כאן")).toBeInTheDocument();
+    // Travelers in the area are listed with contact for those who share a phone (Excel-enabler).
+    expect(screen.getByText(/יוסי/)).toBeInTheDocument();
+    const waLink = screen.getAllByRole("link").find((a) => a.getAttribute("href") === "https://wa.me/972501112233");
+    expect(waLink).toBeTruthy();
+    expect(screen.getByText(/אורח פרטי/)).toBeInTheDocument();
   });
 
   it("badges the viewer's own minyan and swaps the CTA to 'manage' (#2)", async () => {

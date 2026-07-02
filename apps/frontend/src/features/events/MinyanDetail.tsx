@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, Link } from "@tanstack/react-router";
-import type { MinyanStatus, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
+import type { MinyanStatus, RosterMinyanDTO, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
 import type { EventRole, ParticipantInfo, PublicMinyanDTO } from "@minyanim/shared";
 import { authClient } from "../../lib/auth-client";
@@ -29,6 +29,11 @@ const STATUS_CLS: Record<MinyanStatus, string> = {
   cancelled: "text-muted",
 };
 
+/** Roster + contact are present for any signed-in viewer (roster/participant/owner tiers). */
+function hasRoster(m: AnyMinyanDTO): m is RosterMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO {
+  return "participants" in m;
+}
+/** The private address + entry notes are present only for committed participants + the host. */
 function hasPrivate(m: AnyMinyanDTO): m is ParticipantMinyanDTO | OwnerMinyanDTO {
   return "addressPrivate" in m;
 }
@@ -303,11 +308,18 @@ export function MinyanDetail() {
 
       {hasPrivate(m) && m.status !== "cancelled" && m.status !== "completed" && <RolesSection id={id} m={m} />}
 
-      {hasPrivate(m) ? (
+      {hasRoster(m) ? (
         <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
           <h2 className="font-extrabold text-ink">{t("minyanDetail.details")}</h2>
-          {m.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {m.addressPrivate}</p>}
-          {m.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {m.addressNotes}</p>}
+          {hasPrivate(m) ? (
+            <>
+              {m.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {m.addressPrivate}</p>}
+              {m.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {m.addressNotes}</p>}
+            </>
+          ) : (
+            // Signed-in but not committed: people + contact are visible; the exact address isn't.
+            <p className="text-xs text-muted">{t("minyanDetail.joinToSeeAddress")}</p>
+          )}
           <ParticipantRoster participants={m.participants} viewerId={session?.user?.id} />
         </div>
       ) : (
