@@ -120,6 +120,10 @@ export interface PublicMinyanDTO {
   isShabbatShacharit: boolean;
   missingForReady: MissingForReady;
   rolesFilled: { baalTefila: boolean; baalKorei: boolean };
+  /** Viewer-relative: true when the requesting user hosts this minyan (drives the "your minyan"
+   * badge + "manage" CTA in discovery). Absent/false for signed-out or non-host viewers. NOT a
+   * private field — it's the viewer's own relationship, so it survives the public projection. */
+  viewerIsHost?: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -163,6 +167,8 @@ export function toPublicMinyanDTO(m: PublicMinyanDTO): PublicMinyanDTO {
     isShabbatShacharit: m.isShabbatShacharit,
     missingForReady: m.missingForReady,
     rolesFilled: m.rolesFilled,
+    // Viewer-relative, not private — preserve it so discovery can badge the viewer's own minyan.
+    viewerIsHost: m.viewerIsHost,
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
   };

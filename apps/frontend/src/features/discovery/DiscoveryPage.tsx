@@ -214,12 +214,17 @@ function MinyanRow({ m }: { m: PublicMinyanDTO }) {
   const tefillot = m.services.map((s) => t(`tefilla.${s.tefilla}`) + (s.time ? ` ${s.time}` : "")).join(" · ");
   return (
     <Link to="/minyan/$id" params={{ id: m.id }} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5 transition hover:border-clay">
-      <div className="flex items-center justify-between">
-        <h3 className="font-extrabold text-ink">{m.city}, {m.country}</h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-extrabold text-ink">
+          {m.city}, {m.country}
+          {m.viewerIsHost && (
+            <span className="ms-2 rounded-full bg-clay-soft px-2 py-0.5 text-xs font-bold text-clay-ink">{t("discovery.yourMinyan")}</span>
+          )}
+        </h3>
         <span className={`text-sm font-bold ${STATUS_CLS[m.status]}`}>{t(`minyanStatus.${m.status}`)}</span>
       </div>
       <p className="text-sm text-muted">{t(`nusach.${m.nusach}`)} · {tefillot}</p>
-      <span className="text-sm font-bold text-clay">{t("discovery.joinCta")} ›</span>
+      <span className="text-sm font-bold text-clay">{t(m.viewerIsHost ? "discovery.manageCta" : "discovery.joinCta")} ›</span>
       <p className="text-sm font-semibold text-ink">
         {t("discovery.committed", { count: m.committedMen })}
         {m.missingForReady.menShort > 0 && ` — ${t("discovery.moreNeeded", { count: m.missingForReady.menShort })}`}

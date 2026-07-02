@@ -62,6 +62,25 @@ describe("DiscoveryPage", () => {
     expect(screen.getByText("ארגון מניין כאן")).toBeInTheDocument();
   });
 
+  it("badges the viewer's own minyan and swaps the CTA to 'manage' (#2)", async () => {
+    const own = {
+      ...RESULT,
+      minyanim: [{ ...RESULT.minyanim[0], id: "evt_own", viewerIsHost: true }],
+    };
+    useDiscovery.mockReturnValue({ data: own, isFetching: false });
+    const user = userEvent.setup();
+    render(<DiscoveryPage />);
+
+    await user.type(screen.getByLabelText("חיפוש עיר"), "Zako");
+    await user.click(await screen.findByRole("button", { name: "Zakopane, Poland" }));
+    await user.type(screen.getByLabelText("מתאריך"), "2027-08-01");
+    await user.type(screen.getByLabelText("עד תאריך"), "2027-08-31");
+
+    expect(await screen.findByText("המניין שלך")).toBeInTheDocument();
+    expect(screen.getByText(/לניהול המניין/)).toBeInTheDocument();
+    expect(screen.queryByText(/להצטרפות/)).not.toBeInTheDocument();
+  });
+
   it("shows nothing until a center and dates are chosen", () => {
     useDiscovery.mockReturnValue({ data: undefined, isFetching: false });
     render(<DiscoveryPage />);

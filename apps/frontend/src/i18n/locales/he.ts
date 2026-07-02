@@ -196,6 +196,8 @@ export const he = {
       potentialMen: "{{count}} גברים",
       hostCta: "ארגון מניין כאן",
       joinCta: "להצטרפות",
+      yourMinyan: "המניין שלך",
+      manageCta: "לניהול המניין",
       minyanimTitle: "מניינים באזור",
       minyanimEmpty: "עדיין לא אורגנו כאן מניינים — היו הראשונים לארגן.",
       committed: "{{count}}/10 נרשמו",

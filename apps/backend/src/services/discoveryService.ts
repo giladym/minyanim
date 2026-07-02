@@ -61,6 +61,7 @@ function toPublicMinyan(
   m: MinyanJoined,
   committedMen: number,
   roles: { baalTefila: boolean; baalKorei: boolean },
+  viewerId: string | null,
 ): PublicMinyanDTO {
   const readiness = {
     storedStatus: m.storedStatus,
@@ -91,6 +92,7 @@ function toPublicMinyan(
     isShabbatShacharit: isShabbatShacharit(m.services, m.eventDate),
     missingForReady: missingForReady(readiness),
     rolesFilled: roles,
+    viewerIsHost: viewerId !== null && m.hostUserId === viewerId,
     createdAt: m.createdAt.getTime(),
     updatedAt: m.updatedAt.getTime(),
   };
@@ -101,7 +103,7 @@ function toPublicMinyan(
  * (address-free public DTOs), excluding `completed` (derived) and `cancelled`/`hidden` (in SQL).
  * Requires no Stay of the caller's own (D22).
  */
-export async function discover(db: Db, q: DiscoveryQueryType): Promise<DiscoveryResult> {
+export async function discover(db: Db, q: DiscoveryQueryType, viewerId: string | null = null): Promise<DiscoveryResult> {
   const from = new Date(q.from);
   const to = new Date(q.to);
   const hasCoords = typeof q.lat === "number" && typeof q.lng === "number";
@@ -128,7 +130,7 @@ export async function discover(db: Db, q: DiscoveryQueryType): Promise<Discovery
     const ids = rows.map((r) => r.id);
     const [men, roles] = await Promise.all([committedMenByEvent(db, ids), rolesByEvent(db, ids)]);
     minyanim = rows
-      .map((r) => toPublicMinyan(r, men.get(r.id) ?? 0, roles.get(r.id) ?? { baalTefila: false, baalKorei: false }))
+      .map((r) => toPublicMinyan(r, men.get(r.id) ?? 0, roles.get(r.id) ?? { baalTefila: false, baalKorei: false }, viewerId))
       .filter((m) => m.status !== "completed");
   }
 
@@ -148,7 +150,7 @@ function queryForStay(s: { lat: number | null; lng: number | null; city: string;
 export async function nearStay(db: Db, userId: string, stayId: string): Promise<DiscoveryResult | null> {
   const stay = await getStayById(db, userId, stayId);
   if (!stay) return null;
-  return discover(db, queryForStay(stay));
+  return discover(db, queryForStay(stay), userId);
 }
 
 /** Batched count of nearby hosted minyanim per active Stay, for the My-Stays dashboard (R15). */
