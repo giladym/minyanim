@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const navigate = vi.fn();
 const mutateAsync = vi.fn();
@@ -23,6 +23,10 @@ import "../../i18n";
 beforeEach(() => {
   vi.clearAllMocks();
   search.mockReturnValue({}); // default: no ?fromStay prefill
+});
+
+afterEach(() => {
+  vi.useRealTimers(); // undo any per-test fake timers so later tests use the real clock
 });
 
 describe("HostMinyanForm", () => {
@@ -63,18 +67,37 @@ describe("HostMinyanForm", () => {
     expect(getStayMock).not.toHaveBeenCalled(); // discovery path doesn't fetch a stay
   });
 
-  it("pre-fills the date with the stay's first Shabbat when arrived via ?fromStay (#4)", async () => {
-    // 14–16 Jul 2026: the covered Saturday is 18 Jul? No — 11 Jul is Sat; range 14–16 has no Sat.
-    // Use 13–19 Jul 2026 which covers Sat 18 Jul 2026.
+  it("pre-fills date (first Shabbat), men count, and Sefer Torah when arrived via ?fromStay (#4)", async () => {
+    // Freeze "today" before the stay so the past-floor doesn't shift the expected Shabbat.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-01T00:00:00.000Z"));
+    // 13–19 Jul 2026 covers Sat 18 Jul 2026.
     search.mockReturnValue({ fromStay: "stay_1" });
     getStayMock.mockResolvedValue({
       city: "קרקוב", country: "פולין", lat: 50.06, lng: 19.94,
       arrivalDate: Date.UTC(2026, 6, 13), departureDate: Date.UTC(2026, 6, 19),
-      bringsSeferTorah: true,
+      numMen: 4, bringsSeferTorah: true,
     });
     render(<HostMinyanForm />);
     await waitFor(() => expect(getStayMock).toHaveBeenCalledWith("stay_1"));
     // First Saturday in the range (18 Jul 2026) seeds the date input.
+    await waitFor(() => expect(screen.getByLabelText("תאריך")).toHaveValue("2026-07-18"));
+    // Men count carries over from the stay (#1).
+    expect(screen.getByLabelText(/כמה גברים מגיעים/)).toHaveValue(4);
+  });
+
+  it("skips a past Shabbat: prefills the next upcoming Shabbat when the stay has already started (#1)", async () => {
+    // Today is 15 Jul 2026 (a Wednesday), mid-stay. Sat 11 Jul is already past; Sat 18 Jul is next.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-15T09:00:00.000Z"));
+    search.mockReturnValue({ fromStay: "stay_2" });
+    getStayMock.mockResolvedValue({
+      city: "קרקוב", country: "פולין", lat: 50.06, lng: 19.94,
+      arrivalDate: Date.UTC(2026, 6, 8), departureDate: Date.UTC(2026, 6, 20), // 8–20 Jul: covers Sat 11 & 18
+      numMen: 2, bringsSeferTorah: false,
+    });
+    render(<HostMinyanForm />);
+    await waitFor(() => expect(getStayMock).toHaveBeenCalledWith("stay_2"));
     await waitFor(() => expect(screen.getByLabelText("תאריך")).toHaveValue("2026-07-18"));
   });
 });
