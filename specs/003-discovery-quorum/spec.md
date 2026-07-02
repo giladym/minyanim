@@ -60,13 +60,18 @@ the requirements below and will be cited by the planning artifacts.
   Stay (a WhatsApp recruit can join); the optional `stayId` is only for reconciliation (D12). One
   commitment per (minyan, user). v1 commitment = "coming to this gathering," not per-tefilla
   attendance (a future refinement).
-- **D4 — Three-tier privacy DTOs.** Mirroring 002's Owner/Public pattern (`OwnerStayDTO` /
+- **D4 — Privacy DTO tiers.** Mirroring 002's Owner/Public pattern (`OwnerStayDTO` /
   `PublicStayDTO` in `packages/shared/src/schemas/stay.ts`, D8): `PublicMinyanDTO` (city/venue,
-  date, tefilla, time, nusach, counts, status — specific address and host/participant contact
-  **structurally absent**); `ParticipantMinyanDTO` (adds the specific address, host contact, and
-  co-participant names + phone/email); `OwnerMinyanDTO` (the host's full view). The address +
-  contact are revealed **on commit** and **revoked on withdrawal**. The WhatsApp share and the
-  pre-auth join-link landing build from `PublicMinyanDTO` only.
+  date, tefilla, time, nusach, counts, status — specific address and contact **structurally
+  absent**); `ParticipantMinyanDTO` (adds the specific address + entry notes + exact coordinates);
+  `OwnerMinyanDTO` (the host's full view). The address + entry notes + exact point are revealed
+  **on commit** and **revoked on withdrawal**. The WhatsApp share and the pre-auth join-link
+  landing build from `PublicMinyanDTO` only.
+  **Amended post-005 (ADR 0008):** a fourth tier, `RosterMinyanDTO`, sits between public and
+  participant — a **signed-in** but not-yet-committed viewer sees the **roster (names) + host
+  contact + phones of sharers** so they can reach people to coordinate joining. **Phone** is shown
+  only for a person who shares it (`user.share_phone`, default ON); **email** and the exact
+  address/coordinates stay committed-only; **signed-out** visitors still get `PublicMinyanDTO`.
 - **D5 — Freshness mechanism.** Counts/statuses stay fresh by **polling** — the discovery and
   Minyan-detail TanStack Query hooks use a `refetchInterval` (~5 s) plus refetch-on-focus and
   refetch-after-mutation. No realtime infrastructure is introduced (no Queues / Durable Objects /
@@ -418,11 +423,14 @@ this stay"; tapping it opens discovery pre-filtered to that Stay's location + da
   quorum-reached, near-quorum (default 8/10), quorum-lost, and host-cancellation events to the
   relevant host/participants. Each threshold event MUST fire at most once per crossing (idempotent
   on (minyanId, eventType, threshold), D6). Delivery MUST be asynchronous (D6); web push is v2.
-- **FR-011**: The specific address of a Minyan, the host's contact, and co-participants' contact
-  details MUST be visible only to committed participants, revealed on commit and revoked on
-  withdrawal. Serialization MUST use distinct shape contracts — `PublicMinyanDTO` (private fields
-  structurally absent), `ParticipantMinyanDTO`, and `OwnerMinyanDTO` — mirroring 002's owner/public
-  pattern (D4).
+- **FR-011** *(amended post-005 — ADR 0008)*: The **specific address, entry notes, exact
+  coordinates, and email** MUST be visible only to committed participants (host included), revealed
+  on commit and revoked on withdrawal. The **roster (participant names) and phone numbers** MUST be
+  visible to any **signed-in** viewer, with each person's **phone shown only when they share it**
+  (`user.share_phone`, default ON); a **signed-out** viewer sees none of it. Serialization MUST use
+  distinct shape contracts — `PublicMinyanDTO` (private fields structurally absent),
+  `RosterMinyanDTO` (roster + contact, no address), `ParticipantMinyanDTO`, and `OwnerMinyanDTO`
+  (D4).
 - **FR-012**: Each Minyan MUST provide a "Share to WhatsApp" action that opens WhatsApp with a
   message built from `PublicMinyanDTO` (public location, date, tefilla and time, current committed
   count, and a direct join link) and MUST NOT include the private specific address. Opening the
@@ -450,7 +458,15 @@ this stay"; tapping it opens discovery pre-filtered to that Stay's location + da
   active Stay, a count of nearby Minyanim (matching the Stay's location + date range) and a link
   into discovery pre-filtered to that Stay's location and dates; when none are hosted, it MUST
   surface the nearby potential and a prompt to host instead of a dead end (D22, pull). The
-  proactive push nudge is deferred (Assumptions).
+  proactive push nudge is deferred (Assumptions). *(Amended post-005 — ADR 0008)* the per-Stay
+  surface MUST also indicate when the user is **already committed to a Minyan** at that Stay's
+  place/time.
+- **FR-020** *(added post-005 — ADR 0008)*: The discovery "travelers in the area" projection MUST,
+  in addition to the per-Shabbat aggregate count, list the individual travelers with **name +
+  phone** for those who share a phone — resolving the phone from a registered owner's shared number
+  (`user.share_phone`) or, for a seeded/imported Stay with no account, from the Stay's own
+  `contactName`/`contactPhone`. This makes travelers reachable to form a Minyan (and enables a
+  one-time import of known, unregistered travelers).
 
 ### Key Entities
 
@@ -489,9 +505,11 @@ pin layer, and the potential-aggregation logic.
 - **SC-004**: "Ready" status is correct in 100% of cases across the readiness decision table
   — committed men {below / at / above 10} × Sefer Torah {present / absent} × Ba'al Korei
   {claimed / unclaimed} × {Shabbat-morning Shacharit / other} (D8).
-- **SC-005**: The specific address and host/participant contact never appear in any response to a
-  non-committed viewer, and the WhatsApp share message never contains the specific address, in
-  100% of cases (D4).
+- **SC-005** *(amended post-005 — ADR 0008)*: The **specific address, entry notes, exact
+  coordinates, and email** never appear in any response to a non-committed viewer; a person's
+  **phone** never appears unless they share it (`user.share_phone`); a **signed-out** viewer
+  receives no roster or contact at all; and the WhatsApp share message never contains the specific
+  address — in 100% of cases (D4).
 - **SC-006**: Discovery filters (date range, Sefer Torah, nusach incl. "any") return only matching
   results.
 - **SC-007**: The discovery map + list, host form, and commit flow meet WCAG 2.1 AA, are

@@ -14,5 +14,7 @@ Format per record: **Status · Context · Decision · Consequences · Alternativ
 | [0004](./0004-logging.md) | Structured logging via Workers Observability (no Winston) | Accepted |
 | [0005](./0005-fe-be-origin-service-binding.md) | FE↔BE via Service Binding (same origin, first-party cookies) | Accepted |
 | [0006](./0006-deployment-git-connected.md) | Deployment via Git-connected Workers Builds (main→prod, previews on other branches) | Accepted |
+| [0007](./0007-zmanim-server-side.md) | Zmanim computed server-side; only formatted times cross to the client | Accepted |
+| [0008](./0008-contact-visibility.md) | Contact reachable before join, with a per-user phone opt-out (revises 003 SC-005/FR-011) | Accepted |
 
 New ADRs are append-only; supersede rather than rewrite (note "Superseded by ADR-XXXX").
