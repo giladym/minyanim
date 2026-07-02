@@ -46,10 +46,11 @@ export function useDiscovery(params: DiscoveryParams | null) {
   });
 }
 
-/** Batched nearby-minyan counts per stay for the My-Stays dashboard (FR-019). */
+/** Batched per-stay dashboard signals (FR-019): nearby-minyan counts + whether the user is already
+ * committed to a minyan at that place/time. */
 export function useNearStayCounts() {
   return useQuery({
     queryKey: ["near-stay-counts"],
-    queryFn: () => api<{ counts: Record<string, number> }>("/discovery/near-stay-counts").then((r) => r.counts),
+    queryFn: () => api<{ counts: Record<string, number>; committed: Record<string, boolean> }>("/discovery/near-stay-counts"),
   });
 }

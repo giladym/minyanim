@@ -5,13 +5,15 @@ import {
   type UpdateEventInputType,
   type OwnerMinyanDTO,
   type ParticipantMinyanDTO,
+  type RosterMinyanDTO,
   type PublicMinyanDTO,
   type EventRole,
 } from "@minyanim/shared";
 import { api } from "./api";
 
-/** A Minyan in any of the three viewer shapes (the server picks by relationship). */
-export type AnyMinyanDTO = PublicMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO;
+/** A Minyan in any of the four viewer shapes (the server picks by relationship): public
+ * (signed-out), roster (signed-in, not committed), participant (committed), owner (host). */
+export type AnyMinyanDTO = PublicMinyanDTO | RosterMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO;
 
 export const minyanKey = (id: string) => ["event", id] as const;
 

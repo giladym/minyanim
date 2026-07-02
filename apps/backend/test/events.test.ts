@@ -58,7 +58,7 @@ describe("POST /api/events (host) + privacy", () => {
     expect((await res.json()).errors[0].code).toBe("date.in_past");
   });
 
-  it("GET /:id — public view to a non-committed user omits private fields (SC-005)", async () => {
+  it("GET /:id — signed-in non-committed user sees the roster + contact, but NOT the address", async () => {
     const hostCookie = await signIn();
     const id = (await (await host(hostCookie)).json()).id;
     const other = await signIn();
@@ -67,13 +67,28 @@ describe("POST /api/events (host) + privacy", () => {
     const body = await res.json();
     expect(body.id).toBe(id);
     expect(body.committedMen).toBe(2);
+    // Roster + host contact ARE visible so a browser can reach people to coordinate joining.
+    expect(Array.isArray(body.participants)).toBe(true);
+    expect(body.hostContact).toBeTruthy();
+    // …but the private address / entry notes stay committed-only, and the pin stays fuzzed (D4).
     expect(body).not.toHaveProperty("addressPrivate");
     expect(body).not.toHaveProperty("addressNotes");
-    expect(body).not.toHaveProperty("hostContact");
-    expect(body).not.toHaveProperty("participants");
-    // Public pin is fuzzed to ~neighbourhood (2 dp), not the exact host coordinates (D4).
     expect(body.lat).toBe(49.31);
     expect(body.lng).toBe(19.95);
+    // Email is committed-only — not exposed to a non-committed viewer.
+    expect(body.hostContact.email).toBeNull();
+  });
+
+  it("GET /:id — signed-out visitor gets the pure public projection (no roster/contact)", async () => {
+    const hostCookie = await signIn();
+    const id = (await (await host(hostCookie)).json()).id;
+    const res = await SELF.fetch(`https://x/api/events/${id}`); // no cookie
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).not.toHaveProperty("participants");
+    expect(body).not.toHaveProperty("hostContact");
+    expect(body).not.toHaveProperty("addressPrivate");
+    expect(body.lat).toBe(49.31);
   });
 
   it("GET /:id — host sees the owner view with the exact point + private fields", async () => {

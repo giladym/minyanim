@@ -4,6 +4,7 @@ import {
   type CreateEventInputType,
   type UpdateEventInputType,
   type PublicMinyanDTO,
+  type RosterMinyanDTO,
   type ParticipantMinyanDTO,
   type OwnerMinyanDTO,
 } from "@minyanim/shared";
@@ -70,30 +71,54 @@ function buildPublic(
   };
 }
 
-/** Add the participant-only fields (address + host contact + participant list + the viewer's own
- * role slots) to a public DTO. */
-async function withParticipantFields(ctx: Ctx, m: MinyanJoined, base: PublicMinyanDTO, viewerId: string): Promise<ParticipantMinyanDTO> {
+/**
+ * Build the roster fields (participant list + host contact + the viewer's own role slots) on top of
+ * a public DTO. Contact rules (FR: contact people to minyanim):
+ *  • phone — shown only for participants who share it (`user.sharePhone`); an opt-out hides it from
+ *    everyone, committed or not.
+ *  • email — committed-only: a not-yet-committed viewer gets the roster + phones but not emails.
+ * When `viewerCommitted` is true the result is upgraded to a ParticipantMinyanDTO: exact
+ * coordinates + private address + entry notes (D4). Otherwise coordinates stay fuzzed (from `base`)
+ * and the address is absent — those reveal only on commit.
+ */
+async function withRosterFields(
+  ctx: Ctx,
+  m: MinyanJoined,
+  base: PublicMinyanDTO,
+  viewerId: string | null,
+  viewerCommitted: boolean,
+): Promise<RosterMinyanDTO | ParticipantMinyanDTO> {
   const parts = await repo.participantsForEvent(ctx.db, m.id);
   const phones = await repo.firstPhonesByUser(ctx.db, parts.map((p) => p.userId));
   const host = parts.find((p) => p.userId === m.hostUserId);
-  const myRoles = await userRolesForEvent(ctx.db, m.id, viewerId);
-  return {
+  const phoneOf = (userId: string, sharePhone: boolean) => (sharePhone ? phones.get(userId) ?? null : null);
+  const emailOf = (email: string) => (viewerCommitted ? email : null);
+  const myRoles = viewerCommitted && viewerId !== null ? await userRolesForEvent(ctx.db, m.id, viewerId) : { baalTefila: false, baalKorei: false };
+  const roster: RosterMinyanDTO = {
     ...base,
+    hostContact: {
+      name: m.hostName,
+      email: emailOf(host?.email ?? ""),
+      phone: host ? phoneOf(m.hostUserId, host.sharePhone) : null,
+    },
+    participants: parts.map((p) => ({
+      userId: p.userId,
+      name: p.name,
+      numMen: p.numMen,
+      email: emailOf(p.email),
+      phone: phoneOf(p.userId, p.sharePhone),
+      isHost: p.userId === m.hostUserId,
+    })),
+    myRoles,
+  };
+  if (!viewerCommitted) return roster;
+  return {
+    ...roster,
     // Committed participants get the EXACT point + private address + entry notes (D4).
     lat: m.lat,
     lng: m.lng,
     addressPrivate: m.addressPrivate,
     addressNotes: m.addressNotes,
-    hostContact: { name: m.hostName, email: host?.email ?? "", phone: phones.get(m.hostUserId) ?? null },
-    participants: parts.map((p) => ({
-      userId: p.userId,
-      name: p.name,
-      numMen: p.numMen,
-      email: p.email,
-      phone: phones.get(p.userId) ?? null,
-      isHost: p.userId === m.hostUserId,
-    })),
-    myRoles,
   };
 }
 
@@ -106,7 +131,7 @@ export async function getMinyan(
   ctx: Ctx,
   viewerId: string | null,
   id: string,
-): Promise<PublicMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO | null> {
+): Promise<PublicMinyanDTO | RosterMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO | null> {
   const m = await repo.getMinyanById(ctx.db, id);
   if (!m) return null;
   const isHost = viewerId !== null && m.hostUserId === viewerId;
@@ -120,11 +145,13 @@ export async function getMinyan(
   const base = buildPublic(m, men.get(id) ?? 0, roles);
 
   if (isHost) {
-    const p = await withParticipantFields(ctx, m, base, viewerId!);
+    const p = (await withRosterFields(ctx, m, base, viewerId, true)) as ParticipantMinyanDTO;
     return { ...p, isHost: true } satisfies OwnerMinyanDTO;
   }
-  const committed = viewerId !== null && (await repo.getCommitment(ctx.db, id, viewerId)) !== null;
-  return committed ? withParticipantFields(ctx, m, base, viewerId!) : base;
+  if (viewerId === null) return base; // signed-out → public projection (no roster/contact)
+  const committed = (await repo.getCommitment(ctx.db, id, viewerId)) !== null;
+  // Signed-in: committed → address + roster; not committed → roster + contact only (address hidden).
+  return withRosterFields(ctx, m, base, viewerId, committed);
 }
 
 /**

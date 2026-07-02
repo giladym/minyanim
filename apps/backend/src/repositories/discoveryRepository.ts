@@ -1,6 +1,6 @@
 import { and, eq, gte, lte, ne, isNull, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { stay, beitChabadPin } from "../db/schema";
+import { stay, beitChabadPin, user } from "../db/schema";
 
 export interface Bbox {
   minLat: number;
@@ -9,22 +9,43 @@ export interface Bbox {
   maxLng: number;
 }
 
-/** The subset of a Stay needed to compute per-Shabbat potential. */
+/** The subset of a Stay needed to compute per-Shabbat potential + surface a traveler contact. */
 export interface PotentialStay {
   id: string;
+  userId: string;
   numMen: number;
   bringsSeferTorah: boolean;
   arrivalDate: Date;
   departureDate: Date;
+  /** Per-stay contact (used for seeded/imported travelers with no user account). */
+  contactName: string | null;
+  contactPhone: string | null;
+  /** The owning user's display name + phone-sharing preference (for registered travelers). */
+  ownerName: string;
+  ownerSharePhone: boolean;
 }
 
 const POTENTIAL_COLS = {
   id: stay.id,
+  userId: stay.userId,
   numMen: stay.numMen,
   bringsSeferTorah: stay.bringsSeferTorah,
   arrivalDate: stay.arrivalDate,
   departureDate: stay.departureDate,
+  contactName: stay.contactName,
+  contactPhone: stay.contactPhone,
+  ownerName: user.name,
+  ownerSharePhone: user.sharePhone,
 } as const;
+
+const normalizeStay = (r: {
+  id: string; userId: string; numMen: number; bringsSeferTorah: unknown; arrivalDate: Date; departureDate: Date;
+  contactName: string | null; contactPhone: string | null; ownerName: string; ownerSharePhone: unknown;
+}): PotentialStay => ({
+  ...r,
+  bringsSeferTorah: Boolean(r.bringsSeferTorah),
+  ownerSharePhone: Boolean(r.ownerSharePhone),
+});
 
 /**
  * Distinct user ids with an ACTIVE Stay inside the bbox whose date range COVERS `date`
@@ -60,6 +81,7 @@ export async function activeStaysInBbox(db: Db, b: Bbox): Promise<PotentialStay[
   const rows = await db
     .select(POTENTIAL_COLS)
     .from(stay)
+    .innerJoin(user, eq(user.id, stay.userId))
     .where(
       and(
         eq(stay.status, "active"),
@@ -69,7 +91,7 @@ export async function activeStaysInBbox(db: Db, b: Bbox): Promise<PotentialStay[
         lte(stay.lng, b.maxLng),
       ),
     );
-  return rows.map((r) => ({ ...r, bringsSeferTorah: Boolean(r.bringsSeferTorah) }));
+  return rows.map(normalizeStay);
 }
 
 /**
@@ -85,6 +107,7 @@ export async function coordlessActiveStays(
   const rows = await db
     .select(POTENTIAL_COLS)
     .from(stay)
+    .innerJoin(user, eq(user.id, stay.userId))
     .where(
       and(
         eq(stay.status, "active"),
@@ -93,7 +116,7 @@ export async function coordlessActiveStays(
         eq(sql`lower(trim(${stay.country}))`, norm(country)),
       ),
     );
-  return rows.map((r) => ({ ...r, bringsSeferTorah: Boolean(r.bringsSeferTorah) }));
+  return rows.map(normalizeStay);
 }
 
 /** Static Beit Chabad pins inside the bounding box (D18). */

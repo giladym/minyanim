@@ -45,5 +45,5 @@ discovery.get("/api/discovery/near-stay/:stayId", async (c) => {
 /** GET /api/discovery/near-stay-counts — batched nearby-minyan counts for the My-Stays dashboard. */
 discovery.get("/api/discovery/near-stay-counts", async (c) => {
   const userId = await requireUserId(c);
-  return c.json({ counts: await nearStayCounts(createDb(c.env.DB), userId) });
+  return c.json(await nearStayCounts(createDb(c.env.DB), userId));
 });

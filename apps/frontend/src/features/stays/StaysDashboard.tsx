@@ -17,7 +17,7 @@ export function StaysDashboard() {
   const { t } = useTranslation();
   const { data: stays, isLoading, isError } = useStays();
   const { data: folders } = useFolders();
-  const { data: nearbyCounts } = useNearStayCounts();
+  const { data: nearby } = useNearStayCounts();
   const cancel = useCancelStay();
   const move = useUpdateStay();
   const search = useSearch({ from: "/authed/stays" });
@@ -108,7 +108,8 @@ export function StaysDashboard() {
                 onCancel={setConfirmingId}
                 onMove={(folderId) => move.mutate({ id: s.id, input: { folderId } })}
                 folders={folders ?? []}
-                nearbyMinyanim={nearbyCounts?.[s.id]}
+                nearbyMinyanim={nearby?.counts?.[s.id]}
+                committedNearby={nearby?.committed?.[s.id]}
               />
             </li>
           ))}

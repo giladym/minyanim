@@ -32,6 +32,7 @@ export function StayCard({
   onMove,
   folders,
   nearbyMinyanim,
+  committedNearby,
 }: {
   stay: OwnerStayDTO;
   highlighted: boolean;
@@ -44,6 +45,8 @@ export function StayCard({
   folders?: FolderDTO[];
   /** Count of hosted minyanim near this stay (FR-019); undefined while loading. */
   nearbyMinyanim?: number;
+  /** Whether the user is already committed to a minyan at this stay's place/time. */
+  committedNearby?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "he";
@@ -122,6 +125,13 @@ export function StayCard({
             </div>
           )}
         </div>
+      )}
+
+      {!stay.isPast && committedNearby && (
+        <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-teal-soft px-2.5 py-1 text-xs font-bold text-teal-ink">
+          <span aria-hidden>✓</span>
+          {t("stays.alreadyInMinyan")}
+        </p>
       )}
 
       {!stay.isPast && (

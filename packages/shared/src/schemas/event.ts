@@ -128,15 +128,22 @@ export interface PublicMinyanDTO {
   updatedAt: number;
 }
 
-/** Committed-participant view: adds the private address + entry notes, host contact, the exact
- * coordinates (the public view's lat/lng are fuzzed), and the participant list. */
-export interface ParticipantMinyanDTO extends PublicMinyanDTO {
-  addressPrivate: string | null;
-  addressNotes: string | null;
+/** Signed-in browser view: adds the participant list + host contact so a not-yet-committed viewer
+ * can see who's coming and reach sharers to coordinate joining. Coordinates stay FUZZED and the
+ * private address is absent — those reveal only on commit (below). Phone appears only for
+ * participants who share it (`user.sharePhone`); email is committed-only (null here). */
+export interface RosterMinyanDTO extends PublicMinyanDTO {
   hostContact: { name: string; phone: string | null; email: string | null };
   participants: ParticipantInfo[];
   /** Which role slots the viewing participant personally holds (drives claim vs release UI). */
   myRoles: { baalTefila: boolean; baalKorei: boolean };
+}
+
+/** Committed-participant view: adds the private address + entry notes on top of the roster, and the
+ * exact coordinates (the public/roster lat/lng are fuzzed). */
+export interface ParticipantMinyanDTO extends RosterMinyanDTO {
+  addressPrivate: string | null;
+  addressNotes: string | null;
 }
 
 /** Host's full view (management). Same shape as participant in v1; distinguished for future use. */

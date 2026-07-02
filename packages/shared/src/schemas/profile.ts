@@ -12,6 +12,7 @@ export const updateProfileSchema = z.object({
   language: languageSchema.optional(),
   theme: themeSchema.optional(),
   havdalahOpinion: havdalahOpinionSchema.optional(),
+  sharePhone: z.boolean().optional(),
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
@@ -29,5 +30,7 @@ export interface Profile {
   language: string;
   theme: string;
   havdalahOpinion: string;
+  /** Whether the user shares their phone with others (minyan roster + travelers list). */
+  sharePhone: boolean;
   phones: PhoneNumber[];
 }

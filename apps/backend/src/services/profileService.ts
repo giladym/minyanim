@@ -14,6 +14,7 @@ export async function getProfile(db: Db, userId: string): Promise<Profile | null
     language: u.language,
     theme: u.theme,
     havdalahOpinion: u.havdalahOpinion,
+    sharePhone: u.sharePhone,
     phones: phones.map((p) => ({ id: p.id, e164: p.e164, label: p.label })),
   };
 }

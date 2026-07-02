@@ -185,16 +185,39 @@ export function DiscoveryPage() {
             <p className="text-sm text-muted">{t("discovery.potentialHint")}</p>
             {data && data.potential.length === 0 && <p className="text-sm text-muted">{t("discovery.potentialEmpty")}</p>}
             {data?.potential.map((b) => (
-              <div key={b.shabbat} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3">
-                <span className="font-semibold text-ink" dir="ltr">{b.shabbat}</span>
-                <span className="text-ink">{t("discovery.potentialMen", { count: b.menCount })}</span>
-                <Link
-                  to="/minyan/new"
-                  search={{ lat: center!.lat, lng: center!.lng, city: center!.city, country: center!.country, date: b.shabbat, nearby: b.menCount }}
-                  className="rounded-xl bg-clay px-4 py-2 text-sm font-extrabold text-on-clay"
-                >
-                  {t("discovery.hostCta")}
-                </Link>
+              <div key={b.shabbat} className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-semibold text-ink" dir="ltr">{b.shabbat}</span>
+                  <span className="text-ink">{t("discovery.potentialMen", { count: b.menCount })}</span>
+                  <Link
+                    to="/minyan/new"
+                    search={{ lat: center!.lat, lng: center!.lng, city: center!.city, country: center!.country, date: b.shabbat, nearby: b.menCount }}
+                    className="rounded-xl bg-clay px-4 py-2 text-sm font-extrabold text-on-clay"
+                  >
+                    {t("discovery.hostCta")}
+                  </Link>
+                </div>
+                {b.travelers && b.travelers.length > 0 && (
+                  <ul className="flex flex-col gap-2 border-t border-line pt-3">
+                    {b.travelers.map((tr, i) => (
+                      <li key={`${b.shabbat}-${i}`} className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm text-ink">{tr.name} · {t("stays.men", { count: tr.numMen })}</span>
+                        {tr.phone ? (
+                          <span className="flex gap-2">
+                            <a className="inline-flex items-center rounded-lg bg-whatsapp px-3 py-1.5 text-xs font-bold text-on-whatsapp" href={`https://wa.me/${tr.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" aria-label={`${t("minyanDetail.contactWhatsapp")} — ${tr.name}`}>
+                              {t("minyanDetail.contactWhatsapp")}
+                            </a>
+                            <a className="inline-flex items-center rounded-lg border border-line px-3 py-1.5 text-xs font-bold text-ink" dir="ltr" href={`tel:${tr.phone}`} aria-label={`${t("minyanDetail.contactCall")} — ${tr.name}`}>
+                              {tr.phone}
+                            </a>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-faint">{t("minyanDetail.noContact")}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
             {data && data.potential.length === 0 && (

@@ -44,6 +44,7 @@ export function createAuth(env: Env) {
         language: { type: "string", required: false, defaultValue: "he", input: true },
         theme: { type: "string", required: false, defaultValue: "system", input: true },
         havdalahOpinion: { type: "string", required: false, defaultValue: "geonim", input: true },
+        sharePhone: { type: "boolean", required: false, defaultValue: true, input: true },
       },
     },
   });

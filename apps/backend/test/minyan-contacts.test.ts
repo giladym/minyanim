@@ -47,4 +47,28 @@ describe("minyan contact roster (committed-only)", () => {
     expect(pub.participants).toBeUndefined();
     expect(pub.hostContact).toBeUndefined();
   });
+
+  it("respects the share_phone opt-out and shows the roster to a non-committed signed-in viewer", async () => {
+    const a = await signIn(); // host — shares by default
+    await addPhone(a, "+972501112222");
+    const evt = (await (await SELF.fetch("https://x/api/events", { method: "POST", headers: { ...J, cookie: a }, body: JSON.stringify(hostBody) })).json()) as { id: string };
+
+    const b = await signIn();
+    await addPhone(b, "+972503334444");
+    await SELF.fetch("https://x/api/me", { method: "PATCH", headers: { ...J, cookie: b }, body: JSON.stringify({ sharePhone: false }) }); // B opts out
+    await SELF.fetch(`https://x/api/events/${evt.id}/commit`, { method: "POST", headers: { ...J, cookie: b }, body: JSON.stringify({ numMen: 2 }) });
+
+    // The host (committed) sees B in the roster, but B's phone is hidden (opted out).
+    const asA = (await get(a, evt.id)) as { participants: { phone: string | null; isHost?: boolean }[] };
+    expect(asA.participants.find((p) => !p.isHost)!.phone).toBeNull();
+
+    // A signed-in but NOT committed viewer C sees the roster: host phone (sharer) yes, B phone no,
+    // and no private address.
+    const c = await signIn();
+    const asC = (await get(c, evt.id)) as { participants: { phone: string | null; isHost?: boolean }[]; hostContact: { phone: string | null }; addressPrivate?: string };
+    expect(asC.participants).toHaveLength(2);
+    expect(asC.hostContact.phone).toBe("+972501112222");
+    expect(asC.participants.find((p) => !p.isHost)!.phone).toBeNull();
+    expect(asC.addressPrivate).toBeUndefined();
+  });
 });

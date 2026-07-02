@@ -11,7 +11,7 @@ export async function findUser(db: Db, id: string) {
 export async function updateUser(
   db: Db,
   id: string,
-  fields: Partial<{ name: string; language: string; theme: string; havdalahOpinion: string }>,
+  fields: Partial<{ name: string; language: string; theme: string; havdalahOpinion: string; sharePhone: boolean }>,
 ) {
   await db.update(user).set({ ...fields, updatedAt: new Date() }).where(eq(user.id, id));
 }
