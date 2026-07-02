@@ -15,6 +15,11 @@ function firstShabbat(arrival: number, departure: number): string {
   }
   return "";
 }
+/** Today at UTC midnight (epoch-ms), matching the date-only storage convention. */
+function todayUtcMidnight(): number {
+  const n = new Date();
+  return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+}
 
 const fieldCls =
   "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay";
@@ -66,9 +71,13 @@ export function HostMinyanForm() {
       getStay(fromStay)
         .then((s) => {
           setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
-          const shabbat = firstShabbat(s.arrivalDate, s.departureDate);
+          // Default to the first Shabbat that isn't already in the past: scan from max(arrival,
+          // today) so a stay that has already started prefills the next upcoming Shabbat, not a
+          // gone one. The server remains authoritative for the timezone-correct past check.
+          const shabbat = firstShabbat(Math.max(s.arrivalDate, todayUtcMidnight()), s.departureDate);
           if (shabbat) setEventDate(shabbat);
           if (s.bringsSeferTorah) setSeferTorah(true);
+          if (typeof s.numMen === "number") setHostNumMen(Math.min(50, Math.max(1, s.numMen)));
         })
         .catch(() => {});
     } else if (lat != null && lng != null) {
