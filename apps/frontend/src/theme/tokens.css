@@ -58,12 +58,14 @@ button:not(:disabled),
   --faint: #8c9384;
   --line: #2b302a;
   --line2: #414940;
-  /* Forest-green primary, lightened for dark surfaces. */
-  --primary: #a1d494;
-  --primary-container: #2d5a27;
+  /* Forest-green primary. `--primary` stays a mid-forest FILL in both themes so buttons/cards read
+     as solid green (never a bright block on dark); `--primary-ink` is the lighter ACCENT used for
+     text/icons that sit on the dark page background. */
+  --primary: #3f7a37;
+  --primary-container: #23501e;
   --primary-soft: #1f2b1c;
-  --primary-ink: #bcf0ae;
-  --on-primary: #002201;
+  --primary-ink: #a1d494;
+  --on-primary: #ffffff;
   --clay: #ffb599;
   --clay-soft: #3a2013;
   --clay-ink: #ffb599;

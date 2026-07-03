@@ -133,7 +133,7 @@ export function Home() {
       </Section>
 
       {/* Mission — replaces the old early-access block: the pitch card + a live stat card. */}
-      <Section className="bg-chip">
+      <Section className="bg-chip border-y border-line">
         <div className="grid gap-6 md:grid-cols-3">
           <div className="rounded-2xl border border-line bg-surface p-8 md:col-span-2 md:p-10">
             <p className={eyebrow}>{t("home.mission.eyebrow")}</p>
@@ -155,15 +155,15 @@ export function Home() {
       </Section>
 
       {/* How it works — centered, round icon medallions that fill on hover. */}
-      <Section id="how" className="bg-surface">
+      <Section id="how" className="bg-surface border-y border-line">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-3xl font-extrabold tracking-tight text-primary md:text-4xl">{t("home.how.title")}</h2>
+          <h2 className="font-display text-3xl font-extrabold tracking-tight md:text-4xl">{t("home.how.title")}</h2>
           <p className="mt-3 leading-relaxed text-muted">{t("home.how.subtitle")}</p>
         </div>
         <div className="mt-14 grid gap-10 md:grid-cols-3">
           {steps.map((s) => (
             <div key={s.icon} className="group flex flex-col items-center text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-chip text-primary transition-colors duration-500 group-hover:bg-primary group-hover:text-on-primary">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-chip text-primary-ink transition-colors duration-500 group-hover:bg-primary group-hover:text-on-primary">
                 <Icon name={s.icon} size={30} />
               </div>
               <h3 className="mt-6 font-display text-xl font-bold">{s.title}</h3>
