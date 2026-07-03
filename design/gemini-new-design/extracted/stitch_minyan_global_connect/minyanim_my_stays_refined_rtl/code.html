@@ -1,0 +1,259 @@
+<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#23501e",
+                        "primary-fixed": "#bcf0ae",
+                        "primary-container": "#2d5a27",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#a1d494",
+                        "tertiary-fixed": "#f1e0cc",
+                        "inverse-on-surface": "#f3f0ef",
+                        "outline-variant": "#c2c9bb",
+                        "background": "#fcf9f8",
+                        "outline": "#72796e",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#974725",
+                        "secondary-fixed": "#ffdbce",
+                        "primary": "#154212",
+                        "secondary-container": "#ff9970",
+                        "inverse-surface": "#303030",
+                        "on-surface": "#1b1c1b",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#793110",
+                        "surface-tint": "#3b6934",
+                        "on-primary-fixed": "#002201",
+                        "surface-variant": "#e4e2e1",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#231a0e",
+                        "tertiary-container": "#5a4e3f",
+                        "error-container": "#ffdad6",
+                        "surface": "#fcf9f8",
+                        "inverse-primary": "#a1d494",
+                        "tertiary": "#423729",
+                        "on-background": "#1b1c1b",
+                        "on-primary-container": "#9dd090",
+                        "surface-bright": "#fcf9f8",
+                        "on-secondary-container": "#772f0e",
+                        "surface-container": "#f0edec",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#d5c4b1",
+                        "surface-container-low": "#f6f3f2",
+                        "on-tertiary-fixed-variant": "#504536",
+                        "surface-dim": "#dcd9d8",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#d0c0ad",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#42493e",
+                        "surface-container-high": "#eae7e7",
+                        "surface-container-highest": "#e4e2e1",
+                        "secondary-fixed-dim": "#ffb599",
+                        "on-secondary-fixed": "#370e00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "16px",
+                        "base": "4px",
+                        "xl": "80px",
+                        "lg": "48px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "xs": "8px",
+                        "margin-mobile": "16px",
+                        "md": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-xl": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-lg": ["\"Source Serif 4\""],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "body-md": ["\"Source Serif 4\""]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    }catch(_e){}</script></head><body class="parchment-texture text-on-surface font-body-md min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface sticky top-0 z-50 border-b border-outline-variant/10">
+    <div class="flex flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-7xl mx-auto">
+        <div class="flex items-center gap-8">
+            <span class="text-headline-md font-headline-md font-bold text-primary">מניין</span>
+            <nav class="hidden md:flex flex-row gap-6">
+                <a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">איך זה עובד</a>
+                <a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">קהילה</a>
+            </nav>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="material-symbols-outlined p-2 rounded-full hover:bg-surface-container-high/50 transition-all">dark_mode</button>
+            <button class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-all">התחברות</button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-lg">
+    <!-- Header Section-->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 text-right">
+        <div class="w-full md:w-auto">
+            <h1 class="font-headline-xl text-headline-xl text-primary mb-2">המיקומים שלי</h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">נהל את המסעות שלך, עקוב אחר מניינים והישאר מחובר לקהילה בכל מקום בעולם.</p>
+        </div>
+        <button class="flex items-center gap-2 bg-secondary text-on-secondary px-8 py-3 rounded-xl font-label-md text-label-md shadow-lg hover:shadow-xl transition-all self-start md:self-end">
+            <span class="material-symbols-outlined">add</span>
+            הוסף שהייה חדשה
+        </button>
+    </div>
+
+    <!-- Main Content: Stays Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        <!-- Stay Card 1: Minyan Ready -->
+        <div class="heritage-card bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 flex flex-col">
+            <div class="relative h-48 w-full">
+                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBG0Cvpyr29L8FcaD6liNXjdgadyODRzwybTP20BYq54_tkDeLWhQWLB6fH8G0G8PCjNvLky9IoiB2uSL1qO0DThLTlxHGKukILbdaK2Rvsux1SDTl88kLd_tjZKYAxqy07qUs_OgvUXDiLypLywkYHm0kvX-dPmHxHh7GIEr-xAvviLZrQeYqFLCge6WXzWZUnySQBdT5j0yM55vyl7RdvdozxpjN66HB0tHQdIWm8U6x-cglvitpSDQ')"></div>
+                <div class="absolute top-4 right-4 bg-primary-container/90 text-on-primary-container px-3 py-1 rounded-full text-xs font-label-md flex items-center gap-1 backdrop-blur-sm">
+                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+                    מניין מוכן
+                </div>
+            </div>
+            <div class="p-md flex flex-col flex-grow text-right">
+                <h3 class="font-headline-md text-headline-md text-secondary mb-1">ירושלים, ישראל</h3>
+                <div class="flex items-center gap-2 text-on-surface-variant mb-4">
+                    <span class="material-symbols-outlined text-sm">calendar_today</span>
+                    <span class="font-body-md text-body-md">14 - 21 אוקטובר, 2024</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-outline-variant/20 flex flex-row justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">groups</span>
+                        <span class="font-label-md text-label-md">4 מטיילים</span>
+                    </div>
+                    <div class="flex -space-x-reverse space-x-2">
+                        <div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-variant flex items-center justify-center overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnGbgRw22QHI4IMudsy2XsBRee_5e5JKPkHWIuXWw4gfa-39pFI_Br4Mnq6zdDOeFt_2ShIn3U1wOLrFA7_MiOJRFFHN6ZqWV7_SjNnzR_rXWjSLfloj4L64EKt90aOuaCbj2hq2h-ol7pmujR6JVKHnXi1Mv-gHS4RolshXtoAeq4Tj_oCg3FA4LxFIhVvpSxHASmii7nKS9Jt_WmKi2qbyHBHbKGfwsNLmndanPz2aFz0TcsGCw6Vw">
+                        </div>
+                        <div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-variant flex items-center justify-center overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCy_Gft8XisGTeJDizFl8T1h0XpYY6R8XjRxFMQSXrAGkvpoeVTFkgb052G9RmtEahZ_8JtKiDe-fnZPbAyLlBWpBLiGmzQ4rYVx7iTn8B5W_SVLCnFMJ_gdSxwbHGB4ZshpYKh6Bu2PnkjIIXJ8rL9coRsLCiS713wHV5IMxrVCvDDikw1ODzCQlo-5q9ofTe9W1wz98a_WGcMX9tTZ3SfWDg5ymuiMz7--OmU4_ZP6LlA_WDmPGJ68g">
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-primary text-on-primary text-[10px] font-bold flex items-center justify-center border-2 border-surface">
+                            +12
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stay Card 2: Looking for More -->
+        <div class="heritage-card bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 flex flex-col">
+            <div class="relative h-48 w-full">
+                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBejPrYY7J2yihVTM7nDJLtBGqzhmawna0rqE9S5pmjZ6PTd1OazOzIcArbhpTlmucajgjYv1j_W-fApETntosCnZXRDqzAce6ybl4nbgep5aUPfE5gQ7z11x2Wkwb_qkCPUYTyIovrO7ZrfjuF9Ggg_SPDvO8glXSwXrz9Ae0bMHCNWFrGXZ6_WRraYW-x6W-ScgRblRTyCbhXdBHRy2x57dRi1peFG-CW1zypS8TOVaFMYbdkAthyYA')"></div>
+                <div class="absolute top-4 right-4 bg-secondary-fixed/90 text-on-secondary-fixed px-3 py-1 rounded-full text-xs font-label-md flex items-center gap-1 backdrop-blur-sm">
+                    <span class="material-symbols-outlined text-sm">person_search</span>
+                    חסרים 4 למניין
+                </div>
+            </div>
+            <div class="p-md flex flex-col flex-grow text-right">
+                <h3 class="font-headline-md text-headline-md text-secondary mb-1">ציריך, שוויץ</h3>
+                <div class="flex items-center gap-2 text-on-surface-variant mb-4">
+                    <span class="material-symbols-outlined text-sm">calendar_today</span>
+                    <span class="font-body-md text-body-md">2 - 5 נובמבר, 2024</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-outline-variant/20 flex flex-row justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">groups</span>
+                        <span class="font-label-md text-label-md">2 מטיילים</span>
+                    </div>
+                    <div class="flex -space-x-reverse space-x-2">
+                        <div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-variant flex items-center justify-center overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_SBawaKRNKW6oB1K2ebbr2x-I9Ut9Y2YHPHe0fzdIkkqanyRG8-5q-UpA79SLdu3VY2hucJBqMDHUh-4AJyR5ZDoF47nTgZ0VL7tU1EMt0Oohq4_McN943jK5VJh4hbstjdvKmidFCBKvIH1NSG42scbT86LZlupZIWq4IQ5T0xxj8JnIXBAwnYy-saHmoYDf7-vWOeUWoxwq0f1Et2ihGQp5YRKDg8rhTwJpTmo4W6GEY0E2SZypVQ">
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-tertiary text-on-tertiary text-[10px] font-bold flex items-center justify-center border-2 border-surface">
+                            +6
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stay Card 3: Empty/Add Placeholder -->
+        <button class="heritage-card bg-transparent rounded-xl border-2 border-dashed border-outline-variant/40 flex flex-col items-center justify-center p-md min-h-[400px] hover:border-primary/40 hover:bg-surface-container-high/20 transition-all group">
+            <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-primary text-4xl">travel_explore</span>
+            </div>
+            <span class="font-headline-md text-headline-md text-on-surface-variant">תכנן את המסע הבא</span>
+            <span class="font-body-md text-body-md text-outline mt-2">הוסף יעד חדש והתחבר למניין המקומי</span>
+        </button>
+    </div>
+
+    <!-- Section: VIP Support -->
+    <section class="mt-16">
+        <div class="bg-primary-container p-lg rounded-xl text-on-primary-container flex flex-col justify-center items-center text-center">
+            <span class="material-symbols-outlined text-5xl mb-4" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+            <h4 class="font-headline-md text-headline-md mb-2">שירות ה-VIP שלנו</h4>
+            <p class="font-body-md text-body-md mb-6 opacity-90">צריך עזרה בארגון מניין פרטי? הצוות שלנו כאן בשבילך.</p>
+            <button class="bg-on-primary-container text-primary-container px-8 py-2 rounded-full font-label-md text-label-md font-bold hover:bg-white transition-colors">צור קשר</button>
+        </div>
+    </section>
+</main>
+
+<!-- FAB for Mobile -->
+<button class="md:hidden fixed bottom-24 left-6 w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-2xl flex items-center justify-center z-50 active:scale-90 transition-transform">
+    <span class="material-symbols-outlined">add</span>
+</button>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row justify-around items-center px-4 py-3 bg-surface border-t border-outline-variant/10 shadow-lg md:hidden">
+    <a class="flex flex-col items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low transition-all p-2 rounded-lg" href="#">
+        <span class="material-symbols-outlined">person</span>
+        <span class="font-label-md text-label-md">פרופיל</span>
+    </a>
+    <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-1" href="#">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">travel_explore</span>
+        <span class="font-label-md text-label-md">המיקומים שלי</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low transition-all p-2 rounded-lg" href="#">
+        <span class="material-symbols-outlined">explore</span>
+        <span class="font-label-md text-label-md">גלה</span>
+    </a>
+</nav>
+
+<!-- Footer -->
+<footer class="w-full px-margin-mobile md:px-margin-desktop py-lg flex flex-col md:flex-row justify-between items-center text-right bg-surface-container border-t border-outline-variant/20 mt-12 mb-20 md:mb-0">
+    <div class="flex flex-col md:flex-row gap-8 items-center">
+        <span class="font-headline-md text-headline-md text-primary font-bold">מניין</span>
+        <div class="flex flex-row gap-4">
+            <a class="font-label-md text-label-md text-on-surface-variant hover:underline decoration-secondary transition-all" href="#">פרטיות</a>
+            <a class="font-label-md text-label-md text-on-surface-variant hover:underline decoration-secondary transition-all" href="#">תנאי שימוש</a>
+            <a class="font-label-md text-label-md text-on-surface-variant hover:underline decoration-secondary transition-all" href="#">הצהרת נגישות</a>
+        </div>
+    </div>
+    <p class="font-body-md text-body-md text-on-surface mt-6 md:mt-0 opacity-70">© תשפ"ד מניין. מחברים קהילות ברחבי העולם.</p>
+</footer>
+
+<script class="">
+    // Simple micro-interaction for cards
+    document.querySelectorAll('.heritage-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            const icon = card.querySelector('.material-symbols-outlined');
+            if (icon) icon.style.transform = 'scale(1.1)';
+        });
+        card.addEventListener('mouseleave', () => {
+            const icon = card.querySelector('.material-symbols-outlined');
+            if (icon) icon.</script></body></html>

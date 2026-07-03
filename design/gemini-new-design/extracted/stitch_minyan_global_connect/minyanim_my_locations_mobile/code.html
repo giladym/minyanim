@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>המיקומים שלי | מניין</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Source+Serif+4:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed-variant": "#504536",
+                    "on-surface": "#1b1c1b",
+                    "surface-dim": "#dcd9d8",
+                    "primary-fixed": "#bcf0ae",
+                    "on-tertiary-fixed": "#231a0e",
+                    "on-secondary-container": "#772f0e",
+                    "surface-container-highest": "#e4e2e1",
+                    "secondary-fixed-dim": "#ffb599",
+                    "tertiary-fixed": "#f1e0cc",
+                    "inverse-surface": "#303030",
+                    "primary": "#154212",
+                    "on-surface-variant": "#42493e",
+                    "background": "#fcf9f8",
+                    "on-error": "#ffffff",
+                    "secondary": "#974725",
+                    "inverse-primary": "#a1d494",
+                    "on-tertiary-container": "#d0c0ad",
+                    "surface-container-low": "#f6f3f2",
+                    "surface-bright": "#fcf9f8",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#3b6934",
+                    "primary-fixed-dim": "#a1d494",
+                    "on-tertiary": "#ffffff",
+                    "primary-container": "#2d5a27",
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#1b1c1b",
+                    "surface-container-high": "#eae7e7",
+                    "on-secondary": "#ffffff",
+                    "surface": "#fcf9f8",
+                    "secondary-fixed": "#ffdbce",
+                    "outline": "#72796e",
+                    "on-primary-container": "#9dd090",
+                    "inverse-on-surface": "#f3f0ef",
+                    "on-error-container": "#93000a",
+                    "surface-variant": "#e4e2e1",
+                    "outline-variant": "#c2c9bb",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#5a4e3f",
+                    "surface-container": "#f0edec",
+                    "secondary-container": "#ff9970",
+                    "on-secondary-fixed-variant": "#793110",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed-dim": "#d5c4b1",
+                    "on-primary-fixed": "#002201",
+                    "on-secondary-fixed": "#370e00",
+                    "tertiary": "#423729",
+                    "on-primary-fixed-variant": "#23501e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "lg": "48px",
+                    "margin-desktop": "64px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "xl": "80px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "md": "24px",
+                    "sm": "16px"
+            },
+            "fontFamily": {
+                    "label-md": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "body-lg": ["\"Source Serif 4\""],
+                    "body-md": ["\"Source Serif 4\""],
+                    "headline-xl": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fcf9f8; /* Parchment base */
+            color: #1b1c1b;
+            font-family: "Source Serif 4", serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 80px);
+        }
+        .stone-border {
+            border: 1px solid rgba(140, 126, 109, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col antialiased">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant/10">
+<div class="flex flex-row-reverse justify-between items-center w-full px-4 py-4 max-w-7xl mx-auto">
+<h1 class="text-headline-md font-headline-md font-bold text-primary">מניין</h1>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high/50 rounded-full transition-colors">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-md mx-auto px-4 pt-8 safe-bottom">
+<!-- Page Heading -->
+<header class="mb-8 text-right">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">המיקומים שלי</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">ניהול נסיעות פעילות וקרובות במרחב הקהילתי.</p>
+</header>
+<!-- Active Stays Section -->
+<section class="space-y-6 mb-12">
+<!-- Stay Card 1 -->
+<article class="bg-surface stone-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative h-32 w-full">
+<div class="bg-cover bg-center w-full h-full" data-alt="A breathtaking aerial view of a historic European square with ancient cobblestone streets and classical architecture, captured during the golden hour with warm sunlight bathing the scene in a soft, welcoming glow. The style is professional architectural photography, minimalist and elegant, echoing the Jerusalem stone aesthetic with muted earth tones and deep forest green accents." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBkSIgLvhosp3OHtliwxCDnrRZl9AppzDLyiQtGJIzNIjuBmeszwIqWd04klBfvICQ8g2TV0VAV5_oN9Lhg2KcgnHtaVIO-_VNhWwzy4H8WEXuNYINAEn2BGM-fWNdXeCVyP2mXHD6rYiICNKPvHf8gYzR9OHs6bVoLYlnLBm15K2STJDxCKXfP5TwRuQK30qT4OmA-PhZvIXbrcmK3bNYuwg2Qo2JgCDKTgNSpp-0URDFn_jRbD1qRdQ')"></div>
+<div class="absolute top-3 right-3">
+<span class="bg-primary px-3 py-1 rounded-full text-white font-label-sm text-label-sm">פעיל עכשיו</span>
+</div>
+</div>
+<div class="p-4 text-right">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">רומא, איטליה</h3>
+<span class="font-label-md text-label-md text-secondary">12.04 - 18.04</span>
+</div>
+<div class="flex flex-row-reverse items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-outline text-[20px]">groups</span>
+<span class="font-body-md text-body-md text-on-surface-variant">8/10 רשומים למניין</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[80%] rounded-full"></div>
+</div>
+<div class="mt-4 flex flex-row-reverse gap-3">
+<button class="flex-1 py-2 bg-primary text-white rounded-lg font-label-md text-label-md">פרטי המיקום</button>
+<button class="px-3 py-2 stone-border rounded-lg text-on-surface">
+<span class="material-symbols-outlined block">share</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Stay Card 2 -->
+<article class="bg-surface stone-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative h-32 w-full">
+<div class="bg-cover bg-center w-full h-full" data-alt="A serene landscape of a mountain village with stone houses nestled against a dramatic cliffside under a clear blue sky. The lighting is crisp and bright, highlighting the textures of the stone and the deep greens of the surrounding foliage. The visual style is clean and dignified, emphasizing a premium travel experience with high-end cultural heritage vibes." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBol0WYsCvqs7mn9ZAjL4mouQpfonMpdQYBID7q43yTI8YmK2dP-U2_hhPwgKUirlNVfWTIKsAt4JB2GcYDTxs9amHee8O4P5IsZaBbJKRu3378uZB_v9PEB28-3alSf2XfSi52_SeQEd0TWLhpXDgCqQGbjboELMlRiuspd4-3xNQ7ixz9CAUdPBNEk0u5mrDbLlodF3L1bnf4bPx8xQVPOvGeeQW7ACkZWWVzEqQZLkkGSGylS-RmCA')"></div>
+<div class="absolute top-3 right-3">
+<span class="bg-surface-container-highest/80 backdrop-blur-md px-3 py-1 rounded-full text-on-surface-variant font-label-sm text-label-sm">בקרוב</span>
+</div>
+</div>
+<div class="p-4 text-right">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">אמידו, פורטוגל</h3>
+<span class="font-label-md text-label-md text-secondary">05.05 - 12.05</span>
+</div>
+<div class="flex flex-row-reverse items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-outline text-[20px]">groups</span>
+<span class="font-body-md text-body-md text-on-surface-variant">3 רשומים למניין</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[30%] rounded-full"></div>
+</div>
+<div class="mt-4">
+<button class="w-full py-2 stone-border text-secondary border-secondary/40 rounded-lg font-label-md text-label-md">נהל הזמנה</button>
+</div>
+</div>
+</article>
+</section>
+<!-- VIP Support Card -->
+<section class="mb-12">
+<div class="bg-tertiary-fixed text-on-tertiary-fixed p-5 rounded-xl flex flex-row-reverse items-center gap-4">
+<div class="bg-on-tertiary-fixed/10 p-3 rounded-full shrink-0">
+<span class="material-symbols-outlined text-primary text-[32px]">support_agent</span>
+</div>
+<div class="text-right">
+<h4 class="font-label-md text-label-md font-bold mb-1">שירות VIP וליווי אישי</h4>
+<p class="font-body-md text-body-md opacity-80">צריכים עזרה עם המניין או הקהילה המקומית? אנחנו כאן 24/6.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB: Add Location -->
+<button class="fixed bottom-24 left-6 z-50 w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[32px]">add_location_alt</span>
+</button>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row-reverse justify-around items-center px-4 py-3 bg-surface border-t border-outline-variant/10 shadow-lg md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low transition-colors px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-md text-label-md mt-1">גלה</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="travel_explore" style="font-variation-settings: 'FILL' 1;">travel_explore</span>
+<span class="font-label-md text-label-md mt-1">השהיות שלי</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low transition-colors px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md mt-1">פרופיל</span>
+</a>
+</nav>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // Subtle haptic-like effect simulation if needed
+            });
+        });
+    </script>
+</body></html>

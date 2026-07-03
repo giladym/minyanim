@@ -1,0 +1,340 @@
+<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=Hanken+Grotesk:wght@400;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-primary-fixed-variant": "#23501e",
+                "primary-fixed": "#bcf0ae",
+                "primary-container": "#2d5a27",
+                "on-error": "#ffffff",
+                "primary-fixed-dim": "#a1d494",
+                "tertiary-fixed": "#f1e0cc",
+                "inverse-on-surface": "#f3f0ef",
+                "outline-variant": "#c2c9bb",
+                "background": "#fcf9f8",
+                "outline": "#72796e",
+                "surface-container-lowest": "#ffffff",
+                "secondary": "#974725",
+                "secondary-fixed": "#ffdbce",
+                "primary": "#154212",
+                "secondary-container": "#ff9970",
+                "inverse-surface": "#303030",
+                "on-surface": "#1b1c1b",
+                "on-secondary": "#ffffff",
+                "on-secondary-fixed-variant": "#793110",
+                "surface-tint": "#3b6934",
+                "on-primary-fixed": "#002201",
+                "surface-variant": "#e4e2e1",
+                "error": "#ba1a1a",
+                "on-tertiary-fixed": "#231a0e",
+                "tertiary-container": "#5a4e3f",
+                "error-container": "#ffdad6",
+                "surface": "#fcf9f8",
+                "inverse-primary": "#a1d494",
+                "tertiary": "#423729",
+                "on-background": "#1b1c1b",
+                "on-primary-container": "#9dd090",
+                "surface-bright": "#fcf9f8",
+                "on-secondary-container": "#772f0e",
+                "surface-container": "#f0edec",
+                "on-primary": "#ffffff",
+                "tertiary-fixed-dim": "#d5c4b1",
+                "surface-container-low": "#f6f3f2",
+                "on-tertiary-fixed-variant": "#504536",
+                "surface-dim": "#dcd9d8",
+                "on-tertiary": "#ffffff",
+                "on-tertiary-container": "#d0c0ad",
+                "on-error-container": "#93000a",
+                "on-surface-variant": "#42493e",
+                "surface-container-high": "#eae7e7",
+                "surface-container-highest": "#e4e2e1",
+                "secondary-fixed-dim": "#ffb599",
+                "on-secondary-fixed": "#370e00"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "spacing": {
+                "sm": "16px",
+                "base": "4px",
+                "xl": "80px",
+                "lg": "48px",
+                "margin-desktop": "64px",
+                "gutter": "24px",
+                "xs": "8px",
+                "margin-mobile": "16px",
+                "md": "24px"
+            },
+            "fontFamily": {
+                "headline-md": ["Assistant", "sans-serif"],
+                "headline-xl": ["Assistant", "sans-serif"],
+                "headline-lg": ["Assistant", "sans-serif"],
+                "body-lg": ["'Source Serif 4'", "serif"],
+                "headline-lg-mobile": ["Assistant", "sans-serif"],
+                "label-md": ["Assistant", "sans-serif"],
+                "label-sm": ["Assistant", "sans-serif"],
+                "body-md": ["'Source Serif 4'", "serif"]
+            },
+            "fontSize": {
+                "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    }catch(_e){}</script></head><body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Parchment Texture Overlay -->
+<div class="fixed inset-0 parchment-overlay z-0"></div>
+
+<!-- TopNavBar -->
+<header class="bg-surface sticky top-0 z-40 border-b border-outline-variant/10">
+    <nav class="flex flex-row justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto">
+        <div class="flex items-center gap-2">
+            <span class="text-headline-md font-headline-md font-bold text-primary">מניין</span>
+        </div>
+        <div class="hidden md:flex flex-row items-center gap-8">
+            <a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="#">בית</a>
+            <a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">איך זה עובד</a>
+            <a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">קהילה</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high/50 p-2 rounded-full transition-all">dark_mode</button>
+            <button class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-all shadow-sm">
+                התחברות
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="relative z-10">
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 items-center gap-16">
+            <!-- Text Content (Right) -->
+            <div class="text-right flex flex-col items-start gap-8 order-1 md:order-1 items-end">
+                <h1 class="font-headline-xl text-5xl md:text-7xl leading-tight text-primary mb-2 text-right w-full">
+                    מניין, בכל מקום שאתם נוסעים
+                </h1>
+                <p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mb-8 text-right w-full">
+                    אל תתנו לנסיעה לעצור את התפילה במניין. רשמו את השהות שלכם, מצאו מטיילים נוספים, והשלימו מניין בקהילה היהודית הגדולה בעולם.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto sm:justify-end">
+                    <button class="cta-shine flex items-center justify-center gap-3 bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-label-md hover:scale-[1.02] active:scale-95 transition-all shadow-lg order-1 sm:order-1">
+                        <span class="material-symbols-outlined">login</span>
+                        התחברו עם Google
+                    </button>
+                    <button class="flex items-center justify-center gap-3 border-2 border-secondary text-secondary px-8 py-4 rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all order-2 sm:order-2">
+                        גלו מניינים קרובים
+                    </button>
+                </div>
+                <div class="mt-12 flex items-center gap-4 text-on-surface-variant w-full justify-start">
+                    <div class="flex -space-x-2 space-x-reverse">
+                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0VHo0gTtKbLxAolPZwkBNbibEaHGmtzZLoAruClmdqV_PLUAzsqkRmH2_DA-qcCffOzQG9FCcXIMrKftTVHV2mh1nRpfF668GO7V_83aHxnk-jo1tms8zZgnTvim8uufj995rvHMq1HyCIigTPD2ls4RuiObhQbdv9bp0PL022Q-tgumLj2YvHT-yx6yc_BC8l7NVI9_ANSrs_qDbUAy2tQ77b4NZCrOsUA-Of1lHhN4b2fpL2LHd0Q">
+                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxDPHLQT6tBh-pNfYB5sYVFV8ZXVM4tILcjHQVmpGmkv1LA_XsEnT5OK0doeEWmSBRzbUnN5RlaUz3-WNOf7lJN39TIf-NifHKyA7-4a-mXTQpo3rZGx6B3jfPLO6C44yv8QFESgfCDDySz3Vj5s_6NcTGObdMwcD5dOytpZXB0kC546dduBV_2OZ2JXjtFeDK3P8jyrCnG7mBcYVKilP25xrEWPrAoe1rikZdXNHtAG21umVQu32XNA">
+                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxddm7WZHWs3s7_tXQwyzL1-aaVfu-_ud81aIKwKmrXdZV6-w2gGJi5kV0t09I0pVkGLB7Q853SZeGAzVw1OZRqJrE4WPiZmpy_b8GDeN8PEMGR5NAely1hoe3Minpny-xi-QrNGE16sbnpD7lw2udGkUIGl6qJyx2mCzn0UdO3GeVSycDawkYOplIIAyRng688czakVI_KoKnKWgVX4NaXA1sHZ2H6fa6-fD5mBxuakDNpCcGGe4Ulg">
+                    </div>
+                    <span class="font-label-md text-label-md">הצטרפו לקהילה צומחת — שבת אחת בכל פעם.</span>
+                </div>
+            </div>
+
+            <!-- Globe Animation Element (Left) -->
+            <div class="relative w-full aspect-square max-w-md mx-auto order-2 md:order-2">
+                <div class="absolute inset-0 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+                <canvas id="cobe" class="w-full h-full cursor-grab active:cursor-grabbing" style="width: 100%; height: 100%;"></canvas>
+                
+                <!-- Floating Indicators -->
+                <div class="absolute top-1/4 right-0 bg-surface heritage-card p-3 rounded-xl animate-bounce" style="animation-duration: 4s;">
+                    <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">travel_explore</span>
+                </div>
+                <div class="absolute bottom-1/4 left-0 bg-surface heritage-card p-3 rounded-xl animate-bounce" style="animation-duration: 5s; animation-delay: 1s;">
+                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">group</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats / Mission Narrative -->
+    <section class="bg-surface-container py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 heritage-card p-10 rounded-xl flex flex-col justify-center gap-6 text-right items-end">
+                    <h2 class="font-headline-lg text-headline-lg text-primary">השליחות שלנו</h2>
+                    <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                        אנחנו כאן כדי להחליף את טבלאות האקסל המסורבלות וקבוצות הוואטסאפ האינסופיות בפלטפורמה פשוטה ומכובדת. המטרה היא להפוך את חיפוש המניין לחוויה של חיבור קהילתי, ולא למשימה לוגיסטית מעיקה. במקום לרדוף אחרי אנשים, תנו לקהילה למצוא אתכם.
+                    </p>
+                    <div class="flex gap-4 justify-end">
+                        <span class="bg-secondary-container/30 text-secondary px-4 py-1 rounded-full font-label-md text-label-md">קהילה</span>
+                        <span class="bg-primary-container/20 text-primary px-4 py-1 rounded-full font-label-md text-label-md">מסורת</span>
+                        <span class="bg-outline-variant/30 text-on-surface-variant px-4 py-1 rounded-full font-label-md text-label-md">טכנולוגיה</span>
+                    </div>
+                </div>
+                <div class="bg-primary text-on-primary p-10 rounded-xl flex flex-col justify-between overflow-hidden relative group text-right">
+                    <div class="absolute top-0 right-0 p-8 opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-700">
+                        <span class="material-symbols-outlined text-8xl" style="font-variation-settings: 'opsz' 48;">auto_stories</span>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="text-5xl font-headline-xl mb-2">1,200+</div>
+                        <div class="font-label-md text-label-md opacity-80">מטיילים מחוברים השבוע</div>
+                    </div>
+                    <p class="font-body-md text-body-md relative z-10 opacity-90 mt-8">
+                        בכל יום, עשרות מניינים נוצרים סביב העולם בזכות החיבור המהיר ב"מניין".
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-24 bg-surface">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="font-headline-lg text-headline-lg text-primary mb-4">איך זה עובד?</h2>
+                <p class="font-body-md text-body-md text-on-surface-variant">שלושה צעדים פשוטים לחיבור בדרכים</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <!-- Step 1 -->
+                <div class="flex flex-col items-center text-center group">
+                    <div class="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center mb-6 group-hover:bg-primary transition-colors duration-500">
+                        <span class="material-symbols-outlined text-primary group-hover:text-on-primary text-3xl transition-colors duration-500">calendar_add_on</span>
+                    </div>
+                    <h3 class="font-headline-md text-headline-md mb-3">רשמו את השהות</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant px-4">
+                        עדכנו את המיקום והתאריכים שלכם בדרכים, כדי שאחרים יוכלו לראות שאתם שם.
+                    </p>
+                </div>
+                <!-- Step 2 -->
+                <div class="flex flex-col items-center text-center group">
+                    <div class="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center mb-6 group-hover:bg-primary transition-colors duration-500">
+                        <span class="material-symbols-outlined text-primary group-hover:text-on-primary text-3xl transition-colors duration-500">search_check</span>
+                    </div>
+                    <h3 class="font-headline-md text-headline-md mb-3">גלו שותפים</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant px-4">
+                        ראו מי עוד נמצא באזורכם באותו זמן וצרו קשר בתיאום פשוט ונוח.
+                    </p>
+                </div>
+                <!-- Step 3 -->
+                <div class="flex flex-col items-center text-center group">
+                    <div class="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center mb-6 group-hover:bg-primary transition-colors duration-500">
+                        <span class="material-symbols-outlined text-primary group-hover:text-on-primary text-3xl transition-colors duration-500">handshake</span>
+                    </div>
+                    <h3 class="font-headline-md text-headline-md mb-3">השלימו מניין</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant px-4">
+                        נפגשים, מתפללים, ושומרים על קשר עם הקהילה הנודדת שלנו.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-24">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="relative rounded-xl overflow-hidden bg-primary p-12 text-center text-on-primary shadow-2xl">
+                <div class="relative z-10">
+                    <h2 class="font-headline-xl text-4xl mb-6">מוכנים למסע הבא שלכם?</h2>
+                    <p class="font-body-lg text-body-lg mb-10 max-w-2xl mx-auto opacity-90">
+                        הצטרפו לאלפי יהודים שכבר לא דואגים לגבי מניין בחו"ל. הירשמו עכשיו והתחילו לתכנן את התפילה הבאה שלכם.
+                    </p>
+                    <button class="bg-surface text-primary px-10 py-4 rounded-xl font-headline-md text-headline-md hover:scale-105 transition-all shadow-lg">
+                        התחילו כאן
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="bg-surface-container border-t border-outline-variant/20">
+    <div class="w-full px-6 py-8 flex flex-col md:flex-row justify-between items-center text-right max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row items-center gap-8 mb-8 md:mb-0">
+            <span class="font-headline-md text-headline-md text-primary font-bold">מניין</span>
+            <div class="flex flex-row gap-6">
+                <a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary hover:underline decoration-secondary transition-all" href="#">תנאי שימוש</a>
+                <a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary hover:underline decoration-secondary transition-all" href="#">פרטיות</a>
+                <a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary hover:underline decoration-secondary transition-all" href="#">הצהרת נגישות</a>
+            </div>
+        </div>
+        <div class="text-on-surface-variant font-label-md text-label-md">
+            © תשפ"ד מניין. מחברים קהילות ברחבי העולם.
+        </div>
+    </div>
+</footer>
+
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row justify-around items-center px-4 py-3 bg-surface border-t border-outline-variant/10 md:hidden shadow-lg">
+    <a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+        <span class="material-symbols-outlined">person</span>
+        <span class="font-label-md text-label-md">פרופיל</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+        <span class="material-symbols-outlined">travel_explore</span>
+        <span class="font-label-md text-label-md">השהיות שלי</span>
+    </a>
+    <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-95 active:scale-90 transition-transform" href="#">
+        <span class="material-symbols-outlined">explore</span>
+        <span class="font-label-md text-label-md">גלה</span>
+    </a>
+</nav>
+
+<script type="module">
+    import createGlobe from "https://cdn.skypack.dev/cobe";
+
+    let phi = 0;
+    const canvas = document.getElementById("cobe");
+
+    const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: 600 * 2,
+        height: 600 * 2,
+        phi: 0,
+        theta: 0.25,
+        dark: 0,
+        diffuse: 1.2,
+        mapSamples: 16000,
+        mapBrightness: 6,
+        baseColor: [1, 1, 1],
+        markerColor: [21/255, 66/255, 18/255], // primary color
+        glowColor: [1.2, 1.2, 1.2],
+        markers: [
+            { location: [31.7683, 35.2137], size: 0.1 }, // Jerusalem
+            { location: [40.7128, -74.006], size: 0.05 }, // NY
+            { location: [48.8566, 2.3522], size: 0.05 }, // Paris
+            { location: [51.5074, -0.1278], size: 0.05 }, // London
+        ],
+        onRender: (state) => {
+            state.phi = phi;
+            phi += 0.003;
+        },
+    });
+
+    // Intersection Observer for scroll reveal animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('section, .heritage-card').forEach(el => {
+        el.classList.add('scroll-reveal');
+        observer.observe(el);
+    });
+
+    // Simple scroll event for header opacity
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('header');
+        if (window.scrollY > 20) {
+            header.classList.add('shadow-sm');
+            header.style.backgroundColor =</script></body></html>

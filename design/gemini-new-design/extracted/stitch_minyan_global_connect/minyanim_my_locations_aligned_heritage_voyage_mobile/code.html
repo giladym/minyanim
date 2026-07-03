@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>המיקומים שלי | מניין</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Source+Serif+4:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#2d5a27",
+                    "on-background": "#1b1c1b",
+                    "inverse-primary": "#a1d494",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#ff9970",
+                    "tertiary-fixed-dim": "#d5c4b1",
+                    "on-primary-fixed": "#002201",
+                    "on-surface-variant": "#42493e",
+                    "primary-fixed-dim": "#a1d494",
+                    "background": "#fcf9f8",
+                    "surface-variant": "#e4e2e1",
+                    "surface-container": "#f0edec",
+                    "outline": "#72796e",
+                    "inverse-surface": "#303030",
+                    "on-secondary-container": "#772f0e",
+                    "surface-bright": "#fcf9f8",
+                    "surface": "#fcf9f8",
+                    "on-secondary-fixed": "#370e00",
+                    "tertiary": "#423729",
+                    "primary": "#2d5a27",
+                    "on-primary-container": "#9dd090",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e4e2e1",
+                    "secondary-fixed": "#ffdbce",
+                    "on-tertiary-fixed-variant": "#504536",
+                    "surface-tint": "#3b6934",
+                    "tertiary-container": "#5a4e3f",
+                    "secondary-fixed-dim": "#ffb599",
+                    "primary-fixed": "#bcf0ae",
+                    "on-tertiary-container": "#d0c0ad",
+                    "inverse-on-surface": "#f3f0ef",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#793110",
+                    "on-error-container": "#93000a",
+                    "surface-container-low": "#f6f3f2",
+                    "surface-container-high": "#eae7e7",
+                    "on-tertiary-fixed": "#231a0e",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#f1e0cc",
+                    "surface-dim": "#dcd9d8",
+                    "outline-variant": "#c2c9bb",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed-variant": "#23501e",
+                    "on-surface": "#1b1c1b",
+                    "secondary": "#974725",
+                    "on-primary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "base": "4px",
+                    "margin-mobile": "16px",
+                    "xs": "8px",
+                    "margin-desktop": "64px",
+                    "lg": "48px",
+                    "sm": "16px",
+                    "xl": "80px",
+                    "md": "24px"
+            },
+            "fontFamily": {
+                    "body-md": ["\"Source Serif 4\""],
+                    "label-sm": ["Hanken Grotesk"],
+                    "label-md": ["Hanken Grotesk"],
+                    "body-lg": ["\"Source Serif 4\""],
+                    "headline-xl": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fcf9f8;
+            color: #1b1c1b;
+            font-family: "Source Serif 4", serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 96px);
+        }
+        .stone-border {
+            border: 1px solid rgba(114, 121, 110, 0.2);
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased bg-background">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant/10">
+<div class="flex flex-row-reverse justify-between items-center w-full px-4 py-4 max-w-7xl mx-auto">
+<h1 class="text-headline-md font-headline-md font-bold text-primary">מניין</h1>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high/50 rounded-full transition-colors">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-md mx-auto px-4 pt-8 safe-bottom">
+<!-- Page Heading & Folder Actions -->
+<header class="mb-6 text-right">
+<div class="flex flex-row-reverse justify-between items-center mb-4">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">המיקומים שלי</h2>
+<button class="flex items-center gap-1 text-primary hover:underline">
+<span class="font-label-md text-label-md">ניהול תיקיות</span>
+<span class="material-symbols-outlined text-[18px]">folder_managed</span>
+</button>
+</div>
+<!-- Folder Filters -->
+<div class="flex flex-row-reverse gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+<button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-primary text-white font-label-md text-label-md shadow-sm">הכל</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-variant transition-colors">אירופה 2026</button>
+<button class="whitespace-nowrap px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-variant transition-colors">טיול בפולין 2027</button>
+</div>
+</header>
+<!-- Location Cards Section -->
+<section class="space-y-6">
+<!-- Trip Card 1 -->
+<article class="bg-surface stone-border rounded-xl overflow-hidden shadow-sm">
+<div class="relative h-28 w-full">
+<div class="bg-cover bg-center w-full h-full opacity-90" style="background-image: url('https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+</div>
+<div class="p-4 text-right">
+<div class="flex flex-row-reverse justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">מזוביה, פולין</h3>
+<button class="p-1 text-on-surface-variant">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex flex-row-reverse items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[18px]">calendar_today</span>
+<span class="font-body-md text-body-md text-on-surface-variant">8 ביולי 2026 – 12 ביולי 2026</span>
+</div>
+<div class="flex flex-row-reverse items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-outline text-[18px]">groups</span>
+<span class="font-body-md text-body-md text-on-surface-variant">11 גברים</span>
+</div>
+<!-- Minyan Discovery Hook -->
+<div class="bg-surface-container-low p-3 rounded-lg flex flex-row-reverse items-center justify-between mb-4 border border-outline-variant/10">
+<div class="flex flex-row-reverse items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">mosque</span>
+<span class="font-label-md text-label-md text-on-surface">1 מניינים ליד המיקום</span>
+</div>
+<button class="text-primary font-label-md text-label-md hover:underline decoration-primary/30">פרטים</button>
+</div>
+<!-- Actions -->
+<div class="flex flex-row-reverse gap-2">
+<button class="flex-1 py-2 bg-primary text-white rounded-lg font-label-md text-label-md active:scale-[0.98] transition-transform">עריכה</button>
+<button class="flex-1 py-2 stone-border text-on-surface rounded-lg font-label-md text-label-md active:scale-[0.98] transition-transform">ביטול מיקום</button>
+<button class="px-3 py-2 stone-border rounded-lg text-on-surface-variant active:scale-[0.98] transition-transform" title="העברה לתיקייה">
+<span class="material-symbols-outlined block">drive_file_move</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Trip Card 2 -->
+<article class="bg-surface stone-border rounded-xl overflow-hidden shadow-sm">
+<div class="relative h-28 w-full">
+<div class="bg-cover bg-center w-full h-full opacity-90" style="background-image: url('https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+</div>
+<div class="p-4 text-right">
+<div class="flex flex-row-reverse justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">ליסבון, פורטוגל</h3>
+<button class="p-1 text-on-surface-variant">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex flex-row-reverse items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[18px]">calendar_today</span>
+<span class="font-body-md text-body-md text-on-surface-variant">15 באוגוסט 2026 – 22 באוגוסט 2026</span>
+</div>
+<div class="flex flex-row-reverse items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-outline text-[18px]">groups</span>
+<span class="font-body-md text-body-md text-on-surface-variant">3 גברים</span>
+</div>
+<!-- Minyan Discovery Hook (Empty State) -->
+<button class="w-full bg-surface-container-low p-3 rounded-lg flex flex-row-reverse items-center justify-center gap-2 mb-4 border border-dashed border-outline-variant/30 text-on-surface-variant hover:bg-surface-variant/20 transition-colors">
+<span class="material-symbols-outlined text-[20px]">search</span>
+<span class="font-label-md text-label-md">חיפוש מניינים ליד המיקום</span>
+</button>
+<!-- Actions -->
+<div class="flex flex-row-reverse gap-2">
+<button class="flex-1 py-2 bg-primary text-white rounded-lg font-label-md text-label-md active:scale-[0.98] transition-transform">עריכה</button>
+<button class="flex-1 py-2 stone-border text-on-surface rounded-lg font-label-md text-label-md active:scale-[0.98] transition-transform">ביטול מיקום</button>
+<button class="px-3 py-2 stone-border rounded-lg text-on-surface-variant active:scale-[0.98] transition-transform" title="העברה לתיקייה">
+<span class="material-symbols-outlined block">drive_file_move</span>
+</button>
+</div>
+</div>
+</article>
+</section>
+</main>
+<!-- FAB: Add Location -->
+<button class="fixed bottom-28 left-6 z-50 w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[32px]">add_location_alt</span>
+</button>
+<!-- Bottom Navigation Bar (Search-first Layout) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row-reverse justify-around items-center px-4 py-3 bg-surface border-t border-outline-variant/10 shadow-lg md:hidden rounded-t-xl">
+<!-- My Locations (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">travel_explore</span>
+<span class="font-label-md text-label-md mt-1">המיקומים שלי</span>
+</a>
+<!-- Discover (Center / Primary) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low transition-colors px-4 py-1" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-label-md text-label-md mt-1">גלה</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low transition-colors px-4 py-1" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md mt-1">פרופיל</span>
+</a>
+</nav>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // Potential haptic feedback integration
+            });
+        });
+    </script>
+</body></html>
