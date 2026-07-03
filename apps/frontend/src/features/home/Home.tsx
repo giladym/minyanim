@@ -119,14 +119,11 @@ export function Home() {
             </div>
             <p className="mt-3 text-sm text-faint">{t("home.hero.trust")}</p>
           </div>
-          <div className="order-first flex flex-col items-center gap-5 md:order-last">
+          <div className="order-first flex items-center justify-center md:order-last">
             <div className="relative flex items-center justify-center">
               {/* Soft brand halo behind the existing globe animation (globe itself unchanged). */}
               <div className="absolute inset-0 -z-10 rounded-full bg-primary/5 blur-3xl" aria-hidden />
               <Globe />
-            </div>
-            <div className="rounded-xl border border-line bg-surface px-4 py-2.5 text-center text-sm font-bold text-faint">
-              {t("home.globe.caption")}
             </div>
           </div>
         </div>

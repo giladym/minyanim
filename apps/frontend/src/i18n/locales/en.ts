@@ -28,7 +28,6 @@ export const en = {
           "Record where you'll be and when, and see who's gathering there for the same Shabbat. Host a minyan at a precise spot — and others join. Everything that used to live in emails, spreadsheets, and WhatsApp groups, now in one simple place.",
         trust: "Completely free · No ads · Your data stays yours",
       },
-      globe: { caption: "Illustrative globe · visualization only" },
       mission: {
         eyebrow: "Our mission",
         body: "We're here to replace clumsy spreadsheets and endless WhatsApp groups with one simple, dignified platform — turning the search for a minyan into a moment of community, not a logistical chore. Instead of chasing people, let the community find you.",
