@@ -18,6 +18,10 @@ export const createFolder = (name: string) =>
 export const renameFolder = (id: string, name: string) =>
   api<FolderDTO>(`/folders/${id}`, { method: "PATCH", body: JSON.stringify({ name }) });
 
+/** PATCH /api/folders/{id} — pin/unpin (controls dashboard quick-filter chip visibility). */
+export const setFolderPinned = (id: string, pinned: boolean) =>
+  api<FolderDTO>(`/folders/${id}`, { method: "PATCH", body: JSON.stringify({ pinned }) });
+
 /** DELETE /api/folders/{id} — delete (confirm-guarded); its Stays cascade to Unfiled. */
 export const deleteFolder = (id: string) =>
   api<{ ok: true }>(`/folders/${id}`, { method: "DELETE", body: JSON.stringify({ confirm: true }) });
@@ -52,6 +56,17 @@ export function useRenameFolder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) => renameFolder(id, name),
+    onSettled: () => invalidateFoldersAndStays(qc),
+  });
+}
+
+/** Pin/unpin mutation with an optimistic cache update (the chip row reacts immediately). */
+export function useSetFolderPinned() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => setFolderPinned(id, pinned),
+    onMutate: ({ id, pinned }) =>
+      qc.setQueryData<FolderDTO[]>(FOLDERS_KEY, (old) => old?.map((f) => (f.id === id ? { ...f, pinned } : f))),
     onSettled: () => invalidateFoldersAndStays(qc),
   });
 }

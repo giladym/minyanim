@@ -15,8 +15,16 @@ export const FolderNameSchema = z
 export const CreateFolderInput = z.object({ name: FolderNameSchema });
 export type CreateFolderInputType = z.infer<typeof CreateFolderInput>;
 
-/** Rename-folder request body (same shape as create). */
-export const UpdateFolderInput = z.object({ name: FolderNameSchema });
+/**
+ * Update-folder request body: rename (`name`) and/or pin/unpin (`pinned`). Both optional so a
+ * request can do either; the service applies whichever is present. Pinned folders are the ones
+ * surfaced as quick-filter chips on the dashboard (unpinned stay reachable via "manage folders"),
+ * keeping the filter row usable across years of trips (004 amendment).
+ */
+export const UpdateFolderInput = z.object({
+  name: FolderNameSchema.optional(),
+  pinned: z.boolean().optional(),
+});
 export type UpdateFolderInputType = z.infer<typeof UpdateFolderInput>;
 
 /**
@@ -28,5 +36,7 @@ export interface FolderDTO {
   id: string;
   name: string;
   stayCount: number;
+  /** Whether the folder is shown as a quick-filter chip on the dashboard (default true). */
+  pinned: boolean;
   createdAt: number;
 }

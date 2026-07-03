@@ -32,8 +32,8 @@ vi.mock("../../lib/stays", () => ({
 vi.mock("../../lib/folders", () => ({
   useFolders: () => ({
     data: [
-      { id: "fld_a", name: "אירופה 2026", stayCount: 2, createdAt: 0 },
-      { id: "fld_b", name: "אסיה", stayCount: 0, createdAt: 1 },
+      { id: "fld_a", name: "אירופה 2026", stayCount: 2, pinned: true, createdAt: 0 },
+      { id: "fld_b", name: "אסיה", stayCount: 0, pinned: true, createdAt: 1 },
     ],
   }),
   useCreateFolder: () => ({ isPending: false, mutateAsync: createFolderMock }),
@@ -204,7 +204,7 @@ describe("AddEditStayForm — folder assignment (004 US1 / R10)", () => {
       status: "active", isPast: false, coversShabbat: false, contactName: null, contactPhone: null,
       contactEmail: null, groupMembers: null, notes: null, folderId: null, historyTag: null, createdAt: 0, updatedAt: 0,
     });
-    createFolderMock.mockResolvedValue({ id: "fld_new", name: "טיול", stayCount: 0, createdAt: 9 });
+    createFolderMock.mockResolvedValue({ id: "fld_new", name: "טיול", stayCount: 0, pinned: true, createdAt: 9 });
     updateMutate.mockResolvedValue({ id: "stay_1" });
     const user = userEvent.setup();
     render(<AddEditStayForm stayId="stay_1" />);
@@ -248,7 +248,7 @@ describe("AddEditStayForm — folder assignment (004 US1 / R10)", () => {
 
   it("inline-creates a folder and assigns it to the new Stay", async () => {
     createMutate.mockResolvedValue({ id: "stay_new" });
-    createFolderMock.mockResolvedValue({ id: "fld_new", name: "חדשה", stayCount: 0, createdAt: 2 });
+    createFolderMock.mockResolvedValue({ id: "fld_new", name: "חדשה", stayCount: 0, pinned: true, createdAt: 2 });
     const user = userEvent.setup();
     render(<AddEditStayForm />);
     await fillLocationManually(user, "לונדון", "בריטניה");

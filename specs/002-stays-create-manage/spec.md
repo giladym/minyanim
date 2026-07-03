@@ -229,6 +229,14 @@ reflected immediately; cancelling removes it from the active list.
   selection (Shacharit / Mincha / Maariv).
 - **FR-005**: The dashboard MUST list a user's Stays sorted by nearest upcoming arrival
   date first, and visually distinguish past Stays.
+- **FR-005a** *(added post-005 — Heritage Voyage design refresh)*: Each Stay card leads with a
+  **map thumbnail** of the place (MapTiler static map from the Stay's coordinates; token-gradient
+  fallback when coordinate-less), country + city overlaid; the body shows the date range, an
+  optional folder chip, a single **minyan-status line** (registered → view · minyanim nearby → join
+  · none → search/organize), a **`⋮` actions menu** (edit · search minyanim · organize a minyan ·
+  move to folder · cancel — *search is always present, even when already registered, so additional
+  minyanim at the same place are findable*), and a collapsible **Shabbat-times** panel. A Stay whose
+  dates cover **today** MUST be emphasized ("here now") and floated to the top of the list.
 - **FR-006**: A user MUST be able to edit and cancel Stays they own.
 - **FR-007**: A specific address on a Stay MUST be stored privately and never exposed
   publicly. Serialization MUST use distinct shape contracts — an **owner** view that includes

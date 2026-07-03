@@ -4,12 +4,13 @@ import {
   listFolders as svcList,
   createFolder as svcCreate,
   renameFolder as svcRename,
+  setFolderPinned as svcSetPinned,
   deleteFolder as svcDelete,
 } from "../services/folderService";
 
 /** Folder-DTO builder enforced at the controller boundary (allowlist; mirrors stayController). */
 function toFolderResponse(dto: FolderDTO): FolderDTO {
-  return { id: dto.id, name: dto.name, stayCount: dto.stayCount, createdAt: dto.createdAt };
+  return { id: dto.id, name: dto.name, stayCount: dto.stayCount, pinned: dto.pinned, createdAt: dto.createdAt };
 }
 
 /** List the caller's folders with active-Stay counts. */
@@ -26,6 +27,11 @@ export async function createFolderController(db: Db, userId: string, name: strin
 /** Rename an owned folder (404 if not owned; `folder.name_taken` on collision). */
 export async function renameFolderController(db: Db, userId: string, id: string, name: string) {
   return toFolderResponse(await svcRename(db, userId, id, name));
+}
+
+/** Pin/unpin an owned folder (controls dashboard quick-filter chip visibility; 404 if not owned). */
+export async function setFolderPinnedController(db: Db, userId: string, id: string, pinned: boolean) {
+  return toFolderResponse(await svcSetPinned(db, userId, id, pinned));
 }
 
 /** Delete an owned folder (confirm-guarded; its Stays cascade to Unfiled). */

@@ -10,51 +10,78 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-/* Jerusalem Stone — AA-corrected tokens (source of truth: design/DESIGN-SYSTEM.md). */
+/* Jerusalem Stone / "Heritage Voyage" — source of truth: design/DESIGN-SYSTEM.md + ADR-pending.
+   Palette refresh (design/gemini-new-design): parchment surface, forest-green PRIMARY, terracotta
+   accent (mapped onto the existing `clay` token). Token NAMES are unchanged so every screen picks
+   up the new look without edits; `--primary` (green) is new — the homepage adopts it first. */
 :root {
-  --bg: #f6f1e7;
-  --header: #f1e8d6;
-  --surface: #fffdf8;
-  --ink: #2b2620;
-  --muted: #676156;
-  --faint: #776c57;
-  --line: #ece2cf;
-  --line2: #e7dcc6;
-  --clay: #a4512e;
-  --clay-soft: #f7e7df;
-  --clay-ink: #a44b2a;
+  --bg: #fcf9f8;           /* parchment (M3 surface) */
+  --header: #f6f3f2;       /* surface-container-low */
+  --surface: #ffffff;      /* card surface (Level 1) */
+  --ink: #1b1c1b;          /* on-surface */
+  --muted: #42493e;        /* on-surface-variant */
+  --faint: #72796e;        /* outline */
+  --line: #e4e2e1;         /* surface-variant / hairline */
+  --line2: #c2c9bb;        /* outline-variant */
+  /* Forest-green PRIMARY — key actions + brand. */
+  --primary: #154212;
+  --primary-container: #2d5a27;
+  --primary-soft: #e6efe4;
+  --primary-ink: #154212;
+  --on-primary: #ffffff;
+  /* Accent = terracotta (kept under the `clay` name). */
+  --clay: #974725;
+  --clay-soft: #fbe6dc;
+  --clay-ink: #8a3f1f;
   --on-clay: #ffffff;
-  --teal: #3f8073;
-  --teal-soft: #e6efe9;
-  --teal-ink: #2f6b5d;
+  /* `teal` retained as the green success/secondary family so existing screens read coherently. */
+  --teal: #2d5a27;
+  --teal-soft: #e6efe4;
+  --teal-ink: #1c4a17;
   --on-teal: #ffffff;
-  --gold: #825916;
-  --gold-soft: #f4e3c6;
-  --chip: #efe6d3;
-  --auth-grad-top: #f0e7d4;
+  --gold: #7a5a22;
+  --gold-soft: #f1e0cc;
+  --chip: #f0edec;                    /* surface-container */
+  --surface-hi: #eae7e7;              /* surface-container-high — medallions, tracks */
+  --surface-hier: #e4e2e1;            /* surface-container-highest — pressed/hover */
+  --on-primary-container: #ffffff;    /* AA-safe text on the dark-green container */
+  --shadow-card: 0 1px 3px rgba(21, 66, 18, 0.1);
+  --auth-grad-top: #f0edec;
 }
 
 [data-theme="dark"] {
-  --bg: #1b1815;
-  --header: #241f19;
-  --surface: #262019;
-  --ink: #f1ead9;
-  --muted: #a99e8a;
-  --faint: #928775;
-  --line: #332c23;
-  --line2: #3a3127;
-  --clay: #d98a5f;
-  --clay-soft: #3a2820;
-  --clay-ink: #eaa57f;
-  --on-clay: #241812;
-  --teal: #5fa595;
-  --teal-soft: #22302c;
-  --teal-ink: #86c5b6;
-  --on-teal: #10201b;
-  --gold: #dcad57;
-  --gold-soft: #342a17;
-  --chip: #2c2519;
-  --auth-grad-top: #241f19;
+  --bg: #12140f;
+  --header: #1b1f18;
+  --surface: #1c211a;
+  --ink: #e3e3dc;
+  --muted: #c2c9bb;
+  --faint: #8c9384;
+  --line: #2b302a;
+  --line2: #414940;
+  /* Forest-green primary. `--primary` stays a mid-forest FILL in both themes so buttons/cards read
+     as solid green (never a bright block on dark); `--primary-ink` is the lighter ACCENT used for
+     text/icons that sit on the dark page background. */
+  --primary: #3f7a37;
+  --primary-container: #23501e;
+  --primary-soft: #1f2b1c;
+  --primary-ink: #a1d494;
+  --on-primary: #ffffff;
+  --clay: #ffb599;
+  --clay-soft: #3a2013;
+  --clay-ink: #ffb599;
+  --on-clay: #572100;
+  --teal: #a1d494;
+  --teal-soft: #1f2b1c;
+  --teal-ink: #bcf0ae;
+  --on-teal: #002201;
+  --gold: #d5c4b1;
+  --gold-soft: #2a2418;
+  --chip: #26291f;
+  --surface-hi: #2f332a;
+  --surface-hier: #383d33;
+  --on-primary-container: #bcf0ae;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --auth-grad-top: #1b1f18;
 }
 
 /* Expose tokens to Tailwind utilities (bg-bg, text-ink, bg-clay, font-sans, …). */
@@ -75,24 +102,76 @@ button:not(:disabled),
   --color-teal-soft: var(--teal-soft);
   --color-teal-ink: var(--teal-ink);
   --color-on-teal: var(--on-teal);
+  --color-primary: var(--primary);
+  --color-primary-container: var(--primary-container);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
+  --color-on-primary: var(--on-primary);
+  --color-on-primary-container: var(--on-primary-container);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
   --color-chip: var(--chip);
+  --color-surface-hi: var(--surface-hi);
+  --color-surface-hier: var(--surface-hier);
+  --shadow-card: var(--shadow-card);
   /* WhatsApp brand color (fixed across light/dark) — for the "Share to WhatsApp" CTA so it's
      recognizable; kept as a named token rather than a magic hex (constitution: tokens-only).
      Bright green is light, so the foreground is near-black (≈10:1 contrast) — white text on it
      is only 1.98:1 and fails WCAG AA (caught by the discovery axe e2e). */
   --color-whatsapp: #25d366;
   --color-on-whatsapp: #0b1f16;
+  /* Body/UI = Assistant (full Hebrew). Display/headings = Hanken Grotesk for Latin, falling back
+     to Assistant for Hebrew (Hanken has no Hebrew glyphs) — the bold, clean grotesk pairing. */
   --font-sans: "Assistant", system-ui, sans-serif;
+  --font-display: "Hanken Grotesk", "Assistant", system-ui, sans-serif;
 }
 
-/* Self-hosted Assistant (GDPR — no Google Fonts hotlinking). Add woff2 to public/fonts/
-   per public/fonts/README.md; until then the system-ui fallback applies. */
+/* Self-hosted fonts (GDPR — no Google Fonts hotlinking). Variable woff2 subsets pulled from Google
+   Fonts into public/fonts/. Assistant (body/UI): Hebrew + Latin + Latin-ext. Hanken Grotesk
+   (display/headings, Latin only — Hebrew headings fall back to Assistant via --font-display). */
+
+/* Assistant — Hebrew */
 @font-face {
   font-family: "Assistant";
   font-style: normal;
   font-weight: 400 800;
   font-display: swap;
-  src: url("/fonts/assistant-variable.woff2") format("woff2");
+  src: url("/fonts/assistant-hebrew.woff2") format("woff2");
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+/* Assistant — Latin-ext */
+@font-face {
+  font-family: "Assistant";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/assistant-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* Assistant — Latin */
+@font-face {
+  font-family: "Assistant";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/assistant-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Hanken Grotesk — Latin-ext */
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/hanken-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* Hanken Grotesk — Latin */
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/hanken-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }

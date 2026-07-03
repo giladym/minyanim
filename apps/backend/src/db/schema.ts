@@ -97,6 +97,9 @@ export const folder = sqliteTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    // 006 (design): folders shown as quick-filter chips on the dashboard. Default TRUE so existing
+    // folders keep showing; the user unpins to declutter the filter across years of trips.
+    pinned: integer("pinned", { mode: "boolean" }).notNull().default(true),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },

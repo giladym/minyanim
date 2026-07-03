@@ -20,6 +20,7 @@ export async function listFolders(db: Db, userId: string): Promise<FolderWithCou
       id: folder.id,
       userId: folder.userId,
       name: folder.name,
+      pinned: folder.pinned,
       createdAt: folder.createdAt,
       updatedAt: folder.updatedAt,
       stayCount: sql<number>`count(case when ${stay.status} = 'active' then 1 end)`,
@@ -68,6 +69,16 @@ export async function renameFolder(
   const rows = await db
     .update(folder)
     .set({ name, updatedAt: new Date() })
+    .where(and(eq(folder.id, id), eq(folder.userId, userId)))
+    .returning();
+  return rows[0] ?? null;
+}
+
+/** Pin/unpin an owned folder (controls whether it shows as a dashboard quick-filter chip). */
+export async function setFolderPinned(db: Db, userId: string, id: string, pinned: boolean): Promise<FolderRow | null> {
+  const rows = await db
+    .update(folder)
+    .set({ pinned, updatedAt: new Date() })
     .where(and(eq(folder.id, id), eq(folder.userId, userId)))
     .returning();
   return rows[0] ?? null;

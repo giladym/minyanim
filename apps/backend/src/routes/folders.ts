@@ -7,6 +7,7 @@ import {
   listFoldersController,
   createFolderController,
   renameFolderController,
+  setFolderPinnedController,
   deleteFolderController,
 } from "../controllers/folderController";
 import type { Logger } from "../lib/logger";
@@ -49,9 +50,14 @@ folders.patch("/api/folders/:id", async (c) => {
       400,
     );
   }
-  return c.json(
-    await renameFolderController(createDb(c.env.DB), userId, c.req.param("id"), parsed.data.name),
-  );
+  const db = createDb(c.env.DB);
+  const id = c.req.param("id");
+  const { name, pinned } = parsed.data;
+  let dto;
+  if (name !== undefined) dto = await renameFolderController(db, userId, id, name);
+  if (pinned !== undefined) dto = await setFolderPinnedController(db, userId, id, pinned);
+  if (!dto) return c.json({ errors: [{ field: "name", code: "folder.name_required" }] }, 400);
+  return c.json(dto);
 });
 
 folders.delete("/api/folders/:id", async (c) => {

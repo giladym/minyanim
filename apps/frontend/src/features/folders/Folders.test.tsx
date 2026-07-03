@@ -6,12 +6,15 @@ import { ApiError } from "../../lib/api";
 const createMutate = vi.fn();
 const renameMutate = vi.fn();
 const deleteMutate = vi.fn();
-let folders: Array<{ id: string; name: string; stayCount: number; createdAt: number }> = [];
+let folders: Array<{ id: string; name: string; stayCount: number; pinned: boolean; createdAt: number }> = [];
+
+const pinMutate = vi.fn();
 
 vi.mock("../../lib/folders", () => ({
   useFolders: () => ({ data: folders }),
   useCreateFolder: () => ({ isPending: false, mutateAsync: createMutate }),
   useRenameFolder: () => ({ isPending: false, mutateAsync: renameMutate }),
+  useSetFolderPinned: () => ({ isPending: false, mutate: pinMutate }),
   useDeleteFolder: () => ({ isPending: false, mutate: deleteMutate }),
 }));
 
@@ -22,8 +25,8 @@ import "../../i18n";
 beforeEach(() => {
   vi.clearAllMocks();
   folders = [
-    { id: "fld_a", name: "אירופה 2026", stayCount: 2, createdAt: 0 },
-    { id: "fld_b", name: "אסיה", stayCount: 0, createdAt: 1 },
+    { id: "fld_a", name: "אירופה 2026", stayCount: 2, pinned: true, createdAt: 0 },
+    { id: "fld_b", name: "אסיה", stayCount: 0, pinned: true, createdAt: 1 },
   ];
 });
 
@@ -35,7 +38,7 @@ describe("FolderManager (US1 — create/rename/delete)", () => {
   });
 
   it("creates a folder", async () => {
-    createMutate.mockResolvedValue({ id: "fld_c", name: "חדשה", stayCount: 0, createdAt: 2 });
+    createMutate.mockResolvedValue({ id: "fld_c", name: "חדשה", stayCount: 0, pinned: true, createdAt: 2 });
     const user = userEvent.setup();
     render(<FolderManager onClose={vi.fn()} />);
     await user.type(screen.getByLabelText("תיקייה חדשה"), "חדשה");
@@ -64,7 +67,7 @@ describe("FolderManager (US1 — create/rename/delete)", () => {
   });
 
   it("renames a folder", async () => {
-    renameMutate.mockResolvedValue({ id: "fld_b", name: "אסיה 2027", stayCount: 0, createdAt: 1 });
+    renameMutate.mockResolvedValue({ id: "fld_b", name: "אסיה 2027", stayCount: 0, pinned: true, createdAt: 1 });
     const user = userEvent.setup();
     render(<FolderManager onClose={vi.fn()} />);
     await user.click(screen.getAllByRole("button", { name: "שינוי שם" })[1]!);

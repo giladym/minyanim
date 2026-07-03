@@ -6,6 +6,7 @@ import {
   createFolder as repoCreate,
   getFolderById as repoGet,
   renameFolder as repoRename,
+  setFolderPinned as repoSetPinned,
   deleteFolder as repoDelete,
   type FolderRow,
   type FolderWithCount,
@@ -28,12 +29,12 @@ function isUniqueViolation(err: unknown): boolean {
 
 /** Map a stored folder (+count) to the owner DTO. `createdAt` is epoch-ms. */
 function toFolderDTO(row: FolderWithCount): FolderDTO {
-  return { id: row.id, name: row.name, stayCount: Number(row.stayCount), createdAt: row.createdAt.getTime() };
+  return { id: row.id, name: row.name, stayCount: Number(row.stayCount), pinned: row.pinned, createdAt: row.createdAt.getTime() };
 }
 
-/** A freshly created/renamed folder has no Stays counted yet from the write path → 0/refetch. */
+/** A freshly created/renamed/re-pinned folder has no Stays counted from the write path → 0/refetch. */
 function toBareFolderDTO(row: FolderRow, stayCount: number): FolderDTO {
-  return { id: row.id, name: row.name, stayCount, createdAt: row.createdAt.getTime() };
+  return { id: row.id, name: row.name, stayCount, pinned: row.pinned, createdAt: row.createdAt.getTime() };
 }
 
 /** List the caller's folders (oldest-first) with active-Stay counts. */
@@ -80,6 +81,13 @@ export async function renameFolder(
     if (isUniqueViolation(err)) throw new AppError(400, ERROR_CODES.FOLDER_NAME_TAKEN, "name");
     throw err;
   }
+  if (!row) throw NotFound();
+  return toBareFolderDTO(row, 0);
+}
+
+/** Pin/unpin an owned folder (controls whether it appears as a dashboard quick-filter chip). */
+export async function setFolderPinned(db: Db, userId: string, id: string, pinned: boolean): Promise<FolderDTO> {
+  const row = await repoSetPinned(db, userId, id, pinned);
   if (!row) throw NotFound();
   return toBareFolderDTO(row, 0);
 }
