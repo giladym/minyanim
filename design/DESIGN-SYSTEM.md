@@ -6,6 +6,34 @@ preference is stored as an **extensible theme identifier** (`minyanim_theme`), s
 named themes (e.g. Voyage, Maariv) can be added later without a data-model change — matching
 Feature 001 FR-009.
 
+## Heritage Voyage refresh (2026-07 · amends the tokens below)
+
+The palette + type below were refreshed to the **Heritage Voyage** direction; the source of truth
+is now `apps/frontend/src/theme/tokens.css` (the tables further down are historical for the values
+that changed). Summary:
+
+- **Primary → forest green** (`--primary #154212`, container `#2d5a27`, soft `#e6efe4`,
+  `--on-primary #fff`). Green = the key-action *fill* (buttons, CTA/stat cards). In **dark**,
+  `--primary` stays a mid-forest fill (`#3f7a37`) — never a bright block — while **`--primary-ink`**
+  (`#a1d494` dark / `#154212` light) is the accent for text/icons on the page background.
+- **Accent → terracotta** on the existing `--clay` token (`#974725`), used sparingly. `--teal` is
+  retained as the green success/secondary family.
+- **Surface → parchment** (`--bg #fcf9f8`, `--surface #ffffff`), a tonal ramp (`--chip`,
+  `--surface-hi`, `--surface-hier`) and `--shadow-card`.
+- **Type**: body/UI = **Assistant** (`--font-sans`); display/headings = **Hanken Grotesk** (Latin)
+  → **Assistant** (Hebrew) via `--font-display`. No serif. *(Preview loads Google Fonts; MUST be
+  self-hosted before launch — GDPR, `public/fonts/README.md`.)*
+
+### Location card pattern (My-Stays)
+
+The Stay card leads with a **MapTiler static-map thumbnail** of the actual place (`staticMapUrl()`
+from the Stay's `lat/lng`; token-gradient fallback), country badge + city overlaid. Body = dates
+(+ optional folder chip), **one minyan-status line** (registered→view · nearby→join · none→search),
+a **`⋮` actions menu** (edit · search minyanim · organize · move · cancel), and a collapsible
+**Shabbat-times** panel. A Stay whose dates cover today is emphasized ("כאן ועכשיו", green ring)
+and floated to the top. The folder quick-filter is a scrolling row of **pinned** folders only
+(star to pin in Manage). Icons are inline SVG (`components/Icon.tsx`), not a webfont.
+
 ## Typography
 
 - **Font**: `Assistant` (Google Fonts), Hebrew-first sans-serif. Weights 400/500/600/700/800.

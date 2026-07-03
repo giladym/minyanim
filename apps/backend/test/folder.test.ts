@@ -79,4 +79,17 @@ describe("folder CRUD (FR-001/D3)", () => {
     const ok = await SELF.fetch(`https://x/api/folders/${id}`, { method: "DELETE", headers: { ...J, cookie }, body: JSON.stringify({ confirm: true }) });
     expect(ok.status).toBe(200);
   });
+
+  it("defaults folders to pinned, and PATCH { pinned } toggles it (design refresh)", async () => {
+    const cookie = await signIn();
+    const created = (await (await post(cookie, "Poland 2027")).json()) as { id: string; pinned: boolean };
+    expect(created.pinned).toBe(true); // new folders show in the quick-filter by default
+
+    const unpinned = await SELF.fetch(`https://x/api/folders/${created.id}`, { method: "PATCH", headers: { ...J, cookie }, body: JSON.stringify({ pinned: false }) });
+    expect(unpinned.status).toBe(200);
+    expect(((await unpinned.json()) as { pinned: boolean }).pinned).toBe(false);
+
+    const list = (await (await SELF.fetch("https://x/api/folders", { headers: { cookie } })).json()) as { folders: { id: string; pinned: boolean }[] };
+    expect(list.folders.find((f) => f.id === created.id)!.pinned).toBe(false);
+  });
 });

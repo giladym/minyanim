@@ -38,9 +38,14 @@ export function StaysDashboard() {
 
   const all = useMemo(() => stays ?? [], [stays]);
   const list = useMemo(() => {
-    if (filter === "all") return all;
-    if (filter === "unfiled") return all.filter((s) => s.folderId == null);
-    return all.filter((s) => s.folderId === filter);
+    const filtered =
+      filter === "all" ? all : filter === "unfiled" ? all.filter((s) => s.folderId == null) : all.filter((s) => s.folderId === filter);
+    // Float the trip that's happening right now (dates cover today) to the top; keep the server's
+    // nearest-first order otherwise. Stable partition.
+    const n = new Date();
+    const today = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+    const isCurrent = (s: (typeof filtered)[number]) => !s.isPast && s.arrivalDate <= today && today <= s.departureDate;
+    return [...filtered.filter(isCurrent), ...filtered.filter((s) => !isCurrent(s))];
   }, [all, filter]);
 
   if (isLoading) {

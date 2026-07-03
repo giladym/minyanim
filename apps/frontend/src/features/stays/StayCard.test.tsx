@@ -11,6 +11,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 vi.mock("../../lib/profile", () => ({ useProfile: () => ({ data: { havdalahOpinion: "geonim" } }) }));
 vi.mock("../../lib/zmanim", () => ({ useStayZmanim: () => ({ data: undefined, isLoading: false, isError: false }) }));
+vi.mock("../../lib/config", () => ({ useMaptilerTileKey: () => undefined, staticMapUrl: () => null }));
 
 import { StayCard } from "./StayCard";
 import "../../i18n";
@@ -27,7 +28,6 @@ const stay: OwnerStayDTO = {
 describe("StayCard — post-save 'add a minyan' promotion (#4)", () => {
   it("shows the promotion only when justSaved, with host (prefilled) + find CTAs", () => {
     render(<StayCard stay={stay} highlighted justSaved onCancel={vi.fn()} />);
-    expect(screen.getByText("המיקום נשמר")).toBeInTheDocument();
     expect(screen.getByText("רוצים מניין כאן?")).toBeInTheDocument();
 
     const host = screen.getByText("הוספת מניין").closest("a")!;

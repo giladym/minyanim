@@ -1,0 +1,1 @@
+ALTER TABLE `folder` ADD `pinned` integer DEFAULT true NOT NULL;

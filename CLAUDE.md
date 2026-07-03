@@ -12,8 +12,14 @@ to any signed-in viewer; the discovery travelers list shows name + phone (sharer
 opt-out (default ON) gates phone everywhere; exact address/coords/entry-notes/email stay committed-only;
 signed-out = pure public. This REVISES 003 SC-005/FR-011 + ROADMAP decision 9 (see those + ADR 0008).
 NOTE: schema changes ship per feature — the remote dev D1 must be migrated on deploy
-(`pnpm db:migrate:remote`); CI/Workers Builds do NOT auto-migrate. Product decomposition &
-shared decisions: `specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
+(`pnpm db:migrate:remote`); CI/Workers Builds do NOT auto-migrate. Post-005 **"Heritage Voyage"
+design refresh** (branch `design/heritage-voyage`; see `design/DESIGN-SYSTEM.md` top section):
+forest-green primary + terracotta accent + parchment surface + Hanken-Grotesk/Assistant fonts
+(tokens.css is SoT; fonts CDN-preview, self-host before launch); redesigned My-Stays card (MapTiler
+map-thumbnail header, one minyan-status line, `⋮` menu, collapsible zmanim, current-stay "here now"
+emphasis); folder **pinning** (`folder.pinned`, migration 0007) drives a scrolling pinned-folder
+quick-filter. Amends 002 FR-005a + 004 FR-004a. Product decomposition & shared decisions:
+`specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
 
 Architecture (constitution v1.1.0 + docs/architecture.md): **pnpm + Turborepo monorepo** —
 `apps/frontend` (Vite React SPA + TanStack Router/Query on Workers Static Assets),

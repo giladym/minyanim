@@ -187,6 +187,11 @@ upcoming Stay; then permanently deletes a cancelled Stay from History and it is 
   **Unfiled** via the `stay.folder_id` FK `ON DELETE SET NULL` — Stays are never deleted (D4/SC-004).
 - **FR-004**: The active dashboard MUST allow browsing Stays by folder (including an **Unfiled**
   group) or as a flat list, and MUST show **only active (upcoming/in-progress)** Stays (D1).
+- **FR-004a** *(added post-005 — design refresh; ADR 0008-adjacent, migration 0007)*: Folders carry
+  a **`pinned`** flag (default true). The dashboard's quick-filter shows only **pinned** folders (as
+  a single horizontally-scrolling chip row, plus All/Unfiled + a manage affordance); unpinned folders
+  remain reachable in **Manage folders**, where the user pins/unpins (star). This keeps the filter
+  usable across years of trips. The currently-selected folder is always shown even if unpinned.
 - **FR-005**: A **History** view MUST show past Stays — `status='active'` & departure passed tagged
   **"attended"**, and `status='cancelled'` tagged **"cancelled"** — removed from the active
   dashboard, grouped by year, sortable by date/folder, and **cursor-paginated (infinite scroll)**.

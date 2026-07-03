@@ -19,3 +19,19 @@ export function useConfig() {
 export function useMaptilerTileKey(): string | undefined {
   return useConfig().data?.maptilerTileKey || undefined;
 }
+
+/**
+ * A MapTiler static-map thumbnail URL for a location card header — the "real location image" from
+ * the Stay's own coordinates. Returns null when coords or the key are missing (caller shows the
+ * token gradient fallback). Uses the public, origin-restricted tile key we already serve.
+ */
+export function staticMapUrl(
+  key: string | undefined,
+  lat: number | null,
+  lng: number | null,
+  opts: { zoom?: number; w?: number; h?: number } = {},
+): string | null {
+  if (!key || lat == null || lng == null) return null;
+  const { zoom = 11, w = 640, h = 260 } = opts;
+  return `https://api.maptiler.com/maps/streets-v2/static/${lng},${lat},${zoom}/${w}x${h}@2x.png?key=${key}`;
+}

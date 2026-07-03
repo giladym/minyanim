@@ -15,6 +15,8 @@ export type IconName =
   | "share"
   | "more"
   | "check"
+  | "close"
+  | "star"
   | "chevron-start";
 
 const GLYPHS: Record<IconName, ReactNode> = {
@@ -62,6 +64,8 @@ const GLYPHS: Record<IconName, ReactNode> = {
     </>
   ),
   check: <path d="M20 6 9 17l-5-5" />,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
+  star: <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.9 6.2 21l1.1-6.5L2.6 9.4l6.5-.9z" />,
   "chevron-start": <path d="m15 18-6-6 6-6" />,
 };
 

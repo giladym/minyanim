@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FolderDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
-import { useFolders, useCreateFolder, useRenameFolder, useDeleteFolder } from "../../lib/folders";
+import { Icon } from "../../components/Icon";
+import { useFolders, useCreateFolder, useRenameFolder, useSetFolderPinned, useDeleteFolder } from "../../lib/folders";
 
 const fieldCls =
   "w-full rounded-xl border border-line2 bg-surface px-3.5 py-2.5 text-ink outline-none transition focus:border-clay";
@@ -17,6 +18,7 @@ export function FolderManager({ onClose }: { onClose: () => void }) {
   const { data: folders } = useFolders();
   const create = useCreateFolder();
   const rename = useRenameFolder();
+  const setPinned = useSetFolderPinned();
   const del = useDeleteFolder();
 
   const [newName, setNewName] = useState("");
@@ -83,7 +85,7 @@ export function FolderManager({ onClose }: { onClose: () => void }) {
             <button
               type="submit"
               disabled={create.isPending || !newName.trim()}
-              className="shrink-0 rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay disabled:opacity-60"
+              className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-on-primary disabled:opacity-60"
             >
               {t("folders.create")}
             </button>
@@ -112,7 +114,7 @@ export function FolderManager({ onClose }: { onClose: () => void }) {
                     <button
                       type="submit"
                       disabled={rename.isPending || !editing.name.trim()}
-                      className="shrink-0 rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay disabled:opacity-60"
+                      className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-on-primary disabled:opacity-60"
                     >
                       {t("folders.save")}
                     </button>
@@ -136,9 +138,18 @@ export function FolderManager({ onClose }: { onClose: () => void }) {
                 key={f.id}
                 className="flex items-center justify-between gap-2 rounded-xl border border-line px-3 py-2.5"
               >
-                <span className="font-bold text-ink">
+                <span className="flex items-center gap-2 font-bold text-ink">
+                  <button
+                    type="button"
+                    className={f.pinned ? "text-gold" : "text-faint"}
+                    aria-label={f.pinned ? t("folders.unpin") : t("folders.pin")}
+                    aria-pressed={f.pinned}
+                    onClick={() => setPinned.mutate({ id: f.id, pinned: !f.pinned })}
+                  >
+                    <Icon name="star" size={18} {...(f.pinned ? { fill: "currentColor" } : {})} />
+                  </button>
                   {f.name}
-                  <span className="ms-2 text-xs font-normal text-muted">
+                  <span className="text-xs font-normal text-muted">
                     {t("folders.stayCount", { count: f.stayCount })}
                   </span>
                 </span>
