@@ -15,7 +15,7 @@ NOTE: schema changes ship per feature — the remote dev D1 must be migrated on 
 (`pnpm db:migrate:remote`); CI/Workers Builds do NOT auto-migrate. Post-005 **"Heritage Voyage"
 design refresh** (branch `design/heritage-voyage`; see `design/DESIGN-SYSTEM.md` top section):
 forest-green primary + terracotta accent + parchment surface + Hanken-Grotesk/Assistant fonts
-(tokens.css is SoT; fonts CDN-preview, self-host before launch); redesigned My-Stays card (MapTiler
+(tokens.css is SoT; fonts self-hosted as woff2 in `apps/frontend/public/fonts/`, no Google hotlinking); redesigned My-Stays card (MapTiler
 map-thumbnail header, one minyan-status line, `⋮` menu, collapsible zmanim, current-stay "here now"
 emphasis); folder **pinning** (`folder.pinned`, migration 0007) drives a scrolling pinned-folder
 quick-filter. Amends 002 FR-005a + 004 FR-004a. Product decomposition & shared decisions:
