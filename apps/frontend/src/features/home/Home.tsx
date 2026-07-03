@@ -51,7 +51,6 @@ function Nav() {
       </div>
       <div className="flex items-center gap-3 md:gap-6">
         <a href="#how" className="hidden text-sm font-bold text-muted sm:block">{t("nav.how")}</a>
-        <a href="#testi" className="hidden text-sm font-bold text-muted sm:block">{t("nav.testimonials")}</a>
         <button className={pill} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
           {t("theme.toggle")}
         </button>
@@ -93,16 +92,10 @@ export function Home() {
   const { t } = useTranslation();
 
   const steps: { icon: IconName; title: string; body: string }[] = [
-    { icon: "calendar", title: t("home.how.s1Title"), body: t("home.how.s1Body") },
+    { icon: "map-pin", title: t("home.how.s1Title"), body: t("home.how.s1Body") },
     { icon: "search", title: t("home.how.s2Title"), body: t("home.how.s2Body") },
-    { icon: "handshake", title: t("home.how.s3Title"), body: t("home.how.s3Body") },
+    { icon: "users", title: t("home.how.s3Title"), body: t("home.how.s3Body") },
   ];
-  const testis = [
-    { q: t("home.testimonials.t1"), loc: t("home.testimonials.t1Loc"), bg: "bg-clay-soft", fg: "text-clay-ink" },
-    { q: t("home.testimonials.t2"), loc: t("home.testimonials.t2Loc"), bg: "bg-teal-soft", fg: "text-teal-ink" },
-    { q: t("home.testimonials.t3"), loc: t("home.testimonials.t3Loc"), bg: "bg-gold-soft", fg: "text-gold" },
-  ];
-
   return (
     <div className="min-h-screen bg-bg font-sans text-ink">
       <Nav />
@@ -175,29 +168,6 @@ export function Home() {
               </div>
               <h3 className="mt-6 font-display text-xl font-bold">{s.title}</h3>
               <p className="mt-3 max-w-[34ch] leading-relaxed text-muted">{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* Testimonials */}
-      <Section id="testi" className="bg-surface">
-        <p className={eyebrow}>{t("home.testimonials.eyebrow")}</p>
-        <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight md:text-4xl">{t("home.testimonials.title")}</h2>
-        <p className="mt-3 text-sm font-semibold text-faint">{t("home.testimonials.disclaimer")}</p>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          {testis.map((c, i) => (
-            <div key={i} className="flex flex-col gap-4 rounded-3xl border border-line bg-bg p-7">
-              <p className="flex-1 leading-relaxed">{`״${c.q}״`}</p>
-              <div className="flex items-center gap-3">
-                <div className={"flex h-10 w-10 items-center justify-center rounded-full font-extrabold " + c.bg + " " + c.fg}>
-                  {t("home.testimonials.traveler").charAt(0)}
-                </div>
-                <div>
-                  <div className="text-sm font-extrabold">{t("home.testimonials.traveler")}</div>
-                  <div className="text-xs text-muted">{c.loc}</div>
-                </div>
-              </div>
             </div>
           ))}
         </div>
