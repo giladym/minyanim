@@ -4,6 +4,7 @@ import type { GeoResult } from "@minyanim/shared";
 import { reverseGeocode, searchPlaces, searchPlacesPrecise } from "../../lib/geo";
 import { ApiError } from "../../lib/api";
 import { useMaptilerTileKey } from "../../lib/config";
+import { maptilerLogoControl } from "../../lib/maptilerLogo";
 
 /** The location subset of a Stay the picker resolves. lat/lng are null in manual mode. */
 export interface LocationValue {
@@ -281,8 +282,9 @@ function PickableMap({
           style: `https://api.maptiler.com/maps/streets/style.json?key=${tileKey}`,
           center: lng != null && lat != null ? [lng, lat] : DEFAULT_CENTER,
           zoom: lng != null && lat != null ? 9 : DEFAULT_ZOOM,
-          attributionControl: false,
+          attributionControl: { compact: true }, // © MapTiler / © OpenStreetMap (required attribution)
         });
+        map.addControl(maptilerLogoControl(), "bottom-left"); // MapTiler logo (free-tier requirement)
         map.on("click", (e: { lngLat: { lat: number; lng: number } }) =>
           onPickRef.current(e.lngLat.lat, e.lngLat.lng),
         );
