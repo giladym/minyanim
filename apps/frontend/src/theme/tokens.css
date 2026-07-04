@@ -31,7 +31,7 @@ button:not(:disabled),
   --surface: #ffffff;      /* card surface (Level 1) */
   --ink: #1b1c1b;          /* on-surface */
   --muted: #42493e;        /* on-surface-variant */
-  --faint: #72796e;        /* outline */
+  --faint: #6b726a;        /* outline + faint text — 4.95:1 on white (was #72796e = 4.49, failed AA) */
   --line: #e4e2e1;         /* surface-variant / hairline */
   --line2: #c2c9bb;        /* outline-variant */
   /* Forest-green PRIMARY — key actions + brand. */
