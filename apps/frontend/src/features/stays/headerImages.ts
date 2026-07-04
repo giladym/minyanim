@@ -6,18 +6,43 @@
  * location keeps a stable image. If none match / an image fails to load, the SceneHeader shows.
  */
 export const HEADER_IMAGES = [
+  // Europe
+  "/headers/eu-paris.jpg",
+  "/headers/eu-london.jpg",
+  "/headers/eu-prague.jpg",
+  "/headers/eu-venice.jpg",
+  "/headers/eu-amsterdam.jpg",
+  "/headers/eu-alps.jpg",
   "/headers/europe-oldtown.jpg",
+  // Americas
+  "/headers/am-newyork.jpg",
+  "/headers/am-sanfrancisco.jpg",
+  "/headers/am-rio.jpg",
+  "/headers/am-canada.jpg",
+  "/headers/americas.jpg",
+  // Far East
+  "/headers/fe-tokyo.jpg",
+  "/headers/fe-kyoto.jpg",
+  "/headers/fe-hongkong.jpg",
+  "/headers/fe-shanghai.jpg",
+  "/headers/fe-bangkok.jpg",
+  "/headers/fe-singapore.jpg",
+  "/headers/asia.jpg",
+  // Africa / South Africa
+  "/headers/af-capetown.jpg",
+  "/headers/af-safari.jpg",
+  "/headers/af-marrakech.jpg",
+  // General landscapes / cities
   "/headers/skyline.jpg",
   "/headers/mountains.jpg",
+  "/headers/gen-lake.jpg",
   "/headers/coast.jpg",
+  "/headers/tropical.jpg",
   "/headers/desert.jpg",
+  "/headers/countryside.jpg",
   "/headers/autumn.jpg",
   "/headers/winter.jpg",
   "/headers/jerusalem.jpg",
-  "/headers/tropical.jpg",
-  "/headers/countryside.jpg",
-  "/headers/asia.jpg",
-  "/headers/americas.jpg",
 ] as const;
 
 /** Stable djb2 hash → non-negative int (matches SceneHeader's, so image + scene stay in sync). */
