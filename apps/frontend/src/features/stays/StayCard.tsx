@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import type { FolderDTO, OwnerStayDTO } from "@minyanim/shared";
 import { Icon } from "../../components/Icon";
 import { useStayZmanim } from "../../lib/zmanim";
 import { useProfile } from "../../lib/profile";
-import { useMaptilerTileKey, staticMapUrl } from "../../lib/config";
 import { SceneHeader } from "./SceneHeader";
 import { ZmanimSection } from "./ZmanimSection";
 
@@ -73,10 +72,8 @@ export function StayCard({
   const locale = i18n.resolvedLanguage ?? "he";
   const [showZmanim, setShowZmanim] = useState(false);
   const [promoDismissed, setPromoDismissed] = useState(false);
-  const [mapFailed, setMapFailed] = useState(false);
   const { data: profile } = useProfile();
   const zmanimQuery = useStayZmanim(stay.id, showZmanim);
-  const mapUrl = staticMapUrl(useMaptilerTileKey(), stay.lat, stay.lng);
   const showPromo = !!justSaved && !promoDismissed && !stay.isPast;
   const isCurrent = !stay.isPast && stay.arrivalDate <= todayUtc() && todayUtc() <= stay.departureDate;
   const folder = folders?.find((f) => f.id === stay.folderId);
@@ -92,20 +89,11 @@ export function StayCard({
         (stay.isPast ? "opacity-60" : "")
       }
     >
-      {/* Header — a deterministic on-brand scene, with the real MapTiler thumbnail layered on top
-          when it loads (it degrades to the scene when the Stay has no coordinates or the key lacks
-          the Static Maps capability). */}
-      <div className="relative h-28 w-full overflow-hidden">
+      {/* Header — a deterministic on-brand scene; tapping it opens the location. (A real map/photo
+          layer can be added here later — e.g. if the MapTiler key gains the Static Maps capability,
+          or by dropping images in public/ — without changing this structure.) */}
+      <HeaderShell stay={stay} label={`${stay.city}, ${stay.country}`}>
         <SceneHeader seed={stay.id + stay.city} />
-        {mapUrl && !mapFailed && (
-          <img
-            src={mapUrl}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            onError={() => setMapFailed(true)}
-          />
-        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
         <span className="absolute top-2.5 start-3 inline-flex items-center gap-1 rounded-full bg-surface/90 px-2.5 py-1 text-xs font-extrabold text-primary-ink backdrop-blur">
           <Icon name="map-pin" size={13} />
@@ -118,7 +106,7 @@ export function StayCard({
           </span>
         )}
         <span className="absolute bottom-2.5 end-3.5 text-xl font-extrabold text-white drop-shadow">{stay.city}</span>
-      </div>
+      </HeaderShell>
 
       <div className="p-4">
         <div className="mb-4 flex items-start justify-between gap-2">
@@ -195,6 +183,19 @@ export function StayCard({
   );
 }
 
+/** Card header wrapper: tappable (→ open/edit the location) for active stays; static for past ones.
+ * Uses a Link (not a whole-card <a>) so the inner status line / ⋮ menu stay independently clickable
+ * without nesting anchors. */
+function HeaderShell({ stay, label, children }: { stay: OwnerStayDTO; label: string; children: ReactNode }) {
+  const cls = "relative block h-28 w-full overflow-hidden";
+  if (stay.isPast) return <div className={cls}>{children}</div>;
+  return (
+    <Link to="/stays/$id/edit" params={{ id: stay.id }} className={cls} aria-label={label}>
+      {children}
+    </Link>
+  );
+}
+
 /** The single minyan-status line: registered → view · nearby → join · none → search/organize. */
 function MinyanStatus({ stay, nearbyMinyanim, committedNearby }: { stay: OwnerStayDTO; nearbyMinyanim?: number; committedNearby?: boolean }) {
   const { t } = useTranslation();
@@ -233,7 +234,7 @@ function CardMenu({ stay, onCancel, onMove, folders }: { stay: OwnerStayDTO; onC
       <summary className="flex h-9 w-9 list-none items-center justify-center rounded-[10px] border border-line text-muted [&::-webkit-details-marker]:hidden" aria-label={t("stays.moreActions")}>
         <Icon name="more" size={18} />
       </summary>
-      <div className="absolute top-11 start-0 z-10 w-56 rounded-xl border border-line bg-surface p-1.5 shadow-card">
+      <div className="absolute top-11 end-0 z-10 w-56 max-w-[80vw] rounded-xl border border-line bg-surface p-1.5 shadow-card">
         <Link to="/stays/$id/edit" params={{ id: stay.id }} className={item}><Icon name="calendar" size={16} className="text-faint" />{t("stays.edit")}</Link>
         <div className="my-1 h-px bg-line" />
         <Link to="/discovery" search={discoverySearch(stay)} className={item}><Icon name="search" size={16} className="text-faint" />{t("stays.findMinyanim")}</Link>
