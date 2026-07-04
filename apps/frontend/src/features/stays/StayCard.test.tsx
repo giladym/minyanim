@@ -43,6 +43,12 @@ describe("StayCard — post-save 'add a minyan' promotion (#4)", () => {
     expect(screen.queryByText("רוצים מניין כאן?")).not.toBeInTheDocument();
   });
 
+  it("makes the header tappable into the location (edit) for an active stay", () => {
+    render(<StayCard stay={stay} highlighted={false} onCancel={vi.fn()} />);
+    // The header wraps the city name in a link into this specific location's edit view.
+    expect(screen.getByText("קרקוב").closest("a")).toHaveAttribute("data-to", "/stays/$id/edit");
+  });
+
   it("dismisses the promotion", async () => {
     const user = userEvent.setup();
     render(<StayCard stay={stay} highlighted justSaved onCancel={vi.fn()} />);
