@@ -210,6 +210,8 @@ export const en = {
     host: {
       title: "Host a minyan",
       nearbyNotice: "{{count}} people with a location nearby will be notified when you save the minyan.",
+      travelersTitle: "Travelers in the area for this Shabbat",
+      committedOnly: "members only",
       addressPrivate: "Specific address",
       addressPlaceholder: "e.g. Marriott Hotel, 19 Słomińskiego St, room 2",
       addressHint: "The exact address — shown only to people who join this minyan. Search the address or click the precise spot on the map to drop an accurate pin.",
