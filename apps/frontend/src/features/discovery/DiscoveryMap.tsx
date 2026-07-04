@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicMinyanDTO, BeitChabadPinDTO } from "@minyanim/shared";
 import { useMaptilerTileKey } from "../../lib/config";
+import { maptilerLogoControl } from "../../lib/maptilerLogo";
 
 type MapLib = typeof import("maplibre-gl");
 type MapInstance = InstanceType<MapLib["Map"]>;
@@ -71,8 +72,9 @@ export function DiscoveryMap({
           style: `https://api.maptiler.com/maps/streets/style.json?key=${tileKey}`,
           center: [center.lng, center.lat],
           zoom: DEFAULT_ZOOM,
-          attributionControl: false,
+          attributionControl: { compact: true }, // © MapTiler / © OpenStreetMap (required attribution)
         });
+        map.addControl(maptilerLogoControl(), "bottom-left"); // MapTiler logo (free-tier requirement)
         mapRef.current = map;
         map.on("load", () => !cancelled && setReady(true));
       })

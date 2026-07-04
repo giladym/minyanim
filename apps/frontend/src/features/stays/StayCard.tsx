@@ -6,6 +6,7 @@ import { Icon } from "../../components/Icon";
 import { useStayZmanim } from "../../lib/zmanim";
 import { useProfile } from "../../lib/profile";
 import { SceneHeader } from "./SceneHeader";
+import { pickHeaderImage } from "./headerImages";
 import { ZmanimSection } from "./ZmanimSection";
 
 /** Today at UTC midnight — Stay dates are stored as UTC-midnight civil dates. */
@@ -72,6 +73,7 @@ export function StayCard({
   const locale = i18n.resolvedLanguage ?? "he";
   const [showZmanim, setShowZmanim] = useState(false);
   const [promoDismissed, setPromoDismissed] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const { data: profile } = useProfile();
   const zmanimQuery = useStayZmanim(stay.id, showZmanim);
   const showPromo = !!justSaved && !promoDismissed && !stay.isPast;
@@ -89,11 +91,20 @@ export function StayCard({
         (stay.isPast ? "opacity-60" : "")
       }
     >
-      {/* Header — a deterministic on-brand scene; tapping it opens the location. (A real map/photo
-          layer can be added here later — e.g. if the MapTiler key gains the Static Maps capability,
-          or by dropping images in public/ — without changing this structure.) */}
+      {/* Header — a curated photo over an on-brand scene fallback; tapping it opens the location.
+          The photo is decorative (not the literal place) and picked deterministically per stay;
+          if it fails to load, the SceneHeader shows through. */}
       <HeaderShell stay={stay} label={`${stay.city}, ${stay.country}`}>
         <SceneHeader seed={stay.id + stay.city} />
+        {!imgFailed && (
+          <img
+            src={pickHeaderImage(stay.id + stay.city)}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
         <span className="absolute top-2.5 start-3 inline-flex items-center gap-1 rounded-full bg-surface/90 px-2.5 py-1 text-xs font-extrabold text-primary-ink backdrop-blur">
           <Icon name="map-pin" size={13} />
