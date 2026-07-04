@@ -98,7 +98,7 @@ export function StayCard({
         <SceneHeader seed={stay.id + stay.city} />
         {!imgFailed && (
           <img
-            src={pickHeaderImage(stay.id + stay.city)}
+            src={pickHeaderImage(stay.id + stay.city, stay.lat, stay.lng)}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
