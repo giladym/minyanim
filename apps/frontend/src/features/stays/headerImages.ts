@@ -52,7 +52,34 @@ function hash(seed: string): number {
   return Math.abs(h);
 }
 
-/** The header photo for a stay, chosen deterministically from the curated set. */
-export function pickHeaderImage(seed: string): string {
-  return HEADER_IMAGES[hash(seed) % HEADER_IMAGES.length]!; // modulo keeps the index in range
+/**
+ * Region buckets keyed off the stay's COORDINATES (numeric — avoids the he/en country-name mess),
+ * so a trip's cities show coherent, fitting imagery instead of a random world mishmash.
+ */
+export const REGION_IMAGES: Record<string, readonly string[]> = {
+  europe: ["/headers/eu-paris.jpg", "/headers/eu-london.jpg", "/headers/eu-prague.jpg", "/headers/eu-venice.jpg", "/headers/eu-amsterdam.jpg", "/headers/eu-alps.jpg", "/headers/europe-oldtown.jpg"],
+  americas: ["/headers/am-newyork.jpg", "/headers/am-sanfrancisco.jpg", "/headers/am-rio.jpg", "/headers/am-canada.jpg", "/headers/americas.jpg"],
+  fareast: ["/headers/fe-tokyo.jpg", "/headers/fe-kyoto.jpg", "/headers/fe-hongkong.jpg", "/headers/fe-shanghai.jpg", "/headers/fe-bangkok.jpg", "/headers/fe-singapore.jpg", "/headers/asia.jpg"],
+  africa: ["/headers/af-capetown.jpg", "/headers/af-safari.jpg", "/headers/af-marrakech.jpg"],
+  mideast: ["/headers/jerusalem.jpg", "/headers/desert.jpg"],
+};
+
+/** Coarse region from lat/lng via bounding boxes (order matters — first match wins). */
+function regionOf(lat: number, lng: number): keyof typeof REGION_IMAGES | null {
+  if (lng >= -170 && lng <= -30) return "americas";
+  if (lng >= 95 && lng <= 155) return "fareast";
+  if (lat >= 12 && lat <= 42 && lng >= 25 && lng <= 63) return "mideast";
+  if (lat >= 36 && lng >= -11 && lng <= 45) return "europe";
+  if (lat >= -37 && lat < 36 && lng >= -20 && lng <= 52) return "africa";
+  return null;
+}
+
+/**
+ * The header photo for a stay. With coordinates it picks deterministically from the matching
+ * region bucket (coherent per trip); without coords (manual city) it picks from the full set.
+ */
+export function pickHeaderImage(seed: string, lat?: number | null, lng?: number | null): string {
+  const region = lat != null && lng != null ? regionOf(lat, lng) : null;
+  const pool = region ? REGION_IMAGES[region]! : HEADER_IMAGES;
+  return pool[hash(seed) % pool.length]!; // modulo keeps the index in range
 }
