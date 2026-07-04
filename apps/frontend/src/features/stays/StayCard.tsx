@@ -6,6 +6,7 @@ import { Icon } from "../../components/Icon";
 import { useStayZmanim } from "../../lib/zmanim";
 import { useProfile } from "../../lib/profile";
 import { useMaptilerTileKey, staticMapUrl } from "../../lib/config";
+import { SceneHeader } from "./SceneHeader";
 import { ZmanimSection } from "./ZmanimSection";
 
 /** Today at UTC midnight — Stay dates are stored as UTC-midnight civil dates. */
@@ -72,6 +73,7 @@ export function StayCard({
   const locale = i18n.resolvedLanguage ?? "he";
   const [showZmanim, setShowZmanim] = useState(false);
   const [promoDismissed, setPromoDismissed] = useState(false);
+  const [mapFailed, setMapFailed] = useState(false);
   const { data: profile } = useProfile();
   const zmanimQuery = useStayZmanim(stay.id, showZmanim);
   const mapUrl = staticMapUrl(useMaptilerTileKey(), stay.lat, stay.lng);
@@ -90,9 +92,20 @@ export function StayCard({
         (stay.isPast ? "opacity-60" : "")
       }
     >
-      {/* Header — real MapTiler thumbnail of the place, or a token gradient fallback. */}
-      <div className="relative h-28 w-full bg-gradient-to-br from-primary-container via-teal to-gold">
-        {mapUrl && <img src={mapUrl} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />}
+      {/* Header — a deterministic on-brand scene, with the real MapTiler thumbnail layered on top
+          when it loads (it degrades to the scene when the Stay has no coordinates or the key lacks
+          the Static Maps capability). */}
+      <div className="relative h-28 w-full overflow-hidden">
+        <SceneHeader seed={stay.id + stay.city} />
+        {mapUrl && !mapFailed && (
+          <img
+            src={mapUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            onError={() => setMapFailed(true)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
         <span className="absolute top-2.5 start-3 inline-flex items-center gap-1 rounded-full bg-surface/90 px-2.5 py-1 text-xs font-extrabold text-primary-ink backdrop-blur">
           <Icon name="map-pin" size={13} />
