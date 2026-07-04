@@ -10,6 +10,7 @@ const getStayMock = vi.fn();
 vi.mock("@tanstack/react-router", () => ({ useNavigate: () => navigate, useSearch: () => search() }));
 vi.mock("../../lib/events", () => ({ useHostMinyan: () => ({ mutateAsync, isPending: false }) }));
 vi.mock("../../lib/stays", () => ({ getStay: (id: string) => getStayMock(id) }));
+vi.mock("../../lib/discovery", () => ({ useDiscovery: () => ({ data: undefined }) }));
 // Stub the heavy LocationPicker (map + geo) with a button that sets a valid coord location.
 vi.mock("../stays/LocationPicker", () => ({
   LocationPicker: ({ onChange }: { onChange: (v: unknown) => void }) => (

@@ -4,7 +4,9 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { CreateEventInput, type Nusach, type Tefilla } from "@minyanim/shared";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { useHostMinyan } from "../../lib/events";
+import { useDiscovery } from "../../lib/discovery";
 import { getStay } from "../../lib/stays";
+import { Icon } from "../../components/Icon";
 import { ApiError } from "../../lib/api";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -87,6 +89,16 @@ export function HostMinyanForm() {
     }
   }, [fromStay, lat, lng, city, country, date]);
 
+  // When arrived from discovery (a point + a Shabbat), fetch the travelers in the area for that
+  // date so the organizer sees WHO they're forming the minyan with (name · men · contact for
+  // sharers) — not just a count. Reuses the discovery `travelers` projection (from=to=that date).
+  const travelersParams =
+    lat != null && lng != null && date
+      ? { lat, lng, city: city ?? undefined, country: country ?? undefined, from: dateToEpoch(date), to: dateToEpoch(date) }
+      : null;
+  const { data: disc } = useDiscovery(travelersParams);
+  const travelers = disc?.potential.find((b) => b.shabbat === date)?.travelers ?? [];
+
   function setService(i: number, patch: Partial<ServiceRow>) {
     setServices((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   }
@@ -142,17 +154,27 @@ export function HostMinyanForm() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5" dir="rtl">
       <h1 className="text-2xl font-extrabold text-ink">{t("host.title")}</h1>
-      {nearby != null && nearby > 0 && (
-        <p role="status" className="rounded-xl bg-teal-soft px-4 py-3 text-sm font-semibold text-teal-ink">
-          {t("host.nearbyNotice", { count: nearby })}
-        </p>
+      {travelers.length > 0 ? (
+        <TravelersPanel travelers={travelers} nearby={nearby} />
+      ) : (
+        nearby != null && nearby > 0 && (
+          <p role="status" className="rounded-xl bg-teal-soft px-4 py-3 text-sm font-semibold text-teal-ink">
+            {t("host.nearbyNotice", { count: nearby })}
+          </p>
+        )
       )}
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
         <section className="rounded-2xl border border-line bg-surface p-5">
+          {location.city && (
+            <p className="mb-3 flex items-center gap-2 text-lg font-extrabold text-ink">
+              <Icon name="map-pin" size={18} className="text-primary-ink" />
+              {location.city}{location.country ? `, ${location.country}` : ""}
+            </p>
+          )}
           <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} precise />
           {fieldError("city")}
           <label className="mt-4 block">
-            <span className={labelCls}>{t("host.addressPrivate")}</span>
+            <span className={labelCls}>{t("host.addressPrivate")}<CommittedPill /></span>
             <input
               className={fieldCls}
               value={addressPrivate}
@@ -163,7 +185,7 @@ export function HostMinyanForm() {
             <span className="mt-1 block text-xs text-muted">{t("host.addressHint")}</span>
           </label>
           <label className="mt-4 block">
-            <span className={labelCls}>{t("host.addressNotes")}</span>
+            <span className={labelCls}>{t("host.addressNotes")}<CommittedPill /></span>
             <textarea
               className={fieldCls}
               rows={2}
@@ -228,10 +250,62 @@ export function HostMinyanForm() {
         </section>
 
         {submitError && <p role="alert" className="text-sm font-bold text-clay-ink">{submitError}</p>}
-        <button type="submit" disabled={host.isPending} className="w-full rounded-[14px] bg-clay px-4 py-[15px] font-extrabold text-on-clay transition disabled:opacity-60">
+        <button type="submit" disabled={host.isPending} className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary transition disabled:opacity-60">
           {host.isPending ? t("auth.submitting") : t("host.submit")}
         </button>
       </form>
+    </div>
+  );
+}
+
+/** "Shown only to those who join" pill — on the private-address / entry-notes fields (D4). */
+function CommittedPill() {
+  const { t } = useTranslation();
+  return (
+    <span className="ms-2 inline-flex items-center gap-1 rounded-full bg-chip px-2 py-0.5 align-middle text-[11px] font-bold text-muted">
+      <Icon name="check" size={11} />
+      {t("host.committedOnly")}
+    </span>
+  );
+}
+
+/** Nearby travelers for the chosen Shabbat — name · men · contact (phone only for sharers), so the
+ * organizer can reach people directly; a footer reminds they're also notified on save. */
+function TravelersPanel({ travelers, nearby }: { travelers: { name: string; phone: string | null; numMen: number }[]; nearby?: number }) {
+  const { t } = useTranslation();
+  const wa = (phone: string) => `https://wa.me/${phone.replace(/\D/g, "")}`;
+  return (
+    <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+      <div className="border-b border-line bg-primary-soft px-4 py-3">
+        <p className="flex items-center gap-2 text-sm font-extrabold text-primary-ink">
+          <Icon name="users" size={18} />
+          {t("host.travelersTitle")}
+        </p>
+      </div>
+      <ul>
+        {travelers.map((tr, i) => (
+          <li key={i} className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 last:border-b-0">
+            <span className="text-sm font-bold text-ink">
+              {tr.name} <span className="font-semibold text-muted">· {t("stays.men", { count: tr.numMen })}</span>
+            </span>
+            {tr.phone ? (
+              <span className="flex gap-2">
+                <a className="inline-flex items-center gap-1 rounded-lg bg-whatsapp px-3 py-1.5 text-xs font-bold text-on-whatsapp" href={wa(tr.phone)} target="_blank" rel="noopener noreferrer" aria-label={`${t("minyanDetail.contactWhatsapp")} — ${tr.name}`}>
+                  {t("minyanDetail.contactWhatsapp")}
+                </a>
+                <a className="inline-flex items-center rounded-lg border border-line px-3 py-1.5 text-xs font-bold text-ink" dir="ltr" href={`tel:${tr.phone}`} aria-label={`${t("minyanDetail.contactCall")} — ${tr.name}`}>
+                  {tr.phone}
+                </a>
+              </span>
+            ) : (
+              <span className="text-xs text-faint">{t("minyanDetail.noContact")}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {nearby != null && nearby > 0 && (
+        <p className="bg-chip px-4 py-2.5 text-xs font-semibold text-muted">{t("host.nearbyNotice", { count: nearby })}</p>
+      )}
     </div>
   );
 }
