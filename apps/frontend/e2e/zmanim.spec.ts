@@ -31,8 +31,9 @@ test("WCAG 2.1 AA: a Stay's Shabbat-times section is axe-clean (with real coordi
   const expander = page.getByRole("button", { name: /זמני שבת|Shabbat times/ });
   await expect(expander).toBeVisible();
   await expander.click();
-  // Candle-lighting label appears once the lazy fetch resolves.
-  await expect(page.getByText(/הדלקת נרות|Candle lighting/)).toBeVisible();
+  // Candle-lighting label appears once the lazy fetch resolves. A 7-day span can cover more than
+  // one Shabbat (each shown), so match the first.
+  await expect(page.getByText(/הדלקת נרות|Candle lighting/).first()).toBeVisible();
 
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(results.violations).toEqual([]);

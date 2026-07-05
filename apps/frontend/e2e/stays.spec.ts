@@ -73,6 +73,8 @@ test("dashboard lists Stays nearest-first", async ({ page }) => {
 test("edit a Stay → the change is reflected", async ({ page }) => {
   await signIn(page);
   await createStay(page, { city: "מדריד", country: "ספרד", arrivalDays: 8, departureDays: 10, numMen: 2 });
+  // Edit / cancel live behind the card's ⋮ actions menu (Heritage Voyage redesign).
+  await page.getByLabel(/פעולות נוספות|More actions/).first().click();
   await page.getByRole("link", { name: /^עריכה$|^Edit$/ }).first().click();
   await page.waitForURL(/\/stays\/.+\/edit/);
   const men = page.getByLabel(/כמה גברים בקבוצה|How many men/);
@@ -94,6 +96,7 @@ test("edit a Stay → the change is reflected", async ({ page }) => {
 test("cancel a Stay → it leaves the active list", async ({ page }) => {
   await signIn(page);
   await createStay(page, { city: "רומא", country: "איטליה", arrivalDays: 6, departureDays: 9 });
+  await page.getByLabel(/פעולות נוספות|More actions/).first().click();
   await page.getByRole("button", { name: /ביטול מיקום|Cancel location/ }).first().click();
   // Confirmation dialog (Profile danger-zone pattern).
   await page.getByRole("button", { name: /כן, בטל את המיקום|Yes, cancel the location/ }).click();
