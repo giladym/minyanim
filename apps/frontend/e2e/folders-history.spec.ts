@@ -52,7 +52,8 @@ test("browse-by-folder: assign a Stay and filter to its folder", async ({ page }
   await dialog.getByRole("button", { name: /^יצירה$|^Create$/ }).click();
   await dialog.getByRole("button", { name: /^סגירה$|^Close$/ }).click();
 
-  // Move the Stay into the folder via the card's select.
+  // Move the Stay into the folder via the card's select (behind the ⋮ actions menu).
+  await page.getByLabel(/פעולות נוספות|More actions/).first().click();
   await page.getByLabel(/העברה לתיקייה|Move to folder/).selectOption({ label: "טיול קיץ" });
 
   // Filter to the folder chip → the Stay is shown; Unfiled → empty group message.

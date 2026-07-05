@@ -73,6 +73,8 @@ test("dashboard lists Stays nearest-first", async ({ page }) => {
 test("edit a Stay → the change is reflected", async ({ page }) => {
   await signIn(page);
   await createStay(page, { city: "מדריד", country: "ספרד", arrivalDays: 8, departureDays: 10, numMen: 2 });
+  // Edit / cancel live behind the card's ⋮ actions menu (Heritage Voyage redesign).
+  await page.getByLabel(/פעולות נוספות|More actions/).first().click();
   await page.getByRole("link", { name: /^עריכה$|^Edit$/ }).first().click();
   await page.waitForURL(/\/stays\/.+\/edit/);
   const men = page.getByLabel(/כמה גברים בקבוצה|How many men/);
@@ -84,16 +86,20 @@ test("edit a Stay → the change is reflected", async ({ page }) => {
   await expect(men).toHaveValue("5");
   await page.getByRole("button", { name: /שמירת שינויים|Save changes/ }).click();
   await page.waitForURL(/\/stays(\?|$)/);
-  // The Madrid card now reflects the updated man-count (5). Scope to that card and wait for the
-  // list to settle (optimistic patch → server invalidation).
-  const card = page.getByTestId("stay-card").filter({ hasText: "מדריד" });
-  // Optimistic patch → server invalidation refetch; allow extra time on slow CI runners.
-  await expect(card.getByText(/5 גברים|5 men/)).toBeVisible({ timeout: 15000 });
+  // The redesigned card face is intentionally minimal (no man-count), so verify the change
+  // persisted by reopening the edit form: the group size seeds as the updated 5.
+  await expect(page.getByTestId("stay-card").filter({ hasText: "מדריד" })).toBeVisible();
+  await page.getByLabel(/פעולות נוספות|More actions/).first().click();
+  await page.getByRole("link", { name: /^עריכה$|^Edit$/ }).first().click();
+  await page.waitForURL(/\/stays\/.+\/edit/);
+  // getStay() seed lands async; allow extra time on slow CI runners.
+  await expect(page.getByLabel(/כמה גברים בקבוצה|How many men/)).toHaveValue("5", { timeout: 15000 });
 });
 
 test("cancel a Stay → it leaves the active list", async ({ page }) => {
   await signIn(page);
   await createStay(page, { city: "רומא", country: "איטליה", arrivalDays: 6, departureDays: 9 });
+  await page.getByLabel(/פעולות נוספות|More actions/).first().click();
   await page.getByRole("button", { name: /ביטול מיקום|Cancel location/ }).first().click();
   // Confirmation dialog (Profile danger-zone pattern).
   await page.getByRole("button", { name: /כן, בטל את המיקום|Yes, cancel the location/ }).click();

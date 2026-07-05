@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, Link } from "@tanstack/react-router";
-import type { MinyanStatus, RosterMinyanDTO, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
+import type { RosterMinyanDTO, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
 import type { EventRole, ParticipantInfo, PublicMinyanDTO } from "@minyanim/shared";
 import { authClient } from "../../lib/auth-client";
@@ -20,14 +20,6 @@ import {
 import { useMinyanZmanim } from "../../lib/zmanim";
 import { useProfile } from "../../lib/profile";
 import { ZmanimSection } from "../stays/ZmanimSection";
-
-const STATUS_CLS: Record<MinyanStatus, string> = {
-  ready: "text-teal-ink",
-  "quorum-reached": "text-teal-ink",
-  forming: "text-clay-ink",
-  completed: "text-muted",
-  cancelled: "text-muted",
-};
 
 /** Roster + contact are present for any signed-in viewer (roster/participant/owner tiers). */
 function hasRoster(m: AnyMinyanDTO): m is RosterMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO {
@@ -125,30 +117,35 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
   // here after auth (D13/R11) — works for Google or email/password.
   if (!session && !committed) {
     return (
-      <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
-        <p className="text-sm text-ink">{t("commit.signInToJoin")}</p>
-        <Link to="/sign-in" search={{ redirect: `/minyan/${id}` }} className="self-start rounded-xl bg-clay px-5 py-2.5 font-extrabold text-on-clay">
+      <section className="mn-fadeup flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
+        <h2 className="font-extrabold text-ink">{t("commit.joinTitle")}</h2>
+        <p className="text-sm text-muted">{t("commit.signInToJoin")}</p>
+        <Link to="/sign-in" search={{ redirect: `/minyan/${id}` }} className="mt-1 self-start rounded-xl bg-primary px-6 py-3 font-extrabold text-on-primary">
           {t("commit.signIn")}
         </Link>
-      </div>
+      </section>
     );
   }
 
   if (committed) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
-        <h2 className="font-extrabold text-ink">{t("commit.youreIn")}</h2>
-        <div className="flex items-center gap-2">
+      <section className="mn-fadeup rounded-2xl border-[1.5px] border-primary-container bg-primary-soft p-5">
+        <p className="flex items-center gap-2.5 text-lg font-extrabold text-primary">
+          <span className="mn-pop grid h-6 w-6 place-items-center rounded-full bg-primary text-sm text-on-primary">✓</span>
+          {t("commit.youreIn")}
+        </p>
+        <p className="mt-1.5 text-xs text-muted">{t("minyanDetail.registeredExplain")}</p>
+        <div className="mt-3 flex items-center gap-2">
           <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(clampMen(e.target.value))} />
-          <button type="button" className="rounded-xl border border-clay px-4 py-2.5 font-bold text-clay disabled:opacity-60" disabled={change.isPending} onClick={() => void runChange()}>
+          <button type="button" className="rounded-xl border border-primary-container px-4 py-2.5 font-bold text-primary disabled:opacity-60" disabled={change.isPending} onClick={() => void runChange()}>
             {t("commit.updateSize")}
           </button>
           <button type="button" className="rounded-xl px-3 py-2.5 font-bold text-clay-ink disabled:opacity-60" disabled={withdraw.isPending} onClick={() => void runWithdraw()}>
             {t("commit.withdraw")}
           </button>
         </div>
-        {actionErr && <p role="alert" className="text-sm font-semibold text-clay-ink">{actionErr}</p>}
-      </div>
+        {actionErr && <p role="alert" className="mt-2 text-sm font-semibold text-clay-ink">{actionErr}</p>}
+      </section>
     );
   }
 
@@ -167,17 +164,18 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+    <section className="mn-fadeup flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
       <h2 className="font-extrabold text-ink">{t("commit.joinTitle")}</h2>
-      <div className="flex items-center gap-2">
+      <p className="text-xs text-muted">{t("minyanDetail.registeredExplain")}</p>
+      <div className="mt-1 flex items-center gap-2">
         <input type="number" min={1} max={50} className={fieldCls} value={numMen} aria-label={t("commit.partySize")} onChange={(e) => setNumMen(clampMen(e.target.value))} />
-        <button type="button" className="rounded-xl bg-clay px-5 py-2.5 font-extrabold text-on-clay disabled:opacity-60" disabled={commit.isPending} onClick={join}>
+        <button type="button" className="rounded-xl bg-primary px-6 py-2.5 font-extrabold text-on-primary disabled:opacity-60" disabled={commit.isPending} onClick={join}>
           {t("commit.join")}
         </button>
       </div>
       {conflict && <p role="alert" className="text-sm font-semibold text-clay-ink">{t("commit.conflictWarning")}</p>}
       {actionErr && <p role="alert" className="text-sm font-semibold text-clay-ink">{actionErr}</p>}
-    </div>
+    </section>
   );
 }
 
@@ -235,7 +233,8 @@ function ParticipantRoster({ participants, viewerId }: { participants: Participa
                 </span>
                 <span className="text-xs text-muted">{t("stays.men", { count: p.numMen })}</span>
               </div>
-              {!isSelf && <ContactButtons p={p} />}
+              {/* Host contact lives in the prominent OrganizerCard above — don't repeat it here. */}
+              {!isSelf && !p.isHost && <ContactButtons p={p} />}
             </li>
           );
         })}
@@ -244,8 +243,49 @@ function ParticipantRoster({ participants, viewerId }: { participants: Participa
   );
 }
 
-export function MinyanDetail() {
+/** The organizer, given prominence: who runs this minyan + how to reach them. Name shows for every
+ * viewer (public tier); WhatsApp / call / email surface only once the viewer is signed in (roster
+ * tier carries `hostContact`, phone gated on the host's share preference, email committed-only). */
+function OrganizerCard({ m }: { m: AnyMinyanDTO }) {
   const { t } = useTranslation();
+  const name = hasRoster(m) ? m.hostContact.name : m.hostName;
+  const contact = hasRoster(m) ? m.hostContact : null;
+  const initial = name.trim().charAt(0) || "?";
+  const btn = "inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold";
+  return (
+    <section className="mn-fadeup flex items-start gap-3.5 rounded-2xl border border-line bg-surface p-5 shadow-card">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-clay-soft text-lg font-extrabold text-clay-ink">{initial}</span>
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="text-xs font-bold uppercase tracking-wide text-clay-ink">{t("minyanDetail.hostTitle")}</span>
+        <span className="text-lg font-extrabold text-ink">{name}</span>
+        {contact && (contact.phone || contact.email) ? (
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {contact.phone && (
+              <a className={`${btn} bg-whatsapp text-on-whatsapp`} href={`https://wa.me/${waDigits(contact.phone)}`} target="_blank" rel="noopener noreferrer" aria-label={`${t("minyanDetail.contactWhatsapp")} — ${name}`}>
+                {t("minyanDetail.contactWhatsapp")}
+              </a>
+            )}
+            {contact.phone && (
+              <a className={`${btn} border border-line text-ink`} dir="ltr" href={`tel:${contact.phone}`} aria-label={`${t("minyanDetail.contactCall")} — ${name}`}>
+                {contact.phone}
+              </a>
+            )}
+            {contact.email && (
+              <a className={`${btn} border border-line text-ink`} href={`mailto:${contact.email}`} aria-label={`${t("minyanDetail.contactEmail")} — ${name}`}>
+                {t("minyanDetail.contactEmail")}
+              </a>
+            )}
+          </div>
+        ) : (
+          !contact && <span className="text-xs text-muted">{t("commit.signInToJoin")}</span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function MinyanDetail() {
+  const { t, i18n } = useTranslation();
   const { id } = useParams({ from: "/minyan/$id" });
   const { data: m, isLoading } = useMinyan(id);
   const { data: session } = authClient.useSession();
@@ -257,44 +297,97 @@ export function MinyanDetail() {
   const isShabbat = !!m && new Date(m.eventDate).getUTCDay() === 6;
   const zmanimQuery = useMinyanZmanim(id, isShabbat);
 
+  // Animate the quorum progress bar from 0 → target on mount (transition on width).
+  const pct = m ? Math.min(100, Math.round((m.committedMen / 10) * 100)) : 0;
+  const [barW, setBarW] = useState(0);
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setBarW(pct));
+    return () => cancelAnimationFrame(r);
+  }, [pct]);
+
   if (isLoading) return <p className="p-6 text-muted" dir="rtl">{t("discovery.loading")}</p>;
   if (!m) return <p className="p-6 text-muted" dir="rtl">{t("stays.loadError")}</p>;
 
   const tefillot = m.services.map((s) => t(`tefilla.${s.tefilla}`) + (s.time ? ` ${s.time}` : "")).join(" · ");
+  const active = m.status !== "cancelled" && m.status !== "completed";
+  const dateLabel = new Intl.DateTimeFormat(i18n.resolvedLanguage === "en" ? "en-GB" : "he-IL", { weekday: "long", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(m.eventDate));
+  // Readiness checklist: quorum always; Sefer Torah + Ba'al Korei only when it's a Torah-reading
+  // Shabbat-Shacharit (otherwise they're not required).
+  const ready = [
+    { label: t("stays.men", { count: 10 }), ok: m.missingForReady.menShort === 0 },
+    ...(m.isShabbatShacharit
+      ? [
+          { label: t("discovery.seferTorah"), ok: m.seferTorah },
+          { label: t("roles.baal_korei"), ok: m.rolesFilled.baalKorei },
+        ]
+      : []),
+  ];
+  const secHead = "text-xs font-bold uppercase tracking-wide text-faint";
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-5 p-6" dir="rtl">
-      <Link to="/discovery" className="text-sm font-bold text-clay">{t("minyanDetail.back")}</Link>
+    <div className="mx-auto flex max-w-xl flex-col gap-4 p-4 md:p-6" dir="rtl">
+      <Link to="/discovery" className="text-sm font-bold text-clay-ink">{t("minyanDetail.back")}</Link>
 
-      <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-extrabold text-ink">{m.city}, {m.country}</h1>
-          <span className={`text-sm font-bold ${STATUS_CLS[m.status]}`}>{t(`minyanStatus.${m.status}`)}</span>
+      {/* HERO — place + live readiness (progress + what's missing). */}
+      <section className="mn-fadeup relative overflow-hidden rounded-2xl bg-gradient-to-b from-primary to-primary-container p-5 text-on-primary shadow-card">
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-extrabold">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-primary-ink" />
+            {t(`minyanStatus.${m.status}`)}
+          </span>
+          <span className="text-xs opacity-85">{dateLabel}</span>
         </div>
-        <p className="text-ink">{t(`nusach.${m.nusach}`)} · {tefillot}</p>
-        <p className="text-sm font-semibold text-ink">
-          {t("discovery.committed", { count: m.committedMen })}
-          {m.missingForReady.menShort > 0 && ` — ${t("discovery.moreNeeded", { count: m.missingForReady.menShort })}`}
-        </p>
-        {(m.missingForReady.seferTorah || m.missingForReady.baalKorei) && (
-          <p className="text-sm text-clay-ink">
-            {t("discovery.missing")}: {[m.missingForReady.seferTorah && t("discovery.seferTorah"), m.missingForReady.baalKorei && t("roles.baal_korei")].filter(Boolean).join(", ")}
-          </p>
-        )}
-        {m.notes && <p className="text-sm text-muted">{m.notes}</p>}
+        <h1 className="mt-3 font-display text-2xl font-extrabold">{m.city}, {m.country}</h1>
+        <p className="mt-1 text-sm opacity-90">{t(`nusach.${m.nusach}`)} · {tefillot}</p>
+        <div className="mt-4">
+          <div className="mb-1.5 flex justify-between text-sm font-extrabold"><span>{t("minyanDetail.quorumLabel")}</span><span>{m.committedMen} / 10</span></div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
+            <div className="h-full rounded-full bg-primary-ink transition-[width] duration-700 ease-out" style={{ width: `${barW}%` }} />
+          </div>
+        </div>
+        <div className="mt-3.5 flex flex-wrap gap-2">
+          {ready.map((r) => (
+            <span key={r.label} className={"inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold " + (r.ok ? "bg-white/15" : "mn-glow bg-surface text-clay-ink")}>
+              {r.ok ? "✓" : "✗"} {r.label}
+            </span>
+          ))}
+        </div>
+        {m.notes && <p className="mt-3 text-sm opacity-90">{m.notes}</p>}
         <a
           href={whatsAppHref(buildShareText(m, `${window.location.origin}/minyan/${m.id}`, (tf) => t(`tefilla.${tf}`)))}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 self-start rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-bold text-on-whatsapp"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-bold text-primary"
         >
           {t("minyanDetail.shareWhatsApp")}
         </a>
-      </div>
+      </section>
+
+      {active && <CommitSection id={id} m={m} />}
+
+      {!isOwner(m) && <OrganizerCard m={m} />}
+
+      {hasPrivate(m) && active && <RolesSection id={id} m={m} />}
+
+      {hasRoster(m) ? (
+        <section className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+          {hasPrivate(m) ? (
+            <>
+              {m.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {m.addressPrivate}</p>}
+              {m.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {m.addressNotes}</p>}
+            </>
+          ) : (
+            <p className="text-xs text-muted">{t("minyanDetail.joinToSeeAddress")}</p>
+          )}
+          <ParticipantRoster participants={m.participants} viewerId={session?.user?.id} />
+        </section>
+      ) : (
+        <p className="text-xs text-muted">{t("minyanDetail.commitToSeeAddress")}</p>
+      )}
 
       {isShabbat && (
         <section className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
-          <h2 className="text-lg font-extrabold text-ink">{t("zmanim.title")}</h2>
+          <h2 className={secHead}>{t("zmanim.title")}</h2>
           <ZmanimSection
             data={zmanimQuery.data}
             isLoading={zmanimQuery.isLoading}
@@ -302,28 +395,6 @@ export function MinyanDetail() {
             havdalahOpinion={profile?.havdalahOpinion ?? "geonim"}
           />
         </section>
-      )}
-
-      {m.status !== "cancelled" && m.status !== "completed" && <CommitSection id={id} m={m} />}
-
-      {hasPrivate(m) && m.status !== "cancelled" && m.status !== "completed" && <RolesSection id={id} m={m} />}
-
-      {hasRoster(m) ? (
-        <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
-          <h2 className="font-extrabold text-ink">{t("minyanDetail.details")}</h2>
-          {hasPrivate(m) ? (
-            <>
-              {m.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {m.addressPrivate}</p>}
-              {m.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {m.addressNotes}</p>}
-            </>
-          ) : (
-            // Signed-in but not committed: people + contact are visible; the exact address isn't.
-            <p className="text-xs text-muted">{t("minyanDetail.joinToSeeAddress")}</p>
-          )}
-          <ParticipantRoster participants={m.participants} viewerId={session?.user?.id} />
-        </div>
-      ) : (
-        <p className="text-xs text-muted">{t("minyanDetail.commitToSeeAddress")}</p>
       )}
 
       {isOwner(m) && m.status !== "cancelled" && (

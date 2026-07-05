@@ -116,7 +116,9 @@ export function StayCard({
             {t("stays.current")}
           </span>
         )}
-        <span className="absolute bottom-2.5 end-3.5 text-xl font-extrabold text-white drop-shadow">{stay.city}</span>
+        {/* Card title as a real heading (accessible landmark for each card); the visible text is the
+            city, the accessible name pairs it with the country for screen readers + tests. */}
+        <h2 aria-label={`${stay.city}, ${stay.country}`} className="absolute bottom-2.5 end-3.5 text-xl font-extrabold text-white drop-shadow">{stay.city}</h2>
       </HeaderShell>
 
       <div className="p-4">
@@ -169,6 +171,9 @@ export function StayCard({
 
       {showPromo && (
         <div className="mx-4 mb-4 border-t border-dashed border-line2 pt-4">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-primary-ink">
+            <Icon name="check" size={16} />{t("stays.minyanPromo.saved")}
+          </p>
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-sm font-extrabold text-ink">{t("stays.minyanPromo.q")}</p>
             <button

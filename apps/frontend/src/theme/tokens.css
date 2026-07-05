@@ -3,6 +3,20 @@
 /* Dark theme keyed on [data-theme="dark"] (set by the no-flash script / ThemeProvider). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* Tasteful UI motion (Minyan detail hero, etc.). Disabled under prefers-reduced-motion.
+   NOTE: mn-fadeup animates TRANSFORM ONLY (no opacity) on purpose — fading text through partial
+   opacity transiently drops its contrast below AA, which the axe gate can catch mid-animation.
+   A transform-only slide keeps every element at full opacity throughout. */
+@keyframes mn-fadeup { from { transform: translateY(10px); } to { transform: none; } }
+@keyframes mn-pop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes mn-glow { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--clay) 30%, transparent); } }
+.mn-fadeup { animation: mn-fadeup 0.5s both; }
+.mn-pop { animation: mn-pop 0.4s 0.3s both; }
+.mn-glow { animation: mn-glow 2.4s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .mn-fadeup, .mn-pop, .mn-glow { animation: none; }
+}
+
 /* Tailwind v4's Preflight no longer sets cursor:pointer on buttons — restore it for enabled
    interactive controls so they read as clickable. */
 button:not(:disabled),
@@ -20,7 +34,7 @@ button:not(:disabled),
   --surface: #ffffff;      /* card surface (Level 1) */
   --ink: #1b1c1b;          /* on-surface */
   --muted: #42493e;        /* on-surface-variant */
-  --faint: #72796e;        /* outline */
+  --faint: #6b726a;        /* outline + faint text — 4.95:1 on white (was #72796e = 4.49, failed AA) */
   --line: #e4e2e1;         /* surface-variant / hairline */
   --line2: #c2c9bb;        /* outline-variant */
   /* Forest-green PRIMARY — key actions + brand. */
