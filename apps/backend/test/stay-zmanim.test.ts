@@ -59,6 +59,8 @@ describe("GET /api/stays/:id/zmanim (005 US1)", () => {
   });
 
   it("coordless Stay → hasCoordinates:false, empty (the add-location CTA case)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-20T12:00:00Z")); // pin before the stay so it stays active
     const cookie = await signIn();
     const s = await create(cookie, { lat: null, lng: null });
     const body = (await (await zmanim(cookie, s.id)).json()) as ZmanimResponse;
