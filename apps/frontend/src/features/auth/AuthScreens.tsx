@@ -20,11 +20,11 @@ function AuthCard({ title, children }: { title: string; children: ReactNode }) {
       style={{ background: "linear-gradient(180deg,var(--auth-grad-top),var(--bg) 30%)" }}
     >
       <div className="w-full max-w-sm">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[20px] bg-clay text-[34px] font-extrabold text-on-clay shadow-xl">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[20px] bg-primary font-display text-[34px] font-extrabold text-on-primary shadow-card">
           מ
         </div>
-        <h1 className="mb-6 text-center text-[28px] font-extrabold">{title}</h1>
-        {children}
+        <h1 className="mb-6 text-center font-display text-[28px] font-extrabold">{title}</h1>
+        <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">{children}</div>
       </div>
     </main>
   );
@@ -35,11 +35,16 @@ function TextField(props: {
   type?: string;
   value: string;
   onChange: (v: string) => void;
+  /** Error message: reddens the border AND renders the message below. */
   error?: string;
+  /** Reddens the border only (no message) — for a field implicated in another field's error,
+   * e.g. both password fields on a mismatch, where the message shows once under the last one. */
+  invalid?: boolean;
   autoComplete?: string;
   minLength?: number;
 }) {
-  const { label, type = "text", value, onChange, error, autoComplete, minLength } = props;
+  const { label, type = "text", value, onChange, error, invalid, autoComplete, minLength } = props;
+  const bad = !!error || !!invalid;
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-bold text-ink">{label}</span>
@@ -48,13 +53,13 @@ function TextField(props: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        aria-invalid={!!error}
+        aria-invalid={bad}
         autoComplete={autoComplete}
         minLength={minLength}
         required
         className={
-          "w-full rounded-xl border bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay " +
-          (error ? "border-clay-ink" : "border-line2")
+          "w-full rounded-xl border bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-primary " +
+          (bad ? "border-clay-ink" : "border-line2")
         }
       />
       {error && <span className="mt-1 block text-sm font-semibold text-clay-ink">{error}</span>}
@@ -68,7 +73,7 @@ function PrimaryButton({ children, loading, ...rest }: { children: ReactNode; lo
     <button
       {...rest}
       disabled={loading || rest.disabled}
-      className="w-full rounded-[14px] bg-clay px-4 py-[15px] font-extrabold text-on-clay transition disabled:opacity-60"
+      className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary shadow-card transition disabled:opacity-60"
     >
       {loading ? t("auth.submitting") : children}
     </button>
@@ -99,7 +104,7 @@ function GoogleButton() {
         disabled={busy}
         className="flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-line2 bg-surface px-4 py-[15px] font-extrabold text-ink transition disabled:opacity-60"
       >
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-clay text-sm font-extrabold text-on-clay">G</span>
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-chip text-sm font-extrabold text-ink">G</span>
         {busy ? t("auth.submitting") : t("auth.google")}
       </button>
       <ErrorText msg={err} />
@@ -146,8 +151,8 @@ export function SignIn() {
         <PrimaryButton loading={busy} type="submit">{t("auth.signInSubmit")}</PrimaryButton>
       </form>
       <div className="mt-4 flex justify-between text-sm">
-        <a href="/forgot-password" className="font-bold text-clay">{t("auth.forgot")}</a>
-        <a href="/register" className="font-bold text-clay">{t("auth.toRegister")}</a>
+        <a href="/forgot-password" className="font-bold text-clay-ink">{t("auth.forgot")}</a>
+        <a href="/register" className="font-bold text-clay-ink">{t("auth.toRegister")}</a>
       </div>
     </AuthCard>
   );
@@ -194,14 +199,14 @@ export function Register() {
       <form onSubmit={submit} className="flex flex-col gap-4">
         <TextField label={t("auth.name")} value={name} onChange={setName} autoComplete="name" />
         <TextField label={t("auth.email")} type="email" value={email} onChange={setEmail} autoComplete="email" />
-        <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} autoComplete="new-password" minLength={8} />
+        <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} invalid={!!fieldErr} autoComplete="new-password" minLength={8} />
         <TextField label={t("auth.confirmPassword")} type="password" value={confirm} onChange={setConfirm} error={fieldErr} autoComplete="new-password" minLength={8} />
         <ErrorText msg={err} />
         <PrimaryButton loading={busy} type="submit">{t("auth.registerSubmit")}</PrimaryButton>
       </form>
       <div className="mt-4 text-center text-sm">
         <span className="text-muted">{t("auth.haveAccount")} </span>
-        <a href="/sign-in" className="font-bold text-clay">{t("auth.toSignIn")}</a>
+        <a href="/sign-in" className="font-bold text-clay-ink">{t("auth.toSignIn")}</a>
       </div>
     </AuthCard>
   );
@@ -265,11 +270,11 @@ export function ResetPassword() {
     <AuthCard title={t("auth.resetTitle")}>
       {done ? (
         <p className="text-center leading-relaxed text-muted">
-          {t("auth.resetDone")} <a href="/sign-in" className="font-bold text-clay">{t("auth.toSignIn")}</a>
+          {t("auth.resetDone")} <a href="/sign-in" className="font-bold text-clay-ink">{t("auth.toSignIn")}</a>
         </p>
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} autoComplete="new-password" minLength={8} />
+          <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} invalid={!!fieldErr} autoComplete="new-password" minLength={8} />
           <TextField label={t("auth.confirmPassword")} type="password" value={confirm} onChange={setConfirm} error={fieldErr} autoComplete="new-password" minLength={8} />
           <ErrorText msg={err} />
           <PrimaryButton loading={busy} type="submit">{t("auth.resetSubmit")}</PrimaryButton>
@@ -288,7 +293,7 @@ export function VerifyEmail() {
       <p className="text-center leading-relaxed text-muted">
         {success ? (
           <>
-            {t("auth.verifySuccess")} <a href="/sign-in" className="font-bold text-clay">{t("auth.toSignIn")}</a>
+            {t("auth.verifySuccess")} <a href="/sign-in" className="font-bold text-clay-ink">{t("auth.toSignIn")}</a>
           </>
         ) : (
           t("auth.verifySent")

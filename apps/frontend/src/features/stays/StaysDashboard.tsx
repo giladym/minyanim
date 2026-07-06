@@ -60,13 +60,13 @@ export function StaysDashboard() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-ink">{t("stays.title")}</h1>
         <div className="flex items-center gap-3">
-          <Link to="/stays/history" className="text-sm font-bold text-clay">
+          <Link to="/stays/history" className="text-sm font-bold text-clay-ink">
             {t("history.title")}
           </Link>
           {all.length > 0 && (
             <Link
               to="/stays/new"
-              className="rounded-lg bg-clay px-4 py-2 text-sm font-extrabold text-on-clay"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-extrabold text-on-primary"
             >
               {t("stays.addCta")}
             </Link>
@@ -95,7 +95,7 @@ export function StaysDashboard() {
           <p className="max-w-md text-muted">{t("stays.empty.body")}</p>
           <Link
             to="/stays/new"
-            className="rounded-[14px] bg-clay px-6 py-3 font-extrabold text-on-clay"
+            className="rounded-[14px] bg-primary px-6 py-3 font-extrabold text-on-primary"
           >
             {t("stays.addCta")}
           </Link>
