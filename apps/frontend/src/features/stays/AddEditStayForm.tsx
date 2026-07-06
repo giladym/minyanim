@@ -14,7 +14,7 @@ import { LocationPicker, type LocationValue } from "./LocationPicker";
 import { PrayerNeeds } from "./PrayerNeeds";
 
 const fieldCls =
-  "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay";
+  "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-primary";
 const labelCls = "mb-1.5 block text-sm font-bold text-ink";
 const errCls = "mt-1 block text-sm font-semibold text-clay-ink";
 

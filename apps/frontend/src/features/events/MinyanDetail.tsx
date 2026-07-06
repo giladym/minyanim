@@ -111,7 +111,7 @@ function CommitSection({ id, m }: { id: string; m: AnyMinyanDTO }) {
   }
 
   const committed = hasPrivate(m); // participant view ⇒ already joined
-  const fieldCls = "w-24 rounded-xl border border-line2 bg-surface px-3 py-2.5 text-ink outline-none focus:border-clay";
+  const fieldCls = "w-24 rounded-xl border border-line2 bg-surface px-3 py-2.5 text-ink outline-none focus:border-primary";
 
   // Signed-out visitor (e.g. arriving via a WhatsApp join link): show a sign-in CTA that returns
   // here after auth (D13/R11) — works for Google or email/password.

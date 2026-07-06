@@ -15,8 +15,11 @@ export interface LocationValue {
 }
 
 const fieldCls =
-  "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-clay";
+  "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-primary";
 const labelCls = "mb-1.5 block text-sm font-bold text-ink";
+/** Subtle bordered secondary button — the search ↔ manual-entry mode toggle (a real affordance,
+ * not a bare text link). */
+const toggleCls = "self-start rounded-lg border border-line2 px-3 py-1.5 text-sm font-bold text-primary-ink";
 
 /** World-ish default view when nothing is selected yet — lets the user pan anywhere to pick. */
 const DEFAULT_CENTER: [number, number] = [20, 30];
@@ -157,7 +160,7 @@ export function LocationPicker({
           </label>
           <button
             type="button"
-            className="self-start text-sm font-bold text-clay"
+            className={toggleCls}
             onClick={() => setManual(false)}
           >
             {t("stays.location.searchToggle")}
@@ -225,7 +228,7 @@ export function LocationPicker({
 
           <button
             type="button"
-            className="self-start text-sm font-bold text-clay"
+            className={toggleCls}
             onClick={() => setManual(true)}
           >
             {t("stays.location.manualToggle")}
@@ -326,7 +329,7 @@ function PickableMap({
         ref={ref}
         role="application"
         aria-label={t("stays.location.mapPickAlt")}
-        className="h-56 w-full overflow-hidden rounded-xl border border-line"
+        className="h-44 w-full overflow-hidden rounded-xl border border-line sm:h-56"
       />
       {picking && <p className="text-sm text-muted">{t("stays.location.reverseSearching")}</p>}
     </div>
