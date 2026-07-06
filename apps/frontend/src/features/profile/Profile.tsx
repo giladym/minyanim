@@ -8,8 +8,9 @@ import { useTheme, type Theme } from "../../theme/ThemeProvider";
 import { authClient } from "../../lib/auth-client";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
-const field = "w-full rounded-lg border border-line2 bg-surface px-3 py-2.5 text-ink";
+const field = "w-full rounded-lg border border-line2 bg-surface px-3 py-2.5 text-ink outline-none transition focus:border-primary";
 const card = "rounded-2xl border border-line bg-surface p-5";
+const secHead = "mb-3 block text-xs font-bold uppercase tracking-wide text-faint";
 
 export function ProfilePage() {
   const { t, i18n } = useTranslation();
@@ -81,21 +82,23 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
-      <h1 className="text-2xl font-extrabold">{t("profile.title")}</h1>
+      <h1 className="font-display text-2xl font-extrabold">{t("profile.title")}</h1>
 
       {saveErr && <p role="alert" className="rounded-lg bg-clay-soft px-4 py-2.5 text-sm font-bold text-clay-ink">{saveErr}</p>}
 
       <section className={card}>
-        <label className="mb-1.5 block text-sm font-bold">{t("profile.name")}</label>
+        <span className={secHead}>{t("profile.name")}</span>
         <div className="flex gap-2">
           <input className={field} value={name} aria-label={t("profile.name")} onChange={(e) => setName(e.target.value)} />
-          <button className="rounded-lg bg-clay px-4 font-extrabold text-on-clay" onClick={() => void saveName()}>
+          <button className="shrink-0 rounded-lg bg-primary px-4 font-extrabold text-on-primary transition" onClick={() => void saveName()}>
             {saved ? t("profile.saved") : t("profile.save")}
           </button>
         </div>
       </section>
 
-      <section className={card + " grid grid-cols-2 gap-4"}>
+      <section className={card}>
+        <span className={secHead}>{t("profile.preferences")}</span>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <label className="block">
           <span className="mb-1.5 block text-sm font-bold">{t("profile.language")}</span>
           <select className={field} value={i18n.resolvedLanguage} onChange={(e) => void changeLanguage(e.target.value as Language)}>
@@ -123,10 +126,11 @@ export function ProfilePage() {
             <option value="both">{t("profile.havdalah.both")}</option>
           </select>
         </label>
+        </div>
       </section>
 
       <section className={card}>
-        <h2 className="mb-3 text-sm font-bold">{t("profile.phones")}</h2>
+        <span className={secHead}>{t("profile.phones")}</span>
         <label className="mb-3 flex min-h-[44px] items-start gap-3 rounded-lg border border-line px-3 py-2.5 text-sm text-ink">
           <input
             type="checkbox"
@@ -156,7 +160,7 @@ export function ProfilePage() {
             <input className={field + " sm:max-w-[10rem]"} value={label} aria-label={t("profile.phoneLabel")} placeholder={t("profile.phoneLabel")} onChange={(e) => setLabel(e.target.value)} />
           </div>
           <button
-            className="self-start rounded-lg bg-clay px-4 py-2.5 font-extrabold text-on-clay disabled:opacity-50"
+            className="self-start rounded-lg bg-primary px-4 py-2.5 font-extrabold text-on-primary disabled:opacity-50"
             disabled={!E164.test(phone)}
             onClick={() => void add()}
           >
@@ -173,8 +177,8 @@ export function ProfilePage() {
         {t("profile.signOut")}
       </button>
 
-      <section className={card + " border-clay-soft"}>
-        <h2 className="mb-2 text-sm font-bold text-clay-ink">{t("profile.deleteTitle")}</h2>
+      <section className="rounded-2xl border-[1.5px] border-clay-soft bg-clay-soft/40 p-5">
+        <span className="mb-3 block text-xs font-bold uppercase tracking-wide text-clay-ink">{t("profile.deleteTitle")}</span>
         <p className="mb-3 text-sm text-muted">{t("profile.deleteWarn")}</p>
         {confirmingDelete ? (
           <div className="flex gap-2">

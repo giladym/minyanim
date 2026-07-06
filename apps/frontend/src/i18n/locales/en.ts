@@ -330,6 +330,7 @@ export const en = {
       saveEdit: "Save changes",
       backToList: "Back to locations",
       moreDetails: "More details",
+      moreDetailsHint: "Exact address, contacts and notes — optional",
       // Form — required fields
       arrivalDate: "Arrival date",
       departureDate: "Departure date",
@@ -380,6 +381,7 @@ export const en = {
       name: "Full name",
       save: "Save",
       saved: "Saved",
+      preferences: "Preferences",
       language: "Language",
       theme: "Theme",
       langHe: "Hebrew",

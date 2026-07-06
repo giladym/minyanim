@@ -192,7 +192,7 @@ export function DiscoveryPage() {
                   <Link
                     to="/minyan/new"
                     search={{ lat: center!.lat, lng: center!.lng, city: center!.city, country: center!.country, date: b.shabbat, nearby: b.menCount }}
-                    className="rounded-xl bg-clay px-4 py-2 text-sm font-extrabold text-on-clay"
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-extrabold text-on-primary"
                   >
                     {t("discovery.hostCta")}
                   </Link>

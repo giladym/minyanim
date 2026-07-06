@@ -293,7 +293,7 @@ export function AddEditStayForm({
         </h1>
         <button
           type="button"
-          className="text-sm font-bold text-clay"
+          className="text-sm font-bold text-clay-ink"
           onClick={() => void navigate({ to: "/stays" })}
         >
           {t("stays.backToList")}
@@ -389,7 +389,7 @@ export function AddEditStayForm({
                   <button
                     type="button"
                     disabled={createFolder.isPending || !newFolderName.trim()}
-                    className="shrink-0 rounded-xl bg-clay px-4 py-2.5 text-sm font-extrabold text-on-clay disabled:opacity-60"
+                    className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-on-primary disabled:opacity-60"
                     onClick={async () => {
                       setNewFolderError("");
                       try {
@@ -440,7 +440,7 @@ export function AddEditStayForm({
                 </select>
                 <button
                   type="button"
-                  className="shrink-0 rounded-xl border border-clay px-4 py-2.5 text-sm font-bold text-clay"
+                  className="shrink-0 rounded-xl border border-line2 px-4 py-2.5 text-sm font-bold text-primary-ink"
                   onClick={() => setCreatingFolder(true)}
                 >
                   {t("folders.createInline")}
@@ -453,12 +453,18 @@ export function AddEditStayForm({
         <Card>
           <button
             type="button"
-            className="flex w-full items-center justify-between text-start text-sm font-bold text-clay"
+            className="flex w-full items-center justify-between gap-2 text-start font-bold text-ink"
             aria-expanded={showDetails}
+            aria-label={t("stays.moreDetails")}
             onClick={() => setShowDetails((v) => !v)}
           >
-            {t("stays.moreDetails")}
-            <span aria-hidden>{showDetails ? "−" : "+"}</span>
+            <span className="flex flex-col">
+              <span className="text-sm">{t("stays.moreDetails")}</span>
+              <span className="text-xs font-normal text-muted">{t("stays.moreDetailsHint")}</span>
+            </span>
+            <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-chip text-lg leading-none text-primary-ink">
+              {showDetails ? "−" : "+"}
+            </span>
           </button>
           {showDetails && (
             <div className="mt-4 flex flex-col gap-4">
@@ -545,7 +551,7 @@ export function AddEditStayForm({
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-[14px] bg-clay px-4 py-[15px] font-extrabold text-on-clay transition disabled:opacity-60"
+          className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary shadow-card transition disabled:opacity-60"
         >
           {busy ? t("auth.submitting") : isEdit ? t("stays.saveEdit") : t("stays.saveCreate")}
         </button>

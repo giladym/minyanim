@@ -330,6 +330,7 @@ export const he = {
       saveEdit: "שמירת שינויים",
       backToList: "חזרה למיקומים",
       moreDetails: "פרטים נוספים",
+      moreDetailsHint: "כתובת מדויקת, אנשי קשר והערות — לא חובה",
       // Form — required fields
       arrivalDate: "תאריך הגעה",
       departureDate: "תאריך עזיבה",
@@ -380,6 +381,7 @@ export const he = {
       name: "שם מלא",
       save: "שמירה",
       saved: "נשמר",
+      preferences: "העדפות",
       language: "שפה",
       theme: "מצב תצוגה",
       langHe: "עברית",
