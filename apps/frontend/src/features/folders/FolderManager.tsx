@@ -6,7 +6,7 @@ import { Icon } from "../../components/Icon";
 import { useFolders, useCreateFolder, useRenameFolder, useSetFolderPinned, useDeleteFolder } from "../../lib/folders";
 
 const fieldCls =
-  "w-full rounded-xl border border-line2 bg-surface px-3.5 py-2.5 text-ink outline-none transition focus:border-clay";
+  "w-full rounded-xl border border-line2 bg-surface px-3.5 py-2.5 text-ink outline-none transition focus:border-primary";
 
 /**
  * Folder management dialog (US1, FR-001/FR-003): create, rename, and delete the caller's folders.
