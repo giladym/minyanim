@@ -11,6 +11,7 @@ import { geo } from "./routes/geo";
 import { discovery } from "./routes/discovery";
 import { events } from "./routes/events";
 import { notifications } from "./routes/notifications";
+import { messages } from "./routes/messages";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -59,6 +60,8 @@ app.route("/", discovery);
 app.route("/", events);
 // Notifications inbox — list / mark-read. (003 US5; emails sent server-side via waitUntil)
 app.route("/", notifications);
+// Direct in-app messages between users — send / conversations / thread. (008)
+app.route("/", messages);
 
 // Public client config (no auth) — the PUBLIC MapTiler tile key for client-side maps, served at
 // runtime so the map needs no build-time var. Only client-safe values; never secrets. (005-followup)

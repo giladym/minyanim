@@ -191,9 +191,12 @@ function waDigits(phone: string): string {
 function ContactButtons({ p }: { p: ParticipantInfo }) {
   const { t } = useTranslation();
   const btn = "inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold";
-  if (!p.phone && !p.email) return <span className="text-xs text-faint">{t("minyanDetail.noContact")}</span>;
   return (
     <div className="flex flex-wrap gap-2">
+      {/* In-app message — always available (no phone/email needed); works for any signed-in viewer. */}
+      <Link className={`${btn} bg-primary-soft text-primary-ink`} to="/messages/$userId" params={{ userId: p.userId }} aria-label={`${t("minyanDetail.contactMessage")} — ${p.name}`}>
+        {t("minyanDetail.contactMessage")}
+      </Link>
       {p.phone && (
         <a className={`${btn} bg-whatsapp text-on-whatsapp`} href={`https://wa.me/${waDigits(p.phone)}`} target="_blank" rel="noopener noreferrer" aria-label={`${t("minyanDetail.contactWhatsapp")} — ${p.name}`}>
           {t("minyanDetail.contactWhatsapp")}
