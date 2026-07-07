@@ -82,7 +82,14 @@ const staysEditRoute = createRoute({
   path: "/stays/$id/edit",
   component: lazyRouteComponent(() => import("./features/stays/AddEditStayForm"), "EditStayPage"),
 });
-const profileRoute = createRoute({ getParentRoute: () => authedLayout, path: "/profile", component: lazyRouteComponent(() => import("./features/profile/Profile"), "ProfilePage") });
+const profileRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/profile",
+  // ?onboarding=phone (set by the post-login soft nudge for users with no phone) focuses the phone
+  // field and shows an explanatory banner.
+  validateSearch: (s): { onboarding?: "phone" } => ({ onboarding: s.onboarding === "phone" ? "phone" : undefined }),
+  component: lazyRouteComponent(() => import("./features/profile/Profile"), "ProfilePage"),
+});
 // Discovery (feature 003 US1): search an area → potential + hosted minyanim.
 const discoveryRoute = createRoute({
   getParentRoute: () => authedLayout,

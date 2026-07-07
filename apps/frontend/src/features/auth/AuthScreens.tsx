@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { authClient } from "../../lib/auth-client";
+import { armPhoneNudge, PHONE_NUDGE_KEY } from "../../lib/onboarding";
 
 /** Only allow relative same-origin redirect targets (open-redirect guard, client side). */
 function safeRedirect(): string {
@@ -88,9 +89,11 @@ function GoogleButton() {
   async function start() {
     setErr("");
     setBusy(true);
+    armPhoneNudge(); // survives the SSO round-trip in sessionStorage; consumed on return if no phone
     // On success the browser is redirected to Google, so control only returns here on failure.
     const { error } = await authClient.signIn.social({ provider: "google", callbackURL: safeRedirect() });
     if (error) {
+      try { sessionStorage.removeItem(PHONE_NUDGE_KEY); } catch { /* ignore */ }
       setBusy(false);
       setErr(t("auth.error"));
     }
@@ -133,7 +136,10 @@ export function SignIn() {
     const { error } = await authClient.signIn.email({ email, password, rememberMe: !shared });
     setBusy(false);
     if (error) setErr(t("auth.invalid"));
-    else void navigate({ to: safeRedirect() });
+    else {
+      armPhoneNudge(); // nudge to add a phone after this login if they have none
+      void navigate({ to: safeRedirect() });
+    }
   }
 
   return (

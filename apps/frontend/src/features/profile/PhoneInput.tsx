@@ -24,7 +24,7 @@ function nationalDigits(input: string): string {
  * valid E.164 string emitted via `onChange`. Users type their everyday local number ("0541234567")
  * and pick a country — no need to hand-type "+972". Defaults to Israel (the primary audience).
  */
-export function PhoneInput({ onChange, defaultIso = "IL" }: { onChange: (e164: string) => void; defaultIso?: string }) {
+export function PhoneInput({ onChange, defaultIso = "IL", autoFocus = false }: { onChange: (e164: string) => void; defaultIso?: string; autoFocus?: boolean }) {
   const { t, i18n } = useTranslation();
   const [iso, setIso] = useState(defaultIso);
   const [national, setNational] = useState("");
@@ -62,6 +62,8 @@ export function PhoneInput({ onChange, defaultIso = "IL" }: { onChange: (e164: s
         className={`${fieldCls} min-w-0 flex-1`}
         type="tel"
         inputMode="tel"
+        // Intentional focus: the onboarding nudge lands the user here specifically to add a phone.
+        autoFocus={autoFocus}
         value={national}
         aria-label={t("profile.phoneNumber")}
         placeholder={t("profile.phoneNumberPlaceholder")}

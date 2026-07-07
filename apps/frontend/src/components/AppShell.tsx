@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useTheme, type Theme } from "../theme/ThemeProvider";
 import { getProfile, patchProfile } from "../lib/profile";
@@ -7,6 +7,7 @@ import { authClient } from "../lib/auth-client";
 import { RouteAnnouncer } from "./RouteAnnouncer";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 import { useNotifications } from "../lib/notifications";
+import { PHONE_NUDGE_KEY } from "../lib/onboarding";
 
 // Finding a minyan is the app's primary action — it's the center FAB, not a side tab. The four
 // side tabs flank it: locations · history | FAB | notifications · profile. Adding a location is a
@@ -22,6 +23,7 @@ const NAV = [
 export function AppShell() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
   const unread = useNotifications().data?.unread ?? 0;
@@ -36,9 +38,19 @@ export function AppShell() {
   useEffect(() => {
     getProfile()
       .then((p) => {
-        if (touched.current) return;
-        setTheme(p.theme as Theme);
-        if (p.language !== i18n.resolvedLanguage) void i18n.changeLanguage(p.language);
+        if (!touched.current) {
+          setTheme(p.theme as Theme);
+          if (p.language !== i18n.resolvedLanguage) void i18n.changeLanguage(p.language);
+        }
+        // Soft onboarding: after a real sign-in/register (flag set by the auth screens), a user with
+        // no phone can't be reached by hosts/travelers — nudge them to /profile once. Consume the
+        // flag whether or not we redirect, so it's strictly one-shot and never a hard gate.
+        if (sessionStorage.getItem(PHONE_NUDGE_KEY)) {
+          sessionStorage.removeItem(PHONE_NUDGE_KEY);
+          if (p.phones.length === 0 && window.location.pathname !== "/profile") {
+            void navigate({ to: "/profile", search: { onboarding: "phone" } });
+          }
+        }
       })
       .catch(() => {});
   }, []);
