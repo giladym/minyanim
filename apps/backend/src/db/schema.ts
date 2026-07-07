@@ -19,6 +19,9 @@ export const user = sqliteTable("user", {
   // 006: opt-out for sharing the phone with others (minyan roster + travelers list). Default ON so
   // contact is easy by default; a privacy-conscious user can disable it. Governs phone only.
   sharePhone: integer("share_phone", { mode: "boolean" }).notNull().default(true),
+  // 008: opt-out for receiving in-app messages from other users. Default ON (any signed-in user
+  // may message you); a user can disable it to stop receiving new messages.
+  acceptMessages: integer("accept_messages", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -247,6 +250,29 @@ export const notification = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
   (t) => [index("notification_recipient_idx").on(t.recipientUserId)],
+);
+
+// 008: direct in-app messages between users (any signed-in user → any other, gated by the
+// recipient's `accept_messages` opt-out + a per-sender rate limit). Both FKs cascade so deleting
+// either party removes the thread. A conversation is the set of rows between a given user pair.
+export const message = sqliteTable(
+  "message",
+  {
+    id: text("id").primaryKey(),
+    senderUserId: text("sender_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    recipientUserId: text("recipient_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    read: integer("read", { mode: "boolean" }).notNull().default(false),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("message_recipient_idx").on(t.recipientUserId),
+    index("message_pair_idx").on(t.recipientUserId, t.senderUserId),
+  ],
 );
 
 // Idempotency ledger (R8): a threshold crossing fans out only when a NEW row inserts here.

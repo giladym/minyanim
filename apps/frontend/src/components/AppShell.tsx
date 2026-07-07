@@ -7,6 +7,7 @@ import { authClient } from "../lib/auth-client";
 import { RouteAnnouncer } from "./RouteAnnouncer";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 import { useNotifications } from "../lib/notifications";
+import { useConversations } from "../lib/messages";
 import { PHONE_NUDGE_KEY } from "../lib/onboarding";
 
 // Finding a minyan is the app's primary action — it's the center FAB, not a side tab. The four
@@ -27,6 +28,7 @@ export function AppShell() {
   const { data: session } = authClient.useSession();
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
   const unread = useNotifications().data?.unread ?? 0;
+  const msgUnread = useConversations().data?.unread ?? 0;
   const initial = (session?.user?.name || session?.user?.email || "").trim().charAt(0).toUpperCase() || "•";
 
   // A manual theme/lang change must win over a late-arriving profile sync, otherwise the
@@ -85,6 +87,16 @@ export function AppShell() {
         <div className="flex items-center gap-2">
           <button className={pill} onClick={toggleTheme}>{t("theme.toggle")}</button>
           <button className={pill} onClick={toggleLang}>{i18n.resolvedLanguage === "he" ? "EN" : "עב"}</button>
+          <a href="/messages" aria-label={t("messages.title")} className="relative flex h-8 w-8 items-center justify-center rounded-full border border-line text-muted">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            {msgUnread > 0 && (
+              <span className="absolute -top-1 -end-1 min-w-[16px] rounded-full bg-primary px-1 text-center text-[10px] font-bold text-on-primary" aria-hidden>
+                {msgUnread > 9 ? "9+" : msgUnread}
+              </span>
+            )}
+          </a>
           <a href="/profile" aria-label={t("a11y.myProfile")} className="flex h-8 w-8 items-center justify-center rounded-full bg-teal font-bold text-on-teal">
             {initial}
           </a>

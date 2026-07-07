@@ -183,6 +183,23 @@ export function ProfilePage() {
         {phoneErr && <p role="alert" className="mt-2 text-sm font-bold text-clay-ink">{phoneErr}</p>}
       </section>
 
+      <section className={card}>
+        <span className={secHead}>{t("profile.messagesSection")}</span>
+        <label className="flex min-h-[44px] items-start gap-3 rounded-lg border border-line px-3 py-2.5 text-sm text-ink">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-5 w-5 shrink-0"
+            checked={p.acceptMessages}
+            aria-label={t("profile.acceptMessages")}
+            onChange={(e) => void patch({ acceptMessages: e.target.checked })}
+          />
+          <span>
+            <span className="font-bold">{t("profile.acceptMessages")}</span>
+            <span className="mt-0.5 block text-xs text-muted">{t("profile.acceptMessagesHint")}</span>
+          </span>
+        </label>
+      </section>
+
       <button
         className="self-start rounded-lg border border-line px-4 py-2 text-sm font-bold text-muted"
         onClick={() => void authClient.signOut().then(() => (window.location.href = "/"))}

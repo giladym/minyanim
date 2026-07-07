@@ -31,6 +31,9 @@ export const ERROR_CODES = {
   FOLDER_NAME_REQUIRED: "folder.name_required",
   FOLDER_NAME_TOO_LONG: "folder.name_too_long",
   STAY_NOT_CANCELLED: "stay.not_cancelled",
+  // 008 — In-app messaging.
+  MESSAGE_SELF: "message.self",
+  MESSAGE_OPTED_OUT: "message.opted_out",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;
