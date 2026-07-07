@@ -31,6 +31,12 @@ export function ProfilePage() {
 
   if (!p) return null;
 
+  // Post-login nudge (AppShell sends users with no phone here via ?onboarding=phone). Show the
+  // banner + autofocus the phone field only while they still have no phone. Read straight from the
+  // URL (no router context needed — keeps the component testable in isolation).
+  const onboardingPhone =
+    new URLSearchParams(window.location.search).get("onboarding") === "phone" && p.phones.length === 0;
+
   /** Persist a profile patch, surfacing any failure instead of swallowing it (was silent). */
   async function patch(input: Parameters<typeof patchProfile>[0]): Promise<boolean> {
     setSaveErr("");
@@ -83,6 +89,13 @@ export function ProfilePage() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
       <h1 className="font-display text-2xl font-extrabold">{t("profile.title")}</h1>
+
+      {onboardingPhone && (
+        <div className="mn-fadeup rounded-2xl border-[1.5px] border-primary-container bg-primary-soft p-4">
+          <p className="font-extrabold text-primary">{t("profile.phonePrompt.title")}</p>
+          <p className="mt-1 text-sm text-muted">{t("profile.phonePrompt.body")}</p>
+        </div>
+      )}
 
       {saveErr && <p role="alert" className="rounded-lg bg-clay-soft px-4 py-2.5 text-sm font-bold text-clay-ink">{saveErr}</p>}
 
@@ -156,7 +169,7 @@ export function ProfilePage() {
         </ul>
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-2 sm:flex-row">
-            <PhoneInput onChange={setPhone} />
+            <PhoneInput onChange={setPhone} autoFocus={onboardingPhone} />
             <input className={field + " sm:max-w-[10rem]"} value={label} aria-label={t("profile.phoneLabel")} placeholder={t("profile.phoneLabel")} onChange={(e) => setLabel(e.target.value)} />
           </div>
           <button

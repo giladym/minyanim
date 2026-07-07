@@ -378,6 +378,10 @@ export const en = {
     },
     profile: {
       title: "My profile",
+      phonePrompt: {
+        title: "Add a phone number",
+        body: "A phone number lets minyan organizers and other travelers reach you easily. You can always choose not to share it below.",
+      },
       name: "Full name",
       save: "Save",
       saved: "Saved",

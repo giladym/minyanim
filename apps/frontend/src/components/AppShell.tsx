@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useTheme, type Theme } from "../theme/ThemeProvider";
 import { getProfile, patchProfile } from "../lib/profile";
@@ -19,9 +19,13 @@ const NAV = [
 ];
 
 /** Authenticated app shell: RTL header (logo, calendar slot, theme/lang, avatar) + bottom nav. */
+/** Session key so the "add a phone" nudge fires at most once per browser session (soft, not a gate). */
+const PHONE_NUDGE_KEY = "mn_phone_nudged";
+
 export function AppShell() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
   const unread = useNotifications().data?.unread ?? 0;
@@ -36,9 +40,20 @@ export function AppShell() {
   useEffect(() => {
     getProfile()
       .then((p) => {
-        if (touched.current) return;
-        setTheme(p.theme as Theme);
-        if (p.language !== i18n.resolvedLanguage) void i18n.changeLanguage(p.language);
+        if (!touched.current) {
+          setTheme(p.theme as Theme);
+          if (p.language !== i18n.resolvedLanguage) void i18n.changeLanguage(p.language);
+        }
+        // Soft onboarding: a user with no phone can't be reached by hosts/travelers, so nudge them
+        // to add one — once per session, dismissible, never a hard gate (respects sharePhone opt-out).
+        if (
+          p.phones.length === 0 &&
+          !sessionStorage.getItem(PHONE_NUDGE_KEY) &&
+          window.location.pathname !== "/profile"
+        ) {
+          sessionStorage.setItem(PHONE_NUDGE_KEY, "1");
+          void navigate({ to: "/profile", search: { onboarding: "phone" } });
+        }
       })
       .catch(() => {});
   }, []);
