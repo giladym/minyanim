@@ -64,6 +64,13 @@
       "when": 1783458588836,
       "tag": "0008_sloppy_dexter_bennett",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1783493344900,
+      "tag": "0009_abnormal_goblin_queen",
+      "breakpoints": true
     }
   ]
 }

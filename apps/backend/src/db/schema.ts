@@ -22,6 +22,10 @@ export const user = sqliteTable("user", {
   // 008: opt-out for receiving in-app messages from other users. Default ON (any signed-in user
   // may message you); a user can disable it to stop receiving new messages.
   acceptMessages: integer("accept_messages", { mode: "boolean" }).notNull().default(true),
+  // 009: 'real' = a normal authenticated user; 'seed' = an imported placeholder (no account, can
+  // never sign in) whose stays/events are visible so people find each other. A seed row is CLAIMED
+  // and deleted when a real user signs up whose profile phone matches the seed's phone (F4).
+  kind: text("kind").notNull().default("real"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

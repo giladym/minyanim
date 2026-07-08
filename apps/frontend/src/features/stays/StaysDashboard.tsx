@@ -7,6 +7,7 @@ import { useNearStayCounts } from "../../lib/discovery";
 import { FolderFilter, type FolderFilterValue } from "../folders/FolderFilter";
 import { FolderManager } from "../folders/FolderManager";
 import { StayCard } from "./StayCard";
+import { ClaimBanner } from "./ClaimBanner";
 
 /**
  * My-Stays dashboard (US2 + 004 US1). Lists the caller's active Stays nearest-first, browsable by
@@ -73,6 +74,8 @@ export function StaysDashboard() {
           )}
         </div>
       </div>
+
+      <ClaimBanner />
 
       {all.length > 0 && (
         <FolderFilter

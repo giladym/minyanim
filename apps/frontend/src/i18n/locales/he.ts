@@ -137,6 +137,12 @@ export const he = {
       composePlaceholder: "כתבו הודעה…",
       unknownUser: "משתמש",
     },
+    claim: {
+      title: "מצאנו נסיעות שקשורות אליכם",
+      body: "לפי מספר הטלפון שלכם מצאנו {{stays}} מיקומים ו-{{events}} מניינים שכבר קיימים. לצרף אותם לחשבון שלכם?",
+      confirm: "כן, צרפו אותם",
+      dismiss: "לא עכשיו",
+    },
     folders: {
       label: "תיקייה",
       manage: "ניהול תיקיות",
