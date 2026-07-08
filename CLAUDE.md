@@ -1,7 +1,8 @@
 <!-- SPECKIT START -->
-No active feature plan — 001 + 002 + 003 + 004 + 005 are complete (merged to `develop`, deployed to
-dev, CI/CD via Workers Builds). Start the next feature with `/speckit-specify` (remaining v1: 006
-Admin — see `specs/ROADMAP.md`). 003 introduced the generic `event` (type=`minyan`) model (ROADMAP
+No active feature plan — 001–005 + 007–009 are complete (merged to `develop`, deployed to dev,
+CI/CD via Workers Builds); 006 Admin is specified (`specs/006-admin/`) but not yet built. Start the
+next feature with `/speckit-specify` (remaining v1: 006 Admin + import steps 2–4, see below and
+`specs/ROADMAP.md`). 003 introduced the generic `event` (type=`minyan`) model (ROADMAP
 decision 10). 004 added folders (`stay.folder_id` FK ON DELETE SET NULL = "Unfiled") + a History view
 (amended 002 FR-005/011, D1). 005 added per-Shabbat zmanim (candle-lighting + Havdalah) computed
 server-side, detail-scoped (`GET /api/stays/:id/zmanim`, `GET /api/events/:id/zmanim`) + a
@@ -18,8 +19,25 @@ forest-green primary + terracotta accent + parchment surface + Hanken-Grotesk/As
 (tokens.css is SoT; fonts self-hosted as woff2 in `apps/frontend/public/fonts/`, no Google hotlinking); redesigned My-Stays card (MapTiler
 map-thumbnail header, one minyan-status line, `⋮` menu, collapsible zmanim, current-stay "here now"
 emphasis); folder **pinning** (`folder.pinned`, migration 0007) drives a scrolling pinned-folder
-quick-filter. Amends 002 FR-005a + 004 FR-004a. Product decomposition & shared decisions:
-`specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
+quick-filter. Amends 002 FR-005a + 004 FR-004a. The Heritage-Voyage refresh continued post-007 with
+a **minyan-detail redesign** (green hero + quorum progress + readiness checklist + prominent
+organizer card + entrance animations) and a **forms polish pass** (primary CTAs unified to green —
+terracotta is accent/destructive only; `--faint` bumped to 4.95:1 for AA; input focus rings →
+primary; LocationPicker + auth + profile). See `design/DESIGN-SYSTEM.md`.
+
+007 **phone onboarding** (`specs/007-phone-onboarding/`): a soft, one-time post-login nudge routes a
+user with no phone to `/profile?onboarding=phone` (focused field + banner); frontend-only, respects
+`share_phone`. 008 **in-app messaging** (`specs/008-in-app-messaging/` + ADR 0009; migration 0008):
+`message` table + `user.accept_messages` opt-out; any signed-in user → any other, rate-limited
+(20/5min); routes `POST/GET /api/messages`, `GET /api/messages/:userId`; `/messages` inbox+thread,
+header envelope, "Message" on the minyan roster. 009 **seed import + claim** (`specs/009-seed-import-claim/`
++ ADR 0010; migration 0009): `user.kind` ('real'|'seed'); seed users (synthetic email, no account)
+own visible stays/events; a real user whose profile phone matches claims+merges them
+(`GET/POST /api/me/claims`, server re-verifies the match) then the seed is deleted; seed contact is
+hidden in discovery until claimed (revises ADR 0008 for seeds). The **dev-only import tool**
+(`tools/seed-import/`) is staged inspect→map→gate→create; **step 1 (CSV→profile.json) is built**,
+steps 2–4 pending a row-semantics decision from a real sheet. Amends 002 FR-005a + 004 FR-004a.
+Product decomposition & shared decisions: `specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
 
 Architecture (constitution v1.1.0 + docs/architecture.md): **pnpm + Turborepo monorepo** —
 `apps/frontend` (Vite React SPA + TanStack Router/Query on Workers Static Assets),
@@ -33,5 +51,7 @@ D1 sessions; needs a transactional email provider — Resend rec., research D16)
 structured logging via Workers Observability (**no Winston**); JSDoc on exports; KISS.
 `kosher-zmanim` (LGPL) computed SERVER-SIDE ONLY (legal sign-off pending — never ship to
 client). Tests: vitest-pool-workers, Vitest+Testing Library, Playwright + axe-core (WCAG AA).
-Decisions: docs/adr/. No active plan — 001–005 shipped.
+Latest migrations: 0008 (`message` table + `user.accept_messages`), 0009 (`user.kind`). A dev-only
+import tool lives outside the workspace at `tools/seed-import/` (Node built-ins, `node --test`).
+Decisions: docs/adr/ (through 0010). No active plan — 001–005 + 007–009 shipped; 006 Admin specified.
 <!-- SPECKIT END -->

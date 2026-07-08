@@ -1,6 +1,6 @@
 # Minyanim — Product Roadmap & Feature Decomposition
 
-**Last updated**: 2026-06-18
+**Last updated**: 2026-07-08
 
 This document is the source of truth for how the Minyanim platform is decomposed into
 features and for the cross-cutting product decisions that every feature spec inherits.
@@ -66,6 +66,17 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
     and notifications reference the generic `event`. Additional event types are future features
     that add a `type` value, not a rewrite. User-facing copy still uses the domain term "מניין"
     (003 decision D21).
+11. **In-app messaging (ADR 0009, feature 008).** Beyond the WhatsApp/email deep links of decision 9,
+    any signed-in user may send another a **direct in-app message** (`message` table), so people can
+    coordinate without exposing a phone. Gated by a per-recipient opt-out (`user.accept_messages`,
+    default ON) + a per-sender rate limit. Per-user block/report is a fast-follow.
+12. **Seed users + phone-match claim (ADR 0010, feature 009; revises decision 9 for seeds).** The
+    one-time import (decision 9 anticipated it) creates **seed users** — `user.kind='seed'`,
+    synthetic email, no account, can't sign in — who own visible stays/events. When a real user's
+    profile phone matches a seed's, they claim+merge its data (server re-verifies the match) and the
+    seed is deleted. Seed contact (phone) is **hidden in discovery until claimed** (they haven't
+    consented); their name still shows. Claim auth is **in-app confirm** for the private beta — a
+    launch gate requires SMS-OTP or verified-email before public release.
 
 ---
 
@@ -94,7 +105,11 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
 - **Beit Chabad Pin** — static, curated map entity (name, address, phone, coordinates).
   Informational in v1. Seeded via a one-time import from an officially permitted Chabad.org
   dataset/API (pending licensing) and maintained thereafter by admins.
-- **Notification** — email + in-app message triggered by quorum events.
+- **Notification** — email + in-app message triggered by quorum events (system-generated).
+- **Message** — a direct user-to-user in-app message (sender, recipient, body, read). Distinct from
+  Notification (that is event-driven/system). Feature 008 / ADR 0009.
+- **Seed user** — an imported placeholder (`user.kind='seed'`, synthetic email, no account) that
+  owns visible Stays/Minyanim until the real person claims them by phone match. Feature 009 / ADR 0010.
 - **Admin** — an elevated user role with moderation (remove Stays/Minyanim, ban users),
   Beit Chabad pin curation, and basic platform metrics. Defined in Feature 006.
 
@@ -110,10 +125,16 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
 | **004** | Folders & History | Folder CRUD, assign Stays, history view + "attended" tag | 002 |
 | **005** | Per-Stay Zmanim | Candle-lighting / Havdalah per Shabbat within a Stay/Minyan | 002 |
 | **006** | Admin | Moderation (remove content, ban users), Beit Chabad curation, basic metrics | 001 (+ data from 002/003) |
+| **007** | Phone onboarding | Soft post-login nudge for users with no phone → profile with focused field + banner (frontend-only) | 001, 002 |
+| **008** | In-app messaging | Direct user↔user messages, per-recipient opt-out + rate limit, inbox/thread UI (ADR 0009) | 001, 003 |
+| **009** | Seed import + claim | Seed users (`user.kind`), dev-only staged import tool, phone-match claim/merge, seed-contact hidden until claimed (ADR 0010) | 001, 002, 003, 007 |
 
 **Recommended build order:** 001 → 002 → 003, with 004 and 005 in parallel after 002.
 006 (Admin) can be built any time after 001 but is most useful once 003 produces real data.
 After 001 + 002 the product is usable single-player; 003 adds the multiplayer quorum loop.
+**Status (2026-07-08):** 001–005 + 007–009 shipped to dev; 006 Admin specified but not built;
+feature 009 import steps 2–4 (map → gate → create seed rows) pending a real-sheet row-semantics
+decision (`tools/seed-import/` step 1 is built).
 
 ---
 
