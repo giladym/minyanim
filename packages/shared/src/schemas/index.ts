@@ -11,3 +11,4 @@ export * from "./commitment";
 export * from "./discovery";
 export * from "./notification";
 export * from "./message";
+export * from "./claim";

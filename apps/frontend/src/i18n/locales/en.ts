@@ -137,6 +137,12 @@ export const en = {
       composePlaceholder: "Write a message…",
       unknownUser: "User",
     },
+    claim: {
+      title: "We found trips linked to you",
+      body: "Your phone number matches {{stays}} locations and {{events}} minyanim already in the app. Add them to your account?",
+      confirm: "Yes, add them",
+      dismiss: "Not now",
+    },
     folders: {
       label: "Folder",
       manage: "Manage folders",

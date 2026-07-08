@@ -1,8 +1,9 @@
 import { Hono } from "hono";
-import { updateProfileSchema, addPhoneSchema } from "@minyanim/shared";
+import { updateProfileSchema, addPhoneSchema, claimSeedSchema } from "@minyanim/shared";
 import { createAuth } from "../auth";
 import { createDb } from "../db/client";
 import { getProfile, updateProfile, addUserPhone, removeUserPhone, deleteAccount } from "../services/profileService";
+import { getClaimableSeeds, claimSeedUsers } from "../services/claimService";
 import { AppError, Unauthorized, NotFound } from "../lib/errors";
 import { ERROR_CODES } from "@minyanim/shared";
 import type { Env } from "../env";
@@ -34,6 +35,27 @@ me.patch("/api/me", async (c) => {
   }
   const profile = await updateProfile(createDb(c.env.DB), userId, parsed.data);
   return c.json(profile);
+});
+
+// Seed-user claim (F4): trips/minyanim imported under a placeholder whose phone matches the
+// caller's. GET previews the matches; POST merges the selected seeds into the account + deletes them.
+me.get("/api/me/claims", async (c) => {
+  const userId = await requireUserId(c);
+  const seeds = await getClaimableSeeds(createDb(c.env.DB), userId);
+  return c.json({ seeds });
+});
+
+me.post("/api/me/claims", async (c) => {
+  const userId = await requireUserId(c);
+  const parsed = claimSeedSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json(
+      { errors: parsed.error.issues.map((i) => ({ field: i.path.join("."), code: i.message })) },
+      400,
+    );
+  }
+  const result = await claimSeedUsers(createDb(c.env.DB), userId, parsed.data.seedUserIds);
+  return c.json(result);
 });
 
 me.post("/api/me/phones", async (c) => {

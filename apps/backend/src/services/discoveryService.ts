@@ -44,9 +44,11 @@ export function usersWithStaysNear(db: Db, lat: number, lng: number, date: Date,
 }
 
 /** A traveler's contact: a seeded per-stay contact takes precedence (imported people with no
- * account); otherwise the owning user's name + phone, the phone only if they share it. */
+ * account); otherwise the owning user's name + phone, the phone only if they share it. A 'seed'
+ * (imported placeholder) owner NEVER exposes a phone until the person claims their trips (F4) —
+ * they haven't consented to sharing — but their name still surfaces so others know who's around. */
 function travelerContact(s: PotentialStay, phones: Map<string, string>): TravelerContact {
-  const phone = s.contactPhone ?? (s.ownerSharePhone ? phones.get(s.userId) ?? null : null);
+  const phone = s.ownerKind === "seed" ? null : s.contactPhone ?? (s.ownerSharePhone ? phones.get(s.userId) ?? null : null);
   return { name: s.contactName ?? s.ownerName, phone, numMen: s.numMen };
 }
 

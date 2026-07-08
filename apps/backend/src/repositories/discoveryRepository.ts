@@ -23,6 +23,8 @@ export interface PotentialStay {
   /** The owning user's display name + phone-sharing preference (for registered travelers). */
   ownerName: string;
   ownerSharePhone: boolean;
+  /** 'seed' = imported placeholder — contact is withheld in discovery until the person claims it. */
+  ownerKind: string;
 }
 
 const POTENTIAL_COLS = {
@@ -36,11 +38,12 @@ const POTENTIAL_COLS = {
   contactPhone: stay.contactPhone,
   ownerName: user.name,
   ownerSharePhone: user.sharePhone,
+  ownerKind: user.kind,
 } as const;
 
 const normalizeStay = (r: {
   id: string; userId: string; numMen: number; bringsSeferTorah: unknown; arrivalDate: Date; departureDate: Date;
-  contactName: string | null; contactPhone: string | null; ownerName: string; ownerSharePhone: unknown;
+  contactName: string | null; contactPhone: string | null; ownerName: string; ownerSharePhone: unknown; ownerKind: string;
 }): PotentialStay => ({
   ...r,
   bringsSeferTorah: Boolean(r.bringsSeferTorah),
