@@ -26,13 +26,46 @@ that changed). Summary:
 
 ### Location card pattern (My-Stays)
 
-The Stay card leads with a **MapTiler static-map thumbnail** of the actual place (`staticMapUrl()`
-from the Stay's `lat/lng`; token-gradient fallback), country badge + city overlaid. Body = dates
-(+ optional folder chip), **one minyan-status line** (registered→view · nearby→join · none→search),
-a **`⋮` actions menu** (edit · search minyanim · organize · move · cancel), and a collapsible
-**Shabbat-times** panel. A Stay whose dates cover today is emphasized ("כאן ועכשיו", green ring)
-and floated to the top. The folder quick-filter is a scrolling row of **pinned** folders only
-(star to pin in Manage). Icons are inline SVG (`components/Icon.tsx`), not a webfont.
+The Stay card leads with a **region-matched photo** of the destination (`pickHeaderImage(seed, lat,
+lng)` picks from curated self-hosted images in `public/headers/` by continent/region; a generated
+topographic **scene** gradient is the fallback). *(MapTiler Static Maps was tried first but is a paid
+tier — 403 on free — so it is NOT used for card headers.)* Country badge + city are overlaid; the
+**city title is an `<h2>`** (accessible name "City, Country") so each card is a heading landmark.
+Body = dates (+ optional folder chip), **one minyan-status line** (registered→view · nearby→join ·
+none→search), a **`⋮` actions menu** (edit · search minyanim · organize · move · cancel), and a
+collapsible **Shabbat-times** panel. A Stay whose dates cover today is emphasized ("כאן ועכשיו",
+green ring) and floated to the top. The folder quick-filter is a scrolling row of **pinned** folders
+only (star to pin in Manage). Icons are inline SVG (`components/Icon.tsx`), not a webfont.
+
+### Post-007 redesign + forms polish (2026-07)
+
+Continuation of the Heritage-Voyage refresh across the app's interactive surfaces:
+
+- **Primary-action color is unified to green.** Every primary submit/CTA uses `bg-primary` /
+  `text-on-primary`; **terracotta (`--clay`) is reserved for accents** (chips, badges, links via
+  `--clay-ink`) **and destructive actions** (delete → `bg-clay-ink`). This replaced legacy clay CTAs
+  on the Stay form, auth, profile, dashboard, and discovery.
+- **Input focus ring** is `focus:border-primary` everywhere (was `--clay`).
+- **`--faint` bumped to `#6b726a`** (light) — the previous `#72796e` was 4.49:1 on white and failed
+  the WCAG-AA axe gate for small bold text; `#6b726a` is 4.95:1. Keep foreground grays ≥ 4.5:1.
+- **Entrance motion is transform-only.** `mn-fadeup` (and `mn-pop`, `mn-glow`; keyframes in
+  `tokens.css`) animate **transform, not opacity** — a fading element passes through partial opacity
+  where its text drops below AA contrast and the axe gate catches that transient frame. All motion is
+  disabled under `prefers-reduced-motion`.
+
+### Key surfaces
+
+- **Minyan detail** (`features/events/MinyanDetail.tsx`): a green **hero** (status pill + live pulse,
+  place + tefillot, **animated quorum progress bar**, readiness checklist — quorum always, Sefer
+  Torah + Ba'al Korei only for a Torah-reading Shabbat-Shacharit), a prominent **OrganizerCard**
+  (avatar + name + reach), a distinct "you're in" band, then lighter secondary cards.
+- **Messages** (`features/messages/`, feature 008): `/messages` conversation inbox (avatar + preview
+  + unread badge) and a `/messages/$userId` thread with green "mine" bubbles + a composer; a header
+  **envelope** button carries the unread count. A **"Message"** action sits with the WhatsApp/call
+  affordances on minyan roster contacts.
+- **Claim banner** (`features/stays/ClaimBanner.tsx`, feature 009) + **onboarding banner**
+  (`Profile.tsx` with `?onboarding=phone`, feature 007): both are `bg-primary-soft` /
+  `border-primary-container` info bands with a green confirm + a muted dismiss.
 
 ## Typography
 
