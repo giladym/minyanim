@@ -71,6 +71,13 @@
       "when": 1783493344900,
       "tag": "0009_abnormal_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1783612941180,
+      "tag": "0010_black_lester",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
-import type { PrayerNeeds, MinyanService } from "@minyanim/shared";
+import type { PrayerNeeds, MinyanService, KosherMeta } from "@minyanim/shared";
 
 // better-auth-owned tables (user/session/account/verification) + our phone_number.
 // Field KEYS match better-auth's model fields; DB column names are snake_case.
@@ -26,6 +26,9 @@ export const user = sqliteTable("user", {
   // never sign in) whose stays/events are visible so people find each other. A seed row is CLAIMED
   // and deleted when a real user signs up whose profile phone matches the seed's phone (F4).
   kind: text("kind").notNull().default("real"),
+  // 010: elevated capability. Never settable via signup/profile (input:false in better-auth); set
+  // only by the admin guard when a verified email is in the ADMIN_EMAILS allowlist (010 D2/FR-008).
+  isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -323,3 +326,54 @@ export const beitChabadPin = sqliteTable("beit_chabad_pin", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
+
+// 010: admin-managed category that groups places (worship, restaurants, Chabad houses, mikvehs…).
+// Not a code enum — admins add/rename/reorder/retire without a deploy. Retiring (active=false) hides
+// its places rather than orphaning them. Per-name case-insensitive uniqueness via a NOCASE index in
+// the migration (Drizzle can't express COLLATE — same trick as folder.name, 004).
+export const layer = sqliteTable(
+  "layer",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    icon: text("icon"),
+    displayOrder: integer("display_order").notNull().default(0),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [index("layer_order_idx").on(t.displayOrder)],
+);
+
+// 010: the generic kosher/Jewish place (synagogue, kosher restaurant, Chabad house, mikveh…).
+// Belongs to exactly one layer (cannot exist without one). Rich best-effort fields; a place with at
+// least a name + coordinates is always showable. `beit_chabad_pin` will fold into this in 011.
+export const place = sqliteTable(
+  "place",
+  {
+    id: text("id").primaryKey(),
+    layerId: text("layer_id").notNull().references(() => layer.id, { onDelete: "restrict" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    lat: real("lat").notNull(),
+    lng: real("lng").notNull(),
+    address: text("address"),
+    phone: text("phone"),
+    hours: text("hours"),
+    images: text("images", { mode: "json" }).$type<string[]>(),
+    kosherMeta: text("kosher_meta", { mode: "json" }).$type<KosherMeta>(),
+    // Provenance (server-side only): where the record came from + its license. Records whose license
+    // forbids display are never stored (D5). `attribution` is the renderable string the UI shows.
+    source: text("source").notNull(),
+    sourceId: text("source_id"),
+    license: text("license").notNull(),
+    attribution: text("attribution"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("place_lat_lng_idx").on(t.lat, t.lng),
+    index("place_layer_idx").on(t.layerId),
+    uniqueIndex("place_source_uidx").on(t.source, t.sourceId),
+  ],
+);

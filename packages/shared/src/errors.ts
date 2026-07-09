@@ -34,6 +34,10 @@ export const ERROR_CODES = {
   // 008 — In-app messaging.
   MESSAGE_SELF: "message.self",
   MESSAGE_OPTED_OUT: "message.opted_out",
+  // 010 — Places & admin.
+  AUTH_FORBIDDEN: "auth.forbidden",
+  LAYER_HAS_PLACES: "layer.has_places",
+  LAYER_NAME_TAKEN: "layer.name_taken",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;

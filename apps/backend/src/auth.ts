@@ -45,6 +45,9 @@ export function createAuth(env: Env) {
         theme: { type: "string", required: false, defaultValue: "system", input: true },
         havdalahOpinion: { type: "string", required: false, defaultValue: "geonim", input: true },
         sharePhone: { type: "boolean", required: false, defaultValue: true, input: true },
+        // 010: never settable by the client (input:false) — only the admin guard promotes, from the
+        // ADMIN_EMAILS allowlist. Declared here so better-auth includes it in the user model.
+        isAdmin: { type: "boolean", required: false, defaultValue: false, input: false },
       },
     },
   });
