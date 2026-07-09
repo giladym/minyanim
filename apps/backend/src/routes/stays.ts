@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { CreateStayInput, UpdateStayInput } from "@minyanim/shared";
+import { CreateStayInput, UpdateStayInput, flagContentSchema } from "@minyanim/shared";
+import { flagContent } from "../services/moderationService";
 import { createAuth } from "../auth";
 import { createDb } from "../db/client";
 import { Unauthorized } from "../lib/errors";
@@ -87,4 +88,16 @@ stays.delete("/api/stays/:id/permanent", async (c) => {
   const res = await permanentDeleteStayController(createDb(c.env.DB), userId, id, body.confirm === true);
   c.get("log")?.info("stay.permanently_deleted", { stayId: id });
   return c.json(res);
+});
+
+/** POST /api/stays/:id/flag — flag a Stay for moderation (006). Idempotent per reporter; the 3rd
+ * distinct reporter auto-hides it from discovery. Any signed-in user (not just the owner). */
+stays.post("/api/stays/:id/flag", async (c) => {
+  const userId = await requireUserId(c);
+  const parsed = flagContentSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ errors: parsed.error.issues.map((i) => ({ field: i.path.join("."), code: i.message })) }, 400);
+  }
+  await flagContent(createDb(c.env.DB), "stay", c.req.param("id"), userId, parsed.data);
+  return c.json({ ok: true });
 });

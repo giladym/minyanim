@@ -8,6 +8,8 @@ import {
   type RosterMinyanDTO,
   type PublicMinyanDTO,
   type EventRole,
+  type FlagReason,
+  type FlagContentInput,
 } from "@minyanim/shared";
 import { api } from "./api";
 
@@ -107,7 +109,8 @@ export function useReleaseRole(id: string) {
   });
 }
 
-export const flagMinyan = (id: string) => api(`/events/${id}/flag`, { method: "POST", body: "{}" });
+export const flagMinyan = (id: string, reason: FlagReason) =>
+  api(`/events/${id}/flag`, { method: "POST", body: JSON.stringify({ reason } satisfies FlagContentInput) });
 export function useFlagMinyan(id: string) {
-  return useMutation({ mutationFn: () => flagMinyan(id) });
+  return useMutation({ mutationFn: (reason: FlagReason) => flagMinyan(id, reason) });
 }

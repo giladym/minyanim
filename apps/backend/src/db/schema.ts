@@ -29,6 +29,10 @@ export const user = sqliteTable("user", {
   // 010: elevated capability. Never settable via signup/profile (input:false in better-auth); set
   // only by the admin guard when a verified email is in the ADMIN_EMAILS allowlist (010 D2/FR-008).
   isAdmin: integer("is_admin", { mode: "boolean" }).notNull().default(false),
+  // 006: moderation status — 'active' | 'suspended' | 'banned'. Only the sanction service writes it
+  // (input:false). A timed suspension sets `suspended_until`; an expired one auto-clears to active.
+  status: text("status").notNull().default("active"),
+  suspendedUntil: integer("suspended_until", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
@@ -137,6 +141,9 @@ export const stay = sqliteTable(
     bringsSeferTorah: integer("brings_sefer_torah", { mode: "boolean" }).notNull().default(false),
     prayerNeeds: text("prayer_needs", { mode: "json" }).$type<PrayerNeeds>().notNull(),
     status: text("status").notNull().default("active"),
+    // 006: auto-hidden (≥3 distinct flags) or admin-removed — dropped from public discovery; the
+    // owner still sees it ("under review"). Parallels event.hidden.
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
     contactName: text("contact_name"),
     contactPhone: text("contact_phone"),
     contactEmail: text("contact_email"),
@@ -297,20 +304,26 @@ export const notificationEventLog = sqliteTable(
   (t) => [uniqueIndex("notification_event_log_uidx").on(t.eventId, t.kind, t.threshold)],
 );
 
-// Flag affordance (D19). The 3-flag auto-hide threshold + moderation UI are Feature 006.
+// 006: polymorphic moderation flag — a reporter flags a Stay OR an Event with a reason. No FK on
+// content_id (it targets two tables); contentExists() guards + clearFlags() runs on content removal.
+// One row per reporter per item (idempotent). The 3-flag auto-hide + moderation queue are 006.
 export const flag = sqliteTable(
   "flag",
   {
     id: text("id").primaryKey(),
-    eventId: text("event_id")
-      .notNull()
-      .references(() => event.id, { onDelete: "cascade" }),
+    contentType: text("content_type").notNull(), // 'stay' | 'event'
+    contentId: text("content_id").notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }), // the reporter
+    reason: text("reason").notNull(), // 'spam' | 'inappropriate' | 'fake' | 'other'
+    reportedUserId: text("reported_user_id").references(() => user.id, { onDelete: "cascade" }), // optional user report
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
-  (t) => [uniqueIndex("flag_event_user_uidx").on(t.eventId, t.userId)],
+  (t) => [
+    uniqueIndex("flag_content_user_uidx").on(t.contentType, t.contentId, t.userId),
+    index("flag_content_idx").on(t.contentType, t.contentId),
+  ],
 );
 
 // Static, admin-curated informational pins (D18). Not user-owned.

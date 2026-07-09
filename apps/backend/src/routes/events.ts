@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { CreateEventInput, UpdateEventInput, CreateCommitmentInput, UpdateCommitmentInput } from "@minyanim/shared";
+import { CreateEventInput, UpdateEventInput, CreateCommitmentInput, UpdateCommitmentInput, flagContentSchema } from "@minyanim/shared";
 import { buildCtx } from "../lib/context";
 import { requireUserId, optionalUserId } from "../lib/auth";
 import {
@@ -11,8 +11,7 @@ import {
 import { minyanZmanimController } from "../controllers/zmanimController";
 import { commit, changeCommitment, withdraw } from "../services/commitmentService";
 import { claimRole, releaseRole } from "../services/roleService";
-import { eventExists, flagEvent } from "../repositories/flagRepository";
-import { NotFound } from "../lib/errors";
+import { flagContent } from "../services/moderationService";
 import { createDb } from "../db/client";
 import { EventRoleSchema } from "@minyanim/shared";
 import type { Env } from "../env";
@@ -100,12 +99,14 @@ events.delete("/api/events/:id/roles/:role", async (c) => {
   return c.json({ minyan: await releaseRole(buildCtx(c), userId, c.req.param("id"), role.data) });
 });
 
-/** POST /api/events/:id/flag — flag for moderation (idempotent; thresholds owned by 006 — D19). */
+/** POST /api/events/:id/flag — flag a Minyan for moderation (006). Idempotent per reporter; the 3rd
+ * distinct reporter auto-hides it (server-side). `contentType` is fixed by the route, not the body. */
 events.post("/api/events/:id/flag", async (c) => {
   const userId = await requireUserId(c);
-  const db = createDb(c.env.DB);
-  const id = c.req.param("id");
-  if (!(await eventExists(db, id))) throw NotFound();
-  await flagEvent(db, id, userId);
+  const parsed = flagContentSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ errors: parsed.error.issues.map((i) => ({ field: i.path.join("."), code: i.message })) }, 400);
+  }
+  await flagContent(createDb(c.env.DB), "event", c.req.param("id"), userId, parsed.data);
   return c.json({ ok: true });
 });

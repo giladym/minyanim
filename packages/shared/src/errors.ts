@@ -38,6 +38,10 @@ export const ERROR_CODES = {
   AUTH_FORBIDDEN: "auth.forbidden",
   LAYER_HAS_PLACES: "layer.has_places",
   LAYER_NAME_TAKEN: "layer.name_taken",
+  // 006 — Admin moderation & sanctions.
+  ADMIN_LAST_ADMIN: "admin.last_admin",
+  USER_SUSPENDED: "user.suspended",
+  USER_BANNED: "user.banned",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;

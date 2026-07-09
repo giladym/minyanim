@@ -1,0 +1,22 @@
+diff --git a/dist/pool/index.mjs b/dist/pool/index.mjs
+index 7f2ca738e6e4796a5ba9acdd4c54a809159ccadf..b9bce529896e087b4f32e6c8859afaf7c84b632a 100644
+--- a/dist/pool/index.mjs
++++ b/dist/pool/index.mjs
+@@ -553,7 +553,7 @@ async function pushStackedStorage(intoDepth, persistPath) {
+       }
+       const namePath = path3.join(keyPath, name);
+       const stackFrameNamePath = path3.join(stackFrameKeyPath, name);
+-      assert2(name.endsWith(".sqlite"), `Expected .sqlite, got ${namePath}`);
++      if (!name.endsWith(".sqlite")) continue; /* 006 patch: skip WAL -shm/-wal sidecars instead of asserting */
+       await fs.copyFile(namePath, stackFrameNamePath);
+     }
+   }
+@@ -569,7 +569,7 @@ async function popStackedStorage(fromDepth, persistPath) {
+         break;
+       }
+       const namePath = path3.join(keyPath, name);
+-      assert2(name.endsWith(".sqlite"), `Expected .sqlite, got ${namePath}`);
++      if (!name.endsWith(".sqlite")) continue; /* 006 patch: skip WAL -shm/-wal sidecars instead of asserting */
+       await fs.unlink(namePath);
+     }
+   }
