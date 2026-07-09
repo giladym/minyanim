@@ -6,13 +6,12 @@ const migrations = await readD1Migrations("./migrations");
 
 export default defineWorkersConfig({
   test: {
-    // Retry the intermittent vitest-pool-workers isolated-storage teardown flake: its per-test
-    // snapshot walks the D1 persist dir and asserts every file is `.sqlite`, but WAL mode
-    // occasionally leaves a `-shm`/`-wal` sidecar on write-heavy tests → "Failed to push/pop
-    // isolated storage stack frame". This is an UPSTREAM bug (still present through 0.8.x; only fixed
-    // in versions that require vitest 4). The D1 shim rejects PRAGMA so we can't force a non-WAL mode
-    // from SQL; a retry re-runs the affected test after the sidecar has cleared, which reliably
-    // greens it. Remove once the pool is on a vitest-4-compatible fixed release.
+    // The vitest-pool-workers isolated-storage teardown flake is fixed at the root by a pnpm patch
+    // (patches/@cloudflare__vitest-pool-workers@0.5.41.patch): its per-test snapshot walk asserted
+    // every file in the D1 persist dir ends in `.sqlite`, but WAL leaves a `-shm`/`-wal` sidecar on
+    // write-heavy tests → "Failed to push/pop isolated storage stack frame" (a worker-level crash the
+    // per-test retry below could NOT recover). The patch makes the walk SKIP sidecars. `retry` stays
+    // as a cheap net for any other transient. Drop the patch once on a vitest-4-compatible fixed pool.
     retry: 2,
     setupFiles: ["./test/apply-migrations.ts"],
     poolOptions: {
