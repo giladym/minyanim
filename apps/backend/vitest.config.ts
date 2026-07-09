@@ -6,6 +6,14 @@ const migrations = await readD1Migrations("./migrations");
 
 export default defineWorkersConfig({
   test: {
+    // Retry the intermittent vitest-pool-workers isolated-storage teardown flake: its per-test
+    // snapshot walks the D1 persist dir and asserts every file is `.sqlite`, but WAL mode
+    // occasionally leaves a `-shm`/`-wal` sidecar on write-heavy tests → "Failed to push/pop
+    // isolated storage stack frame". This is an UPSTREAM bug (still present through 0.8.x; only fixed
+    // in versions that require vitest 4). The D1 shim rejects PRAGMA so we can't force a non-WAL mode
+    // from SQL; a retry re-runs the affected test after the sidecar has cleared, which reliably
+    // greens it. Remove once the pool is on a vitest-4-compatible fixed release.
+    retry: 2,
     setupFiles: ["./test/apply-migrations.ts"],
     poolOptions: {
       workers: {
