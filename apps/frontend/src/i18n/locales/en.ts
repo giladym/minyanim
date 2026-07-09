@@ -143,6 +143,15 @@ export const en = {
       confirm: "Yes, add them",
       dismiss: "Not now",
     },
+    places: {
+      title: "Kosher places nearby",
+      pickLocation: "Choose a location to see kosher places around it.",
+      layers: "Layers",
+      empty: "No places found in this area.",
+      mapAlt: "Map of kosher places",
+      googleMaps: "Google Maps",
+      waze: "Waze",
+    },
     admin: {
       nav: "Admin",
       title: "Management",
@@ -377,6 +386,7 @@ export const en = {
       joinCta: "Join",
       noMinyanYet: "No minyan yet — search or organize",
       organizeMinyan: "Organize a minyan here",
+      kosherPlaces: "Kosher places nearby",
       moreActions: "More actions",
       shabbatTimes: "Shabbat times",
       // Form — sections & titles

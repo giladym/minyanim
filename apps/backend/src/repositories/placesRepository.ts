@@ -1,6 +1,7 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { layer, place } from "../db/schema";
+import type { Bbox } from "./discoveryRepository";
 import type { KosherMeta } from "@minyanim/shared";
 
 export type LayerRow = typeof layer.$inferSelect;
@@ -96,4 +97,28 @@ export async function deletePlaceRow(db: Db, id: string): Promise<boolean> {
 /** Whether a layer id exists — validates a place's layer on create/update. */
 export async function layerExists(db: Db, id: string): Promise<boolean> {
   return !!(await getLayer(db, id));
+}
+
+// ── User read path (US1) ──────────────────────────────────────────────────
+/** Active layers only, ordered — the user-facing toggle list. */
+export function listActiveLayers(db: Db): Promise<LayerRow[]> {
+  return db.select().from(layer).where(eq(layer.active, true)).orderBy(asc(layer.displayOrder), asc(layer.name));
+}
+
+/** Places within the bbox that belong to an ACTIVE layer (the 003 near-me scan, reused). */
+export function placesInBbox(db: Db, b: Bbox): Promise<PlaceRow[]> {
+  return db
+    .select()
+    .from(place)
+    .innerJoin(layer, eq(layer.id, place.layerId))
+    .where(
+      and(
+        eq(layer.active, true),
+        gte(place.lat, b.minLat),
+        lte(place.lat, b.maxLat),
+        gte(place.lng, b.minLng),
+        lte(place.lng, b.maxLng),
+      ),
+    )
+    .then((rows) => rows.map((r) => r.place));
 }

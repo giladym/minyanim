@@ -129,7 +129,7 @@ export function StayCard({
               {formatDate(stay.arrivalDate, locale)} – {formatDate(stay.departureDate, locale)}
             </p>
             {folder && (
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-faint">
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">
                 {folder.name}
               </span>
             )}
@@ -255,6 +255,7 @@ function CardMenu({ stay, onCancel, onMove, folders }: { stay: OwnerStayDTO; onC
         <div className="my-1 h-px bg-line" />
         <Link to="/discovery" search={discoverySearch(stay)} className={item}><Icon name="search" size={16} className="text-faint" />{t("stays.findMinyanim")}</Link>
         <Link to="/minyan/new" search={{ fromStay: stay.id }} className={item}><Icon name="users" size={16} className="text-faint" />{t("stays.organizeMinyan")}</Link>
+        <Link to="/places" search={{ lat: stay.lat ?? undefined, lng: stay.lng ?? undefined, city: stay.city }} className={item}><Icon name="map-pin" size={16} className="text-faint" />{t("stays.kosherPlaces")}</Link>
         {onMove && folders && folders.length > 0 && (
           <label className={item + " cursor-pointer"}>
             <Icon name="map-pin" size={16} className="text-faint" />

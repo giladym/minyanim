@@ -4,10 +4,21 @@ import type {
   CreatePlaceInput,
   LayerDTO,
   PlaceDTO,
+  PlacesResponse,
   UpdateLayerInput,
   UpdatePlaceInput,
 } from "@minyanim/shared";
 import { api } from "./api";
+
+// ── User read path (US1) ──────────────────────────────────────────────────
+/** Nearby kosher/Jewish places + active layers around a point. Disabled until coords are known. */
+export function usePlaces(lat: number | null, lng: number | null) {
+  return useQuery({
+    queryKey: ["places", lat, lng] as const,
+    queryFn: () => api<PlacesResponse>(`/places?lat=${lat}&lng=${lng}`),
+    enabled: lat != null && lng != null,
+  });
+}
 
 export const ADMIN_ME_KEY = ["admin", "me"] as const;
 export const ADMIN_LAYERS_KEY = ["admin", "layers"] as const;
