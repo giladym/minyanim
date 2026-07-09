@@ -4,11 +4,13 @@ import type {
   CreatePlaceInput,
   LayerDTO,
   PlaceDTO,
+  PlacesResponse,
   UpdateLayerInput,
   UpdatePlaceInput,
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
 import { AppError, NotFound } from "../lib/errors";
+import { bboxFrom } from "./discoveryService";
 import {
   countPlacesInLayer,
   deleteLayerRow,
@@ -16,13 +18,18 @@ import {
   insertLayer,
   insertPlace,
   layerExists,
+  listActiveLayers,
   listLayers,
   listPlaces,
+  placesInBbox,
   updateLayerRow,
   updatePlaceRow,
   type LayerRow,
   type PlaceRow,
 } from "../repositories/placesRepository";
+
+/** Default "nearby" radius for the places view (km) — kosher infrastructure within reach of a stay. */
+const PLACES_RADIUS_KM = 5;
 
 /** UNIQUE-constraint detector (drizzle wraps the D1 error; the text lives down the cause chain). */
 function isUniqueViolation(err: unknown): boolean {
@@ -126,4 +133,17 @@ export async function updatePlace(db: Db, id: string, input: UpdatePlaceInput): 
 
 export async function deletePlace(db: Db, id: string): Promise<void> {
   if (!(await deletePlaceRow(db, id))) throw NotFound();
+}
+
+// ── User read path (US1) ──────────────────────────────────────────────────
+/** Active layers only — the user-facing toggle list (GET /api/layers). */
+export async function getActiveLayers(db: Db): Promise<LayerDTO[]> {
+  return (await listActiveLayers(db)).map(toLayerDTO);
+}
+
+/** Places near a point (active layers only) + the active-layer list, for the user places view. */
+export async function nearPlaces(db: Db, lat: number, lng: number, radiusKm?: number): Promise<PlacesResponse> {
+  const bbox = bboxFrom(lat, lng, radiusKm ?? PLACES_RADIUS_KM);
+  const [layers, rows] = await Promise.all([listActiveLayers(db), placesInBbox(db, bbox)]);
+  return { layers: layers.map(toLayerDTO), places: rows.map(toPlaceDTO) };
 }

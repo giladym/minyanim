@@ -143,6 +143,15 @@ export const he = {
       confirm: "כן, צרפו אותם",
       dismiss: "לא עכשיו",
     },
+    places: {
+      title: "מקומות כשרים באזור",
+      pickLocation: "בחרו מיקום כדי לראות מקומות כשרים בסביבה.",
+      layers: "שכבות",
+      empty: "לא נמצאו מקומות באזור זה.",
+      mapAlt: "מפת מקומות כשרים",
+      googleMaps: "Google Maps",
+      waze: "Waze",
+    },
     admin: {
       nav: "ניהול",
       title: "ניהול",
@@ -377,6 +386,7 @@ export const he = {
       joinCta: "הצטרפות",
       noMinyanYet: "אין עדיין מניין — לחיפוש או ארגון",
       organizeMinyan: "ארגון מניין כאן",
+      kosherPlaces: "מקומות כשרים בסביבה",
       moreActions: "פעולות נוספות",
       shabbatTimes: "זמני שבת",
       // Form — sections & titles

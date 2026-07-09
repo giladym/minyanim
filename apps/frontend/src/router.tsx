@@ -131,6 +131,17 @@ const messageThreadRoute = createRoute({ getParentRoute: () => authedLayout, pat
 const adminLayoutRoute = createRoute({ getParentRoute: () => authedLayout, path: "/admin", component: lazyRouteComponent(() => import("./features/admin/AdminLayout"), "AdminLayout") });
 const adminLayersRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: "/", component: lazyRouteComponent(() => import("./features/admin/AdminLayersManager"), "AdminLayersManager") });
 const adminPlacesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: "/places", component: lazyRouteComponent(() => import("./features/admin/AdminPlacesManager"), "AdminPlacesManager") });
+// Kosher places near a location (010 US1). ?lat&lng (from a Stay) anchor "nearby"; absent → pick one.
+const placesRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/places",
+  validateSearch: (s): { lat?: number; lng?: number; city?: string } => ({
+    lat: typeof s.lat === "number" ? s.lat : undefined,
+    lng: typeof s.lng === "number" ? s.lng : undefined,
+    city: typeof s.city === "string" ? s.city : undefined,
+  }),
+  component: lazyRouteComponent(() => import("./features/places/PlacesView"), "PlacesView"),
+});
 // Minyan detail (003 US2) — PUBLIC (root-level) so the WhatsApp join link works pre-auth (D13).
 const minyanDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/minyan/$id", component: lazyRouteComponent(() => import("./features/events/MinyanDetail"), "MinyanDetail") });
 
@@ -142,7 +153,7 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   verifyRoute,
   minyanDetailRoute,
-  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute])]),
+  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute]), placesRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });
