@@ -242,7 +242,10 @@ export function AddEditStayForm({
       setErrors((prev) => ({ ...prev, ...next }));
       if (Object.keys(next).some((k) => DETAIL_ERROR_FIELDS.has(k))) setShowDetails(true);
       if (Object.keys(next).length > 0) setFailedAttempt((n) => n + 1);
-      if (err.body.errors.some((e) => !e.field)) setSubmitError(t("auth.error"));
+      // Enforcement codes (banned/suspended) carry a specific, informative message (FR-005); other
+      // non-field errors fall back to the generic notice.
+      const nonField = err.body.errors.find((e) => !e.field);
+      if (nonField) setSubmitError(nonField.code.startsWith("user.") ? t(`errors.${nonField.code}`) : t("auth.error"));
     } else {
       setSubmitError(t("auth.error"));
     }

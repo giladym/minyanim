@@ -8,6 +8,7 @@ import {
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
 import { AppError } from "../lib/errors";
+import { assertUserActive } from "../lib/enforcement";
 import { tzFromCoords, civilDate, todayCivil, coversShabbat } from "../lib/timezone";
 import {
   createStay as repoCreate,
@@ -121,6 +122,7 @@ export async function createStay(
   input: CreateStayInputType,
   clientTz?: string,
 ): Promise<OwnerStayDTO> {
+  await assertUserActive(db, userId); // FR-005/010 — banned/suspended cannot create
   const arrival = toUtcMidnight(input.arrivalDate);
   const departure = toUtcMidnight(input.departureDate);
   const tz = resolveTz(input.lat, input.lng, clientTz);

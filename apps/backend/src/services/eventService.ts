@@ -10,6 +10,7 @@ import {
 } from "@minyanim/shared";
 import type { Ctx } from "../lib/context";
 import { AppError } from "../lib/errors";
+import { assertUserActive } from "../lib/enforcement";
 import { tzFromCoords, civilDate, todayCivil } from "../lib/timezone";
 import { deriveStatus, missingForReady, isShabbatShacharit } from "../lib/minyanStatus";
 import { fuzzCoord } from "../lib/geoPrivacy";
@@ -159,6 +160,7 @@ export async function getMinyan(
  * in one batch, and return the owner view (assembled via the read path).
  */
 export async function hostMinyan(ctx: Ctx, userId: string, input: CreateEventInputType): Promise<OwnerMinyanDTO> {
+  await assertUserActive(ctx.db, userId); // FR-005/010 — banned/suspended cannot host
   const eventDate = toUtcMidnight(input.eventDate);
   assertNotPast(eventDate, input.lat, input.lng);
   const attrs = MinyanAttrsSchema.parse(input.minyan);

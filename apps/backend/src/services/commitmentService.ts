@@ -7,6 +7,7 @@ import {
 import type { Ctx } from "../lib/context";
 import type { Db } from "../db/client";
 import { AppError, NotFound } from "../lib/errors";
+import { assertUserActive } from "../lib/enforcement";
 import { isCompleted } from "../lib/minyanStatus";
 import { getMinyanById } from "../repositories/eventRepository";
 import { getMinyan } from "./eventService";
@@ -34,6 +35,7 @@ export async function commit(
   eventId: string,
   input: CreateCommitmentInputType,
 ): Promise<{ minyan: ParticipantMinyanDTO; conflict: boolean }> {
+  await assertUserActive(ctx.db, userId); // FR-005/010 — banned/suspended cannot commit
   const m = await assertJoinable(ctx.db, eventId);
   const conflict = (await repo.userCommitmentsOnDate(ctx.db, userId, m.eventDate, eventId)).length > 0;
   const now = new Date();

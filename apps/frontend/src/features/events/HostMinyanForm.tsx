@@ -144,7 +144,9 @@ export function HostMinyanForm() {
         const next: Record<string, string> = {};
         for (const e2 of err.body.errors) if (e2.field) next[e2.field] = e2.code;
         setErrors(next);
-        if (err.body.errors.some((e2) => !e2.field)) setSubmitError(t("auth.error"));
+        // Enforcement codes (banned/suspended) get a specific message (FR-005); else the generic notice.
+        const nonField = err.body.errors.find((e2) => !e2.field);
+        if (nonField) setSubmitError(nonField.code.startsWith("user.") ? t(`errors.${nonField.code}`) : t("auth.error"));
       } else setSubmitError(t("auth.error"));
     }
   }

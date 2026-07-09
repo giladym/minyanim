@@ -1,7 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { flag, event, stay } from "../db/schema";
-import type { FlagReason, ModeratedContentType } from "@minyanim/shared";
+import { flag, event, stay, user } from "../db/schema";
+import type { FlagReason, ModeratedContentType, UserStatus } from "@minyanim/shared";
 
 /** Whether the flagged content exists (flagging a missing item is a 404, not an FK error — the
  * polymorphic content_id has no DB FK, so we check the right table by type). */
@@ -56,4 +56,70 @@ export async function getContentOwnerId(db: Db, contentType: ModeratedContentTyp
   }
   const r = await db.select({ owner: stay.userId }).from(stay).where(eq(stay.id, contentId)).limit(1);
   return r[0]?.owner ?? null;
+}
+
+// ── Moderation queue (US3) ──────────────────────────────────────────────────
+export interface FlagGroup {
+  contentType: ModeratedContentType;
+  contentId: string;
+  reporterCount: number;
+  reasonsCsv: string; // "spam,fake"
+  firstFlaggedSec: number; // min(created_at), epoch-seconds (timestamp mode)
+}
+
+/** Flags aggregated per content item — the raw queue rows (the service enriches with content). */
+export async function listFlagGroups(db: Db): Promise<FlagGroup[]> {
+  const rows = await db
+    .select({
+      contentType: flag.contentType,
+      contentId: flag.contentId,
+      reporterCount: sql<number>`count(*)`,
+      reasonsCsv: sql<string>`group_concat(distinct ${flag.reason})`,
+      firstFlaggedSec: sql<number>`min(${flag.createdAt})`,
+    })
+    .from(flag)
+    .groupBy(flag.contentType, flag.contentId);
+  return rows.map((r) => ({ ...r, contentType: r.contentType as ModeratedContentType }));
+}
+
+export interface ContentSummary {
+  city: string;
+  country: string;
+  hidden: boolean;
+  ownerId: string;
+}
+
+/** City/country/hidden/owner for the given event ids (for queue enrichment). */
+export async function eventSummaries(db: Db, ids: string[]): Promise<Map<string, ContentSummary>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db
+    .select({ id: event.id, city: event.city, country: event.country, hidden: event.hidden, ownerId: event.hostUserId })
+    .from(event)
+    .where(inArray(event.id, ids));
+  return new Map(rows.map((r) => [r.id, { city: r.city, country: r.country, hidden: r.hidden, ownerId: r.ownerId }]));
+}
+
+/** City/country/hidden/owner for the given stay ids. */
+export async function staySummaries(db: Db, ids: string[]): Promise<Map<string, ContentSummary>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db
+    .select({ id: stay.id, city: stay.city, country: stay.country, hidden: stay.hidden, ownerId: stay.userId })
+    .from(stay)
+    .where(inArray(stay.id, ids));
+  return new Map(rows.map((r) => [r.id, { city: r.city, country: r.country, hidden: r.hidden, ownerId: r.ownerId }]));
+}
+
+// ── Sanctions (US3) ────────────────────────────────────────────────────────
+/** Set a user's moderation status (+ optional suspension expiry). Only the sanction service calls this. */
+export async function setUserStatus(db: Db, userId: string, status: UserStatus, suspendedUntil: Date | null): Promise<void> {
+  await db.update(user).set({ status, suspendedUntil, updatedAt: new Date() }).where(eq(user.id, userId));
+}
+
+/** Count admins who are currently active — the FR-009 last-admin guard reads this. */
+export async function activeAdminCount(db: Db): Promise<number> {
+  const rows = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(user)
+    .where(and(eq(user.isAdmin, true), eq(user.status, "active")));
+  return Number(rows[0]?.n ?? 0);
 }
