@@ -48,6 +48,9 @@ export function createAuth(env: Env) {
         // 010: never settable by the client (input:false) — only the admin guard promotes, from the
         // ADMIN_EMAILS allowlist. Declared here so better-auth includes it in the user model.
         isAdmin: { type: "boolean", required: false, defaultValue: false, input: false },
+        // 006: moderation status — only the sanction service writes these (input:false).
+        status: { type: "string", required: false, defaultValue: "active", input: false },
+        suspendedUntil: { type: "date", required: false, input: false },
       },
     },
   });

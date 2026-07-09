@@ -424,17 +424,31 @@ export function MinyanDetail() {
 }
 
 /** Discreet "report" affordance (FR-017/D19). Idempotent server-side; the UI just acknowledges. */
+const FLAG_REASONS = ["spam", "inappropriate", "fake", "other"] as const;
+
 function FlagButton({ id }: { id: string }) {
   const { t } = useTranslation();
   const flag = useFlagMinyan(id);
+  if (flag.isSuccess) return <span className="self-start text-xs font-bold text-faint">{t("minyanDetail.flagged")}</span>;
   return (
-    <button
-      type="button"
-      className="self-start text-xs font-bold text-faint disabled:opacity-60"
-      disabled={flag.isPending || flag.isSuccess}
-      onClick={() => flag.mutate()}
-    >
-      {flag.isSuccess ? t("minyanDetail.flagged") : t("minyanDetail.flag")}
-    </button>
+    <details className="group relative self-start">
+      <summary className="cursor-pointer list-none text-xs font-bold text-faint [&::-webkit-details-marker]:hidden">
+        {t("minyanDetail.flag")}
+      </summary>
+      <div className="absolute z-10 mt-1 flex w-52 flex-col rounded-xl border border-line bg-surface p-1.5 shadow-card">
+        <span className="px-2 py-1 text-xs text-muted">{t("moderation.flagReasonPrompt")}</span>
+        {FLAG_REASONS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            className="rounded-lg px-3 py-2 text-start text-sm font-bold text-ink hover:bg-chip disabled:opacity-60"
+            disabled={flag.isPending}
+            onClick={() => flag.mutate(r)}
+          >
+            {t(`moderation.reason.${r}`)}
+          </button>
+        ))}
+      </div>
+    </details>
   );
 }

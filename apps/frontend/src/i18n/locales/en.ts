@@ -143,6 +143,15 @@ export const en = {
       confirm: "Yes, add them",
       dismiss: "Not now",
     },
+    moderation: {
+      flagReasonPrompt: "What's wrong?",
+      reason: {
+        spam: "Spam",
+        inappropriate: "Inappropriate",
+        fake: "Fake / not real",
+        other: "Other",
+      },
+    },
     places: {
       title: "Kosher places nearby",
       pickLocation: "Choose a location to see kosher places around it.",

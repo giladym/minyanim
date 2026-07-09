@@ -13,3 +13,4 @@ export * from "./notification";
 export * from "./message";
 export * from "./claim";
 export * from "./place";
+export * from "./moderation";

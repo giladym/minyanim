@@ -67,6 +67,7 @@ export async function activeStayUserIdsCoveringDate(
     .where(
       and(
         eq(stay.status, "active"),
+        eq(stay.hidden, false),
         gte(stay.lat, b.minLat),
         lte(stay.lat, b.maxLat),
         gte(stay.lng, b.minLng),
@@ -88,6 +89,7 @@ export async function activeStaysInBbox(db: Db, b: Bbox): Promise<PotentialStay[
     .where(
       and(
         eq(stay.status, "active"),
+        eq(stay.hidden, false),
         gte(stay.lat, b.minLat),
         lte(stay.lat, b.maxLat),
         gte(stay.lng, b.minLng),
@@ -114,6 +116,7 @@ export async function coordlessActiveStays(
     .where(
       and(
         eq(stay.status, "active"),
+        eq(stay.hidden, false),
         isNull(stay.lat),
         eq(sql`lower(trim(${stay.city}))`, norm(city)),
         eq(sql`lower(trim(${stay.country}))`, norm(country)),

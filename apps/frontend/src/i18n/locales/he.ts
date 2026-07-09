@@ -143,6 +143,15 @@ export const he = {
       confirm: "כן, צרפו אותם",
       dismiss: "לא עכשיו",
     },
+    moderation: {
+      flagReasonPrompt: "מה הבעיה?",
+      reason: {
+        spam: "ספאם",
+        inappropriate: "תוכן לא הולם",
+        fake: "מזויף / לא אמיתי",
+        other: "אחר",
+      },
+    },
     places: {
       title: "מקומות כשרים באזור",
       pickLocation: "בחרו מיקום כדי לראות מקומות כשרים בסביבה.",
