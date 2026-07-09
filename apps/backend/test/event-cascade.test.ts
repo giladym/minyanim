@@ -33,7 +33,7 @@ describe("account deletion cascades all 003 data (zero orphans)", () => {
     const b = await signIn();
     await SELF.fetch(`https://x/api/events/${eventId}/commit`, { method: "POST", headers: { ...J, cookie: b.cookie }, body: JSON.stringify({ numMen: 9 }) }); // → quorum: host gets a notification
     await SELF.fetch(`https://x/api/events/${eventId}/roles/baal_korei`, { method: "POST", headers: { ...J, cookie: host.cookie }, body: "{}" }); // host claims a role
-    await SELF.fetch(`https://x/api/events/${eventId}/flag`, { method: "POST", headers: { ...J, cookie: host.cookie }, body: "{}" }); // host flags
+    await SELF.fetch(`https://x/api/events/${eventId}/flag`, { method: "POST", headers: { ...J, cookie: host.cookie }, body: JSON.stringify({ reason: "spam" }) }); // host flags (006: reason required)
 
     expect(await count("SELECT COUNT(*) n FROM event WHERE host_user_id = ?", host.id)).toBe(1);
     expect(await count("SELECT COUNT(*) n FROM minyan WHERE event_id = ?", eventId)).toBe(1);
