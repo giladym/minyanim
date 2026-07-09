@@ -1,8 +1,8 @@
 <!-- SPECKIT START -->
-No active feature plan — 001–005 + 007–009 are complete (merged to `develop`, deployed to dev,
+No active feature plan — 001–005 + 007–010 are complete (merged to `develop`, deployed to dev,
 CI/CD via Workers Builds); 006 Admin is specified (`specs/006-admin/`) but not yet built. Start the
-next feature with `/speckit-specify` (remaining v1: 006 Admin + import steps 2–4, see below and
-`specs/ROADMAP.md`). 003 introduced the generic `event` (type=`minyan`) model (ROADMAP
+next feature with `/speckit-specify` (remaining v1: 006 Admin + import steps 2–4 of feature 009, see
+below and `specs/ROADMAP.md`). 003 introduced the generic `event` (type=`minyan`) model (ROADMAP
 decision 10). 004 added folders (`stay.folder_id` FK ON DELETE SET NULL = "Unfiled") + a History view
 (amended 002 FR-005/011, D1). 005 added per-Shabbat zmanim (candle-lighting + Havdalah) computed
 server-side, detail-scoped (`GET /api/stays/:id/zmanim`, `GET /api/events/:id/zmanim`) + a
@@ -36,8 +36,17 @@ own visible stays/events; a real user whose profile phone matches claims+merges 
 (`GET/POST /api/me/claims`, server re-verifies the match) then the seed is deleted; seed contact is
 hidden in discovery until claimed (revises ADR 0008 for seeds). The **dev-only import tool**
 (`tools/seed-import/`) is staged inspect→map→gate→create; **step 1 (CSV→profile.json) is built**,
-steps 2–4 pending a row-semantics decision from a real sheet. Amends 002 FR-005a + 004 FR-004a.
-Product decomposition & shared decisions: `specs/ROADMAP.md`. Design system: `design/DESIGN-SYSTEM.md`.
+steps 2–4 pending a row-semantics decision from a real sheet. 010 **kosher places & map layers**
+(`specs/010-kosher-places/` + ADR 0011; migration 0010): a generic `place` model grouped by
+**admin-managed `layer`**s; a reusable **admin foundation** (`user.is_admin`, `input:false`;
+`requireAdmin` guard; first admin via the `ADMIN_EMAILS` env allowlist, idempotently promoted;
+`/api/admin/*` + an `/admin` UI shell — 006 will extend it); a user **places view** (`GET /api/places`
+bbox scan → accessible list + clustered MapLibre layer + Google Maps/Waze deep links, reachable from a
+Stay's ⋮ menu); and a **dev-only OSM/Overpass importer** (`tools/places-import/`, staged → reviewable
+`upsert.sql` applied via wrangler; idempotent on unique `(source, source_id)`). Additive: it COPIES
+`beit_chabad_pin` into a "Chabad houses" layer; the destructive drop + discovery fold defer to 011.
+Amends 002 FR-005a + 004 FR-004a. Product decomposition & shared decisions: `specs/ROADMAP.md`.
+Design system: `design/DESIGN-SYSTEM.md`.
 
 Architecture (constitution v1.1.0 + docs/architecture.md): **pnpm + Turborepo monorepo** —
 `apps/frontend` (Vite React SPA + TanStack Router/Query on Workers Static Assets),
@@ -51,7 +60,9 @@ D1 sessions; needs a transactional email provider — Resend rec., research D16)
 structured logging via Workers Observability (**no Winston**); JSDoc on exports; KISS.
 `kosher-zmanim` (LGPL) computed SERVER-SIDE ONLY (legal sign-off pending — never ship to
 client). Tests: vitest-pool-workers, Vitest+Testing Library, Playwright + axe-core (WCAG AA).
-Latest migrations: 0008 (`message` table + `user.accept_messages`), 0009 (`user.kind`). A dev-only
-import tool lives outside the workspace at `tools/seed-import/` (Node built-ins, `node --test`).
-Decisions: docs/adr/ (through 0010). No active plan — 001–005 + 007–009 shipped; 006 Admin specified.
+Latest migrations: 0008 (`message` table + `user.accept_messages`), 0009 (`user.kind`), 0010 (`place`
++ `layer` tables + `user.is_admin`; copies beit_chabad pins into a Chabad layer). Dev-only import
+tools live outside the workspace: `tools/seed-import/` (009) + `tools/places-import/` (010) — Node
+built-ins, `node --test`. Decisions: docs/adr/ (through 0011). No active plan — 001–005 + 007–010
+shipped; 006 Admin specified.
 <!-- SPECKIT END -->

@@ -110,6 +110,13 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
   Notification (that is event-driven/system). Feature 008 / ADR 0009.
 - **Seed user** — an imported placeholder (`user.kind='seed'`, synthetic email, no account) that
   owns visible Stays/Minyanim until the real person claims them by phone match. Feature 009 / ADR 0010.
+- **Place** — a kosher/Jewish location (synagogue, kosher restaurant, Chabad house, mikveh…) with
+  coords + rich fields + source/license provenance, grouped by a Layer. Feature 010 / ADR 0011.
+  Generalizes the earlier `beit_chabad_pin`.
+- **Layer** — an admin-managed category grouping Places (not a code enum). Feature 010.
+- **Admin** — an elevated `user.is_admin` capability bootstrapped from the `ADMIN_EMAILS` env
+  allowlist; guards `/api/admin/*` + the `/admin` surface. Foundation built in 010; moderation/metrics
+  are Feature 006.
 - **Admin** — an elevated user role with moderation (remove Stays/Minyanim, ban users),
   Beit Chabad pin curation, and basic platform metrics. Defined in Feature 006.
 
@@ -128,13 +135,15 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
 | **007** | Phone onboarding | Soft post-login nudge for users with no phone → profile with focused field + banner (frontend-only) | 001, 002 |
 | **008** | In-app messaging | Direct user↔user messages, per-recipient opt-out + rate limit, inbox/thread UI (ADR 0009) | 001, 003 |
 | **009** | Seed import + claim | Seed users (`user.kind`), dev-only staged import tool, phone-match claim/merge, seed-contact hidden until claimed (ADR 0010) | 001, 002, 003, 007 |
+| **010** | Kosher places & map layers | Generic `place` + admin-managed `layer`; admin foundation (role + guard + `/admin`); user places view (list + clustered map + Google Maps/Waze); dev-only OSM importer (ADR 0011) | 001, 002, 003 |
 
 **Recommended build order:** 001 → 002 → 003, with 004 and 005 in parallel after 002.
 006 (Admin) can be built any time after 001 but is most useful once 003 produces real data.
 After 001 + 002 the product is usable single-player; 003 adds the multiplayer quorum loop.
-**Status (2026-07-08):** 001–005 + 007–009 shipped to dev; 006 Admin specified but not built;
+**Status (2026-07-09):** 001–005 + 007–010 shipped to dev; 006 Admin specified but not built;
 feature 009 import steps 2–4 (map → gate → create seed rows) pending a real-sheet row-semantics
-decision (`tools/seed-import/` step 1 is built).
+decision (`tools/seed-import/` step 1 is built). Feature 010 established the **admin foundation**
+(role + guard + `/admin`) that 006 will build on.
 
 ---
 

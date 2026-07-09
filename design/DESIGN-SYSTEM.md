@@ -66,6 +66,17 @@ Continuation of the Heritage-Voyage refresh across the app's interactive surface
 - **Claim banner** (`features/stays/ClaimBanner.tsx`, feature 009) + **onboarding banner**
   (`Profile.tsx` with `?onboarding=phone`, feature 007): both are `bg-primary-soft` /
   `border-primary-container` info bands with a green confirm + a muted dismiss.
+- **Kosher places** (`features/places/`, feature 010): a `/places` view with green layer-toggle
+  chips (`aria-pressed`), a clustered MapLibre layer (enhancement) and an **accessible list as the
+  source of truth** — each place row shows layer + kosher chip, a green **Google Maps** + neutral
+  **Waze** deep link, and OSM attribution. Reachable from a Stay's ⋮ menu.
+- **Admin surface** (`features/admin/`, feature 010): the `/admin` shell (guarded on
+  `GET /api/admin/me`) with green Layers / Places tabs; the managers use the standard form styling
+  (green primary CTAs, clay-ink for destructive, `focus:border-primary`). An "Admin" header pill
+  shows only to admins.
+
+> **Chip contrast gotcha:** `text-faint` (`#6b726a`) clears AA on white (4.95:1) but **not** on
+> `bg-chip` (`#f0edec` → 4.25:1). Chip/badge labels use **`text-muted`**, not `text-faint`.
 
 ## Typography
 

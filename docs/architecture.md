@@ -36,8 +36,9 @@ minyanim/
 │                            #   (single source of truth for request/response payloads)
 ├── docs/                    # this folder (architecture, ADRs, secrets, integrations)
 ├── design/                  # design system + homepage assets
-├── tools/                   # dev-only tooling outside the workspace
-│   └── seed-import/         #   staged CSV→DB seed import (Node built-ins; feature 009)
+├── tools/                   # dev-only tooling outside the workspace (Node built-ins; node --test)
+│   ├── seed-import/         #   staged CSV→DB seed import (feature 009)
+│   └── places-import/       #   staged OSM/Overpass → upsert.sql places import (feature 010)
 └── specs/                   # spec-kit features + ROADMAP
 ```
 

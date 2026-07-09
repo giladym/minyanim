@@ -18,5 +18,6 @@ Format per record: **Status · Context · Decision · Consequences · Alternativ
 | [0008](./0008-contact-visibility.md) | Contact reachable before join, with a per-user phone opt-out (revises 003 SC-005/FR-011) | Accepted |
 | [0009](./0009-in-app-messaging.md) | In-app direct messaging: any user, with a per-recipient opt-out + rate limit | Accepted |
 | [0010](./0010-seed-user-claim.md) | Seed users + phone-match claim: in-app confirm (beta), server re-verified | Accepted |
+| [0011](./0011-admin-foundation-and-places.md) | Admin foundation (allowlist-bootstrapped) + generic places catalogue from open data | Accepted |
 
 New ADRs are append-only; supersede rather than rewrite (note "Superseded by ADR-XXXX").
