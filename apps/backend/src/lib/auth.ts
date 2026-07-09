@@ -1,5 +1,7 @@
 import { createAuth } from "../auth";
-import { Unauthorized } from "./errors";
+import { Unauthorized, Forbidden } from "./errors";
+import { createDb } from "../db/client";
+import { findUser, updateUser } from "../repositories/userRepository";
 import type { Env } from "../env";
 
 /** Minimal structural context — accepts any Hono context regardless of its `Variables`. */
@@ -26,4 +28,30 @@ export async function optionalUserId(c: AuthCtx): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Resolve the user id and require ADMIN, or throw (401 if signed out, 403 otherwise). Admin iff the
+ * user row is already `isAdmin`, OR the account email is in the `ADMIN_EMAILS` allowlist — in which
+ * case the row is **idempotently promoted** (010 D2/FR-008). This is the ONLY writer of `isAdmin`:
+ * the first admin is set purely by configuring the allowlist secret + signing in (no self-service
+ * promotion, no DB edit). A session for an allowlisted email already implies control of it — Google
+ * SSO emails are provider-verified and prod email/password sign-in is gated on verification.
+ */
+export async function requireAdmin(c: AuthCtx): Promise<string> {
+  const userId = await requireUserId(c);
+  const db = createDb(c.env.DB);
+  const u = await findUser(db, userId);
+  if (u?.isAdmin) return userId;
+
+  const allow = (c.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const email = (u?.email ?? "").toLowerCase();
+  if (email && allow.includes(email)) {
+    await updateUser(db, userId, { isAdmin: true });
+    return userId;
+  }
+  throw Forbidden();
 }

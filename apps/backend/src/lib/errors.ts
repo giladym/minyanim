@@ -17,5 +17,6 @@ export class AppError extends Error {
 }
 
 export const Unauthorized = () => new AppError(401, ERROR_CODES.AUTH_REQUIRED);
+export const Forbidden = () => new AppError(403, ERROR_CODES.AUTH_FORBIDDEN);
 export const NotFound = () => new AppError(404, ERROR_CODES.RESOURCE_NOT_FOUND);
 export const RateLimited = () => new AppError(429, ERROR_CODES.RATE_LIMITED);

@@ -25,6 +25,8 @@ export default defineWorkersConfig({
             // Geocoding route returns canned results in tests (no live MapTiler calls); the
             // live/error paths are covered by service-level tests with an injected fetch.
             GEO_MODE: "mock",
+            // 010: admin allowlist for the guard test — a user with this email is promoted to admin.
+            ADMIN_EMAILS: "admin@example.com",
           },
         },
       },

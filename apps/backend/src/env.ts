@@ -20,4 +20,8 @@ export interface Env {
   REQUIRE_EMAIL_VERIFICATION?: string;
   /** "true" disables rate limiting (e2e only, to avoid shared-IP throttling). Default: on. */
   RATE_LIMIT_DISABLED?: string;
+  /** 010: comma-separated allowlist of admin emails (a secret). A signed-in user whose account email
+   * is listed is idempotently promoted to admin by the guard — bootstraps the first admin with no
+   * self-service promotion and no DB edit. */
+  ADMIN_EMAILS?: string;
 }
