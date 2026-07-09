@@ -8,6 +8,7 @@ import { RouteAnnouncer } from "./RouteAnnouncer";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 import { useNotifications } from "../lib/notifications";
 import { useConversations } from "../lib/messages";
+import { useAdminMe } from "../lib/places";
 import { PHONE_NUDGE_KEY } from "../lib/onboarding";
 
 // Finding a minyan is the app's primary action — it's the center FAB, not a side tab. The four
@@ -29,6 +30,7 @@ export function AppShell() {
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
   const unread = useNotifications().data?.unread ?? 0;
   const msgUnread = useConversations().data?.unread ?? 0;
+  const isAdmin = useAdminMe().data?.isAdmin ?? false;
   const initial = (session?.user?.name || session?.user?.email || "").trim().charAt(0).toUpperCase() || "•";
 
   // A manual theme/lang change must win over a late-arriving profile sync, otherwise the
@@ -85,6 +87,7 @@ export function AppShell() {
         </a>
         <HeaderCalendar />
         <div className="flex items-center gap-2">
+          {isAdmin && <a href="/admin" className={pill}>{t("admin.nav")}</a>}
           <button className={pill} onClick={toggleTheme}>{t("theme.toggle")}</button>
           <button className={pill} onClick={toggleLang}>{i18n.resolvedLanguage === "he" ? "EN" : "עב"}</button>
           <a href="/messages" aria-label={t("messages.title")} className="relative flex h-8 w-8 items-center justify-center rounded-full border border-line text-muted">

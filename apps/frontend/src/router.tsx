@@ -127,6 +127,10 @@ const notificationsRoute = createRoute({ getParentRoute: () => authedLayout, pat
 // Direct messages (008): inbox + per-correspondent thread.
 const messagesRoute = createRoute({ getParentRoute: () => authedLayout, path: "/messages", component: lazyRouteComponent(() => import("./features/messages/Messages"), "MessagesPage") });
 const messageThreadRoute = createRoute({ getParentRoute: () => authedLayout, path: "/messages/$userId", component: lazyRouteComponent(() => import("./features/messages/Messages"), "MessageThreadPage") });
+// Admin surface (010): /admin shell (guards on GET /api/admin/me) with Layers + Places manager tabs.
+const adminLayoutRoute = createRoute({ getParentRoute: () => authedLayout, path: "/admin", component: lazyRouteComponent(() => import("./features/admin/AdminLayout"), "AdminLayout") });
+const adminLayersRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: "/", component: lazyRouteComponent(() => import("./features/admin/AdminLayersManager"), "AdminLayersManager") });
+const adminPlacesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: "/places", component: lazyRouteComponent(() => import("./features/admin/AdminPlacesManager"), "AdminPlacesManager") });
 // Minyan detail (003 US2) — PUBLIC (root-level) so the WhatsApp join link works pre-auth (D13).
 const minyanDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/minyan/$id", component: lazyRouteComponent(() => import("./features/events/MinyanDetail"), "MinyanDetail") });
 
@@ -138,7 +142,7 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   verifyRoute,
   minyanDetailRoute,
-  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute, messagesRoute, messageThreadRoute]),
+  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute])]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });
