@@ -15,7 +15,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "pnpm --filter @minyanim/backend dev --port 8787 --local --var REQUIRE_EMAIL_VERIFICATION:false --var RATE_LIMIT_DISABLED:true --var GEO_MODE:mock",
+      command: "pnpm --filter @minyanim/backend dev --port 8787 --local --var REQUIRE_EMAIL_VERIFICATION:false --var RATE_LIMIT_DISABLED:true --var GEO_MODE:mock --var ADMIN_EMAILS:admin-e2e@example.com",
       url: "http://localhost:8787/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
