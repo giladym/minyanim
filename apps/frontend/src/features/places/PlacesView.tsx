@@ -96,7 +96,7 @@ function PlaceRow({ place: p, layer }: { place: PlaceDTO; layer?: LayerDTO }) {
           {p.address && <span className="text-sm text-muted">{p.address}</span>}
         </span>
         <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-          {layer && <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-faint">{layer.name}</span>}
+          {layer && <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">{layer.name}</span>}
           {p.kosherMeta?.dietary && <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary-ink">{t(DIETARY_KEY[p.kosherMeta.dietary] ?? "")}</span>}
         </span>
       </div>

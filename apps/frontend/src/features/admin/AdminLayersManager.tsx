@@ -75,7 +75,7 @@ function LayerRow({ layer }: { layer: LayerDTO }) {
       <div className="flex flex-wrap items-center gap-2">
         <input className={field + " flex-1"} value={name} aria-label={t("admin.layerName")} onChange={(e) => setName(e.target.value)} />
         <input type="number" min={0} className={field + " w-20"} value={order} aria-label={t("admin.layerOrder")} onChange={(e) => setOrder(Math.max(0, Math.floor(Number(e.target.value)) || 0))} />
-        {!layer.active && <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-faint">{t("admin.retired")}</span>}
+        {!layer.active && <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">{t("admin.retired")}</span>}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {dirty && (

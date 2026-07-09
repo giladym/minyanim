@@ -148,7 +148,7 @@ function HistoryStayCard({
         <span
           className={
             "rounded-full px-2.5 py-1 text-xs font-bold " +
-            (cancelled ? "bg-chip text-faint" : "bg-teal-soft text-teal-ink")
+            (cancelled ? "bg-chip text-muted" : "bg-teal-soft text-teal-ink")
           }
         >
           {cancelled ? t("history.cancelled") : t("history.attended")}

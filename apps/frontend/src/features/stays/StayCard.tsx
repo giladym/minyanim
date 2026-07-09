@@ -129,7 +129,7 @@ export function StayCard({
               {formatDate(stay.arrivalDate, locale)} – {formatDate(stay.departureDate, locale)}
             </p>
             {folder && (
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-faint">
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">
                 {folder.name}
               </span>
             )}
