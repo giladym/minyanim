@@ -320,10 +320,10 @@ export const he = {
       missing: "עדיין חסר",
       seferTorah: "ספר תורה",
       loading: "טוען…",
-      mapAlt: "מפת מניינים ונקודות בית חב״ד באזור",
-      beitChabad: "בית חב״ד",
+      mapAlt: "מפת מניינים ומקומות באזור",
       phone: "טלפון",
-      beitChabadInfo: "למידע בלבד — לא ניתן להצטרף",
+      placeInfo: "למידע בלבד — לא ניתן להצטרף",
+      placeLayers: "שכבות מקומות",
     },
     host: {
       title: "אירוח מניין",

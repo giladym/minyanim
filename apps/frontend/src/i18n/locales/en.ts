@@ -320,10 +320,10 @@ export const en = {
       missing: "Still needs",
       seferTorah: "Sefer Torah",
       loading: "Loading…",
-      mapAlt: "Map of minyanim and Beit Chabad pins in this area",
-      beitChabad: "Beit Chabad",
+      mapAlt: "Map of minyanim and places in this area",
       phone: "Phone",
-      beitChabadInfo: "Informational — not joinable",
+      placeInfo: "Informational — not joinable",
+      placeLayers: "Place layers",
     },
     host: {
       title: "Host a minyan",

@@ -41,7 +41,12 @@ const RESULT = {
       rolesFilled: { baalTefila: false, baalKorei: false }, createdAt: 0, updatedAt: 0,
     },
   ],
-  beitChabad: [], attribution: "© MapTiler © OpenStreetMap contributors",
+  places: [
+    { id: "place_c1", layerId: "layer_chabad_houses", name: "בית חב״ד זקופנה", description: null,
+      lat: 49.3, lng: 19.95, address: "רחוב 1", phone: "+48180000000", hours: null, images: [], kosherMeta: null, attribution: null },
+  ],
+  layers: [{ id: "layer_chabad_houses", name: "בתי חב״ד", icon: "chabad", displayOrder: 0, active: true }],
+  attribution: "© MapTiler © OpenStreetMap contributors",
 };
 
 describe("DiscoveryPage", () => {
@@ -90,6 +95,20 @@ describe("DiscoveryPage", () => {
     expect(await screen.findByText("המניין שלך")).toBeInTheDocument();
     expect(screen.getByText(/לניהול המניין/)).toBeInTheDocument();
     expect(screen.queryByText(/להצטרפות/)).not.toBeInTheDocument();
+  });
+
+  it("renders a place-layer toggle (Chabad houses) that flips its pressed state (011)", async () => {
+    useDiscovery.mockReturnValue({ data: RESULT, isFetching: false });
+    const user = userEvent.setup();
+    render(<DiscoveryPage />);
+    await user.type(screen.getByLabelText("חיפוש עיר"), "Zako");
+    await user.click(await screen.findByRole("button", { name: "Zakopane, Poland" }));
+    await user.type(screen.getByLabelText("מתאריך"), "2027-08-01");
+    await user.type(screen.getByLabelText("עד תאריך"), "2027-08-31");
+
+    const toggle = await screen.findByRole("button", { name: "בתי חב״ד", pressed: true });
+    await user.click(toggle);
+    expect(screen.getByRole("button", { name: "בתי חב״ד", pressed: false })).toBeInTheDocument();
   });
 
   it("shows nothing until a center and dates are chosen", () => {

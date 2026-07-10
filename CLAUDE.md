@@ -1,15 +1,21 @@
 <!-- SPECKIT START -->
-No active feature plan — 001–010 are complete (merged to `develop`, deployed to dev, CI/CD via
-Workers Builds). 006 **Admin** is now built (`specs/006-admin/`): US1/US2 flag-with-reason +
+No active feature plan. **011 Beit Chabad → Places consolidation** is built
+(`specs/011-beit-chabad-consolidation/`): the legacy `beit_chabad_pin` table + bespoke discovery overlay
+are retired; the generic `place`/`layer` model (010) is the single source of truth for Chabad houses
+(migration 0012 reconciles then drops the table). Discovery now sources Chabad houses (and any active
+layer's places) via the generic `placesInBbox`/`PlaceDTO` path — `DiscoveryResult` dropped
+`beitChabad`/`BeitChabadPinDTO` and gained `places: PlaceDTO[]` + `layers: LayerDTO[]`; the discovery map
+renders per-layer toggles (mirroring the `/places` view). 001–010 are complete (merged to `develop`,
+deployed to dev, CI/CD via Workers Builds). 006 **Admin** is built (`specs/006-admin/`): US1/US2 flag-with-reason +
 auto-hide at 3 distinct reporters (#43); US3 moderation queue + user sanctions (warn/suspend/ban/
 reinstate, FR-009 last-admin guard) + `assertUserActive` enforcement on create-stay/host-minyan/
 commit; US5 metrics dashboard (`GET /api/admin/metrics` → counts + form→host→quorum funnel +
 top locations). All moderation/metrics endpoints live on the existing `/api/admin/*` router behind
 `requireAdmin`. US4 (Beit Chabad curation) is DELIVERED VIA 010's places manager — no 006 endpoint;
-the destructive `beit_chabad_pin` retirement + discovery fold is 011. Migration 0011 (`flag` reshape
-to polymorphic `{contentType, contentId, reason, reportedUserId}` + `stay.hidden` + `user.status`/
-`suspended_until`) shipped with #43. Start the next feature with `/speckit-specify` (remaining v1:
-011 + import steps 2–4 of feature 009, see below and `specs/ROADMAP.md`). 003 introduced the generic `event` (type=`minyan`) model (ROADMAP
+the destructive `beit_chabad_pin` retirement + discovery fold shipped in 011 (migration 0012). Migration
+0011 (`flag` reshape to polymorphic `{contentType, contentId, reason, reportedUserId}` + `stay.hidden` +
+`user.status`/`suspended_until`) shipped with #43. Start the next feature with `/speckit-specify`
+(remaining v1: import steps 2–4 of feature 009, see below and `specs/ROADMAP.md`). 003 introduced the generic `event` (type=`minyan`) model (ROADMAP
 decision 10). 004 added folders (`stay.folder_id` FK ON DELETE SET NULL = "Unfiled") + a History view
 (amended 002 FR-005/011, D1). 005 added per-Shabbat zmanim (candle-lighting + Havdalah) computed
 server-side, detail-scoped (`GET /api/stays/:id/zmanim`, `GET /api/events/:id/zmanim`) + a
@@ -51,7 +57,8 @@ steps 2–4 pending a row-semantics decision from a real sheet. 010 **kosher pla
 bbox scan → accessible list + clustered MapLibre layer + Google Maps/Waze deep links, reachable from a
 Stay's ⋮ menu); and a **dev-only OSM/Overpass importer** (`tools/places-import/`, staged → reviewable
 `upsert.sql` applied via wrangler; idempotent on unique `(source, source_id)`). Additive: it COPIES
-`beit_chabad_pin` into a "Chabad houses" layer; the destructive drop + discovery fold defer to 011.
+`beit_chabad_pin` into a "Chabad houses" layer; 011 then reconciled + dropped it (migration 0012) and
+folded the discovery Chabad overlay into the generic places layer path.
 Amends 002 FR-005a + 004 FR-004a. Product decomposition & shared decisions: `specs/ROADMAP.md`.
 Design system: `design/DESIGN-SYSTEM.md`.
 
@@ -67,9 +74,9 @@ D1 sessions; needs a transactional email provider — Resend rec., research D16)
 structured logging via Workers Observability (**no Winston**); JSDoc on exports; KISS.
 `kosher-zmanim` (LGPL) computed SERVER-SIDE ONLY (legal sign-off pending — never ship to
 client). Tests: vitest-pool-workers, Vitest+Testing Library, Playwright + axe-core (WCAG AA).
-Latest migrations: 0008 (`message` table + `user.accept_messages`), 0009 (`user.kind`), 0010 (`place`
-+ `layer` tables + `user.is_admin`), 0011 (006: `flag` reshaped polymorphic + reason + reportedUser;
-`stay.hidden`; `user.status` + `suspended_until`). Dev-only import tools live outside the workspace:
-`tools/seed-import/` (009) + `tools/places-import/` (010) — Node built-ins, `node --test`. Decisions:
-docs/adr/ (through 0011). No active plan — 001–010 shipped (006 built); next: 011.
+Latest migrations: 0009 (`user.kind`), 0010 (`place` + `layer` tables + `user.is_admin`), 0011 (006:
+`flag` reshaped polymorphic + reason + reportedUser; `stay.hidden`; `user.status` + `suspended_until`),
+0012 (011: reconcile `beit_chabad_pin` → `place` then DROP the table). Dev-only import tools live outside
+the workspace: `tools/seed-import/` (009) + `tools/places-import/` (010) — Node built-ins, `node --test`.
+Decisions: docs/adr/ (through 0011). 001–011 shipped; next v1 remainder: import steps 2–4 of feature 009.
 <!-- SPECKIT END -->

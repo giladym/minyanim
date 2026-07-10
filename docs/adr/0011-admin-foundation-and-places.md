@@ -47,6 +47,10 @@ Migration **0010** (place + layer tables, `user.is_admin`). Applied to remote de
 - **Deferred (to 011):** the destructive `beit_chabad_pin` **drop** + folding discovery's Chabad query
   into `place`. 010 ships **additively** — it copies the pins into a "Chabad houses" layer and leaves
   the old table + discovery untouched, so there is no data loss or discovery regression.
+  **✅ Done in 011** (migration 0012, `specs/011-beit-chabad-consolidation/`): the reconcile-then-drop
+  landed and discovery now sources Chabad houses (and any active layer) via the generic
+  `placesInBbox`/`PlaceDTO` path — `DiscoveryResult.beitChabad`/`BeitChabadPinDTO` removed, `places` +
+  `layers` added, with per-layer toggles on the discovery map. `place` is the single source of truth.
 
 ## Alternatives
 

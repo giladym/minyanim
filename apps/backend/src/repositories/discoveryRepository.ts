@@ -1,6 +1,6 @@
 import { and, eq, gte, lte, ne, isNull, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { stay, beitChabadPin, user } from "../db/schema";
+import { stay, user } from "../db/schema";
 
 export interface Bbox {
   minLat: number;
@@ -124,27 +124,5 @@ export async function coordlessActiveStays(
     );
   return rows.map(normalizeStay);
 }
-
-/** Static Beit Chabad pins inside the bounding box (D18). */
-export async function beitChabadInBbox(db: Db, b: Bbox) {
-  return db
-    .select({
-      id: beitChabadPin.id,
-      name: beitChabadPin.name,
-      address: beitChabadPin.address,
-      phone: beitChabadPin.phone,
-      city: beitChabadPin.city,
-      country: beitChabadPin.country,
-      lat: beitChabadPin.lat,
-      lng: beitChabadPin.lng,
-    })
-    .from(beitChabadPin)
-    .where(
-      and(
-        gte(beitChabadPin.lat, b.minLat),
-        lte(beitChabadPin.lat, b.maxLat),
-        gte(beitChabadPin.lng, b.minLng),
-        lte(beitChabadPin.lng, b.maxLng),
-      ),
-    );
-}
+// (011) `beitChabadInBbox` was removed — the discovery map now surfaces Chabad houses (and any other
+// active layer's places) via the generic `placesInBbox` in placesRepository. See discoveryService.

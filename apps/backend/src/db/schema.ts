@@ -326,19 +326,9 @@ export const flag = sqliteTable(
   ],
 );
 
-// Static, admin-curated informational pins (D18). Not user-owned.
-export const beitChabadPin = sqliteTable("beit_chabad_pin", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  address: text("address"),
-  phone: text("phone"),
-  city: text("city").notNull(),
-  country: text("country").notNull(),
-  lat: real("lat").notNull(),
-  lng: real("lng").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
+// (011) The legacy `beit_chabad_pin` table was retired here — Chabad houses now live in the generic
+// `place` model under the admin-managed "Chabad houses" layer (SoT). Migration 0012 reconciled any
+// remaining pins into `place` then dropped the table.
 
 // 010: admin-managed category that groups places (worship, restaurants, Chabad houses, mikvehs…).
 // Not a code enum — admins add/rename/reorder/retire without a deploy. Retiring (active=false) hides
@@ -360,7 +350,7 @@ export const layer = sqliteTable(
 
 // 010: the generic kosher/Jewish place (synagogue, kosher restaurant, Chabad house, mikveh…).
 // Belongs to exactly one layer (cannot exist without one). Rich best-effort fields; a place with at
-// least a name + coordinates is always showable. `beit_chabad_pin` will fold into this in 011.
+// least a name + coordinates is always showable. Chabad houses are just one layer here (011).
 export const place = sqliteTable(
   "place",
   {
