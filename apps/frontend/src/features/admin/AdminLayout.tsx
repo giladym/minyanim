@@ -31,6 +31,7 @@ export function AdminLayout() {
         <Link to="/admin" className={tab(path === "/admin")}>{t("admin.layersTab")}</Link>
         <Link to="/admin/places" className={tab(path.startsWith("/admin/places"))}>{t("admin.placesTab")}</Link>
         <Link to="/admin/moderation" className={tab(path.startsWith("/admin/moderation"))}>{t("admin.moderationTab")}</Link>
+        <Link to="/admin/metrics" className={tab(path.startsWith("/admin/metrics"))}>{t("admin.metricsTab")}</Link>
       </nav>
       <Outlet />
     </div>

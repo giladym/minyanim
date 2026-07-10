@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { LayerDTO, PlaceDTO, ModerationQueueEntryDTO } from "@minyanim/shared";
+import type { LayerDTO, PlaceDTO, ModerationQueueEntryDTO, AdminMetricsDTO } from "@minyanim/shared";
 
 const createLayer = vi.fn(() => Promise.resolve({}));
 const createPlace = vi.fn(() => Promise.resolve({}));
@@ -26,6 +26,10 @@ vi.mock("../../lib/moderation", () => ({
   useContentAction: () => ({ mutate: contentAction, isPending: false }),
   useSanctionUser: () => ({ mutate: sanction, isPending: false }),
 }));
+let metrics: AdminMetricsDTO;
+vi.mock("../../lib/metrics", () => ({
+  useAdminMetrics: () => ({ data: metrics, isLoading: false, isError: false }),
+}));
 // Stub the map picker (its MapLibre/geo deps aren't needed to test the manager UI).
 vi.mock("../stays/LocationPicker", () => ({
   LocationPicker: () => <div data-testid="location-picker" />,
@@ -34,6 +38,7 @@ vi.mock("../stays/LocationPicker", () => ({
 import { AdminLayersManager } from "./AdminLayersManager";
 import { AdminPlacesManager } from "./AdminPlacesManager";
 import { ModerationQueue } from "./ModerationQueue";
+import { AdminMetrics } from "./AdminMetrics";
 import "../../i18n";
 
 beforeEach(() => {
@@ -43,6 +48,14 @@ beforeEach(() => {
   entries = [
     { contentType: "event", contentId: "evt_1", reporterCount: 3, reasons: ["spam", "fake"], hidden: true, reportedUserId: "usr_owner", content: { city: "וינה", country: "AT" }, createdAt: 1_700_000_000_000 },
   ];
+  metrics = {
+    users: { total: 12, admins: 2, suspended: 1, banned: 0 },
+    stays: { total: 8, active: 5, hidden: 1 },
+    minyanim: { total: 6, forming: 3, ready: 2, cancelled: 1, hidden: 0 },
+    funnel: { potential: 5, hosted: 6, quorum: 2 },
+    moderation: { openFlags: 3, autoHidden: 1 },
+    topLocations: [{ city: "וינה", country: "AT", count: 4 }],
+  };
 });
 
 describe("AdminLayersManager", () => {
@@ -93,5 +106,18 @@ describe("ModerationQueue", () => {
     entries = [];
     render(<ModerationQueue />);
     expect(screen.getByText("אין פריטים הממתינים לטיפול.")).toBeInTheDocument();
+  });
+});
+
+describe("AdminMetrics", () => {
+  it("renders the funnel (with the quorum north-star), counts and top locations", () => {
+    render(<AdminMetrics />);
+    // Funnel north-star + a couple of representative counts render.
+    expect(screen.getByText("הגיעו למניין")).toBeInTheDocument();
+    expect(screen.getByText("מתפללים פוטנציאליים")).toBeInTheDocument();
+    expect(screen.getAllByText("12").length).toBeGreaterThan(0); // users.total
+    // Top locations row.
+    expect(screen.getByText(/וינה/)).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
   });
 });

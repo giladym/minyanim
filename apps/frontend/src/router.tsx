@@ -133,6 +133,8 @@ const adminLayersRoute = createRoute({ getParentRoute: () => adminLayoutRoute, p
 const adminPlacesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: "/places", component: lazyRouteComponent(() => import("./features/admin/AdminPlacesManager"), "AdminPlacesManager") });
 // Moderation queue + sanctions (006 US3).
 const adminModerationRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: "/moderation", component: lazyRouteComponent(() => import("./features/admin/ModerationQueue"), "ModerationQueue") });
+// Metrics dashboard (006 US5).
+const adminMetricsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: "/metrics", component: lazyRouteComponent(() => import("./features/admin/AdminMetrics"), "AdminMetrics") });
 // Kosher places near a location (010 US1). ?lat&lng (from a Stay) anchor "nearby"; absent → pick one.
 const placesRoute = createRoute({
   getParentRoute: () => authedLayout,
@@ -155,7 +157,7 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   verifyRoute,
   minyanDetailRoute,
-  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute, adminModerationRoute]), placesRoute]),
+  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute, adminModerationRoute, adminMetricsRoute]), placesRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });

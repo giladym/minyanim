@@ -29,6 +29,7 @@ import {
   sanctionUser,
   type SanctionAction,
 } from "../services/moderationService";
+import { getMetrics } from "../services/metricsService";
 import type { Env } from "../env";
 
 /** Narrow the `:contentType` route param to the moderated set, or 404 (defence-in-depth). */
@@ -143,3 +144,9 @@ function sanctionRoute(action: SanctionAction) {
   });
 }
 (["warn", "suspend", "ban", "reinstate"] as const).forEach(sanctionRoute);
+
+// ── Metrics (006 US5) ────────────────────────────────────────────────────────
+admin.get("/api/admin/metrics", async (c) => {
+  await requireAdmin(c);
+  return c.json(await getMetrics(createDb(c.env.DB)));
+});

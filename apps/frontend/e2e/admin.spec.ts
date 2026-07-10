@@ -23,6 +23,18 @@ test("admin surface is WCAG-clean and an admin can manage layers", async ({ page
   await expect(page.getByLabel(/שם המקום|Place name/)).toBeVisible();
   const placesAxe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(placesAxe.violations).toEqual([]);
+
+  // Moderation queue tab (006 US3) — empty state, axe-clean.
+  await page.getByRole("link", { name: /^פיקוח$|^Moderation$/ }).click();
+  await expect(page.getByText(/אין פריטים הממתינים לטיפול|Nothing awaiting review/)).toBeVisible();
+  const modAxe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+  expect(modAxe.violations).toEqual([]);
+
+  // Metrics tab (006 US5) — the funnel + counts render and are axe-clean.
+  await page.getByRole("link", { name: /^מדדים$|^Metrics$/ }).click();
+  await expect(page.getByText(/הגיעו למניין|Reached quorum/)).toBeVisible();
+  const metricsAxe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+  expect(metricsAxe.violations).toEqual([]);
 });
 
 test("a non-admin is redirected away from /admin", async ({ page }) => {
