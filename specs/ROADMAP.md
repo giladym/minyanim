@@ -87,7 +87,7 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
   Dark / System in v1, default "system"), zero or more phone numbers (E.164). Supports
   self-service account deletion that cascade-removes all data the user owns (Stays,
   Minyanim they host, commitments, folders).
-- **Stay (שהייה)** — a user's presence at a place over a date range. Fields: location
+- **Stay (יעד)** — a user's presence at a place over a date range. Fields: location
   (city, country, coordinates), specific address (private), arrival date, departure
   date, number of men in party, brings Sefer Torah, prayer needs (Shabbat always;
   weekday tefillot optional), notes, group members, folder, status.

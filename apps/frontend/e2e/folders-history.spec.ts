@@ -23,7 +23,7 @@ async function createStay(page: Page, city: string, country: string) {
   await page.getByLabel(/^מדינה$|^Country$/).fill(country);
   await page.getByLabel(/תאריך הגעה|Arrival date/).fill(dateInput(10));
   await page.getByLabel(/תאריך עזיבה|Departure date/).fill(dateInput(12));
-  await page.getByRole("button", { name: /שמירת מיקום|Save location/ }).click();
+  await page.getByRole("button", { name: /שמירת יעד|Save location/ }).click();
   await page.waitForURL(/\/stays(\?|$)/);
 }
 
@@ -60,7 +60,7 @@ test("browse-by-folder: assign a Stay and filter to its folder", async ({ page }
   await page.getByRole("button", { name: "טיול קיץ" }).click();
   await expect(page.getByRole("heading", { name: "ברלין, גרמניה" })).toBeVisible();
   await page.getByRole("button", { name: /ללא תיקייה|Unfiled/ }).click();
-  await expect(page.getByText(/אין מיקומים בתיקייה הזו|No locations in this folder/)).toBeVisible();
+  await expect(page.getByText(/אין יעדים בתיקייה הזו|No locations in this folder/)).toBeVisible();
 });
 
 test("WCAG 2.1 AA: the History view is axe-clean", async ({ page }) => {
@@ -68,7 +68,7 @@ test("WCAG 2.1 AA: the History view is axe-clean", async ({ page }) => {
   await page.goto("/stays/history");
   await expect(page.getByRole("heading", { name: /היסטוריה|History/ })).toBeVisible();
   // Empty history is a valid, accessible state.
-  await expect(page.getByText(/אין עדיין מיקומים בהיסטוריה|No locations in your history/)).toBeVisible();
+  await expect(page.getByText(/אין עדיין יעדים בהיסטוריה|No locations in your history/)).toBeVisible();
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(results.violations).toEqual([]);
 });

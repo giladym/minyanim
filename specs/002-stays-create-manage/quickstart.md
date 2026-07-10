@@ -15,7 +15,7 @@ duplicating them. Implementation details live in `tasks.md` + the code.
 
 ## Scenario 1 — Register a Stay in < 90s (US1, SC-001)
 
-1. From the empty My Stays dashboard, click **"הוסף שהייה"**.
+1. From the empty My Stays dashboard, click **"הוסף יעד"**.
 2. In the location search, type a city (Hebrew or English) → pick a result; the map confirms and
    city/country/coordinates auto-fill (`GET /api/geo/search`).
 3. Required fields only: arrival + departure dates, `numMen` (defaults to 1). Shabbat tefillot
@@ -42,7 +42,7 @@ duplicating them. Implementation details live in `tasks.md` + the code.
    location, date range, men count, Sefer Torah badge when set.
 3. Create a Stay whose departure already passed (destination-local). **Expected**: rendered as
    past (derived `isPast`), visually distinct; cancelled Stays absent.
-4. Empty state: a brand-new user sees the explanation + single "הוסף שהייה" CTA.
+4. Empty state: a brand-new user sees the explanation + single "הוסף יעד" CTA.
 
 ## Scenario 3 — Edit & cancel (US3)
 

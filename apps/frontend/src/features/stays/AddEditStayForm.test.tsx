@@ -156,7 +156,7 @@ describe("AddEditStayForm — smart defaults & disclosure", () => {
     render(<AddEditStayForm />);
     expect(screen.getByLabelText("כמה גברים בקבוצה (כולל אותך)")).toHaveValue(1);
     // Let the async profile prefill settle so its state update isn't an unwrapped act() warning.
-    await screen.findByRole("button", { name: "שמירת מיקום" });
+    await screen.findByRole("button", { name: "שמירת יעד" });
   });
 
   it("pre-fills contact name from the profile", async () => {
@@ -322,7 +322,7 @@ describe("AddEditStayForm — duplicate prefill (004 US3 / D9)", () => {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function submitButton() {
-  return screen.getByRole("button", { name: "שמירת מיקום" });
+  return screen.getByRole("button", { name: "שמירת יעד" });
 }
 
 async function fillDates(user: ReturnType<typeof userEvent.setup>, arrival: string, departure: string) {

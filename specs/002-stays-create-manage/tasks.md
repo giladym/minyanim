@@ -62,7 +62,7 @@ monorepo `apps/frontend`, `apps/backend`, `packages/shared`. Builds on 001.
 
 ## Phase 4: User Story 2 — View & Sort My Stays (P1)
 
-- [x] T022 [US2] `StaysDashboard.tsx` (replaces 001 `StaysPlaceholder`) + `StayCard.tsx`: nearest-first list, empty state ("הוסף שהייה" CTA + explainer), past-stay distinct styling (derived `isPast`), Sefer Torah badge; wire `/stays`
+- [x] T022 [US2] `StaysDashboard.tsx` (replaces 001 `StaysPlaceholder`) + `StayCard.tsx`: nearest-first list, empty state ("הוסף יעד" CTA + explainer), past-stay distinct styling (derived `isPast`), Sefer Torah badge; wire `/stays`
 - [x] T023 [P] [US2] Backend test: list sort (nearest-first, active only) + derived `isPast`/`coversShabbat` in `apps/backend/test/stays.test.ts`
 - [x] T024 [P] [US2] e2e `apps/frontend/e2e/stays.spec.ts`: empty state, create→appears, sort order, past styling (+ `GEO_MODE=mock` backend in `playwright.config.ts`)
 

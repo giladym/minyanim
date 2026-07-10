@@ -25,7 +25,7 @@ AA-corrected tokens), Assistant Hebrew display type, RTL-first.
    column ~`70ch` max. (Clear text+CTA heroes test ~20% higher than image-heavy.)
 2. **Live activity globe / map** — world lighting up as travelers converge; pulsing pins;
    animated arcs. A counter ("X גברים, Y ערים, Z מניינים").
-3. **"איך זה עובד"** — 3 steps (רשמו שהייה · גלו מי באזור · ארחו והשלימו מניין), scroll-revealed.
+3. **"איך זה עובד"** — 3 steps (רשמו יעד · גלו מי באזור · ארחו והשלימו מניין), scroll-revealed.
 4. **The problem/mission** — warm narrative: the manual Excel/WhatsApp pain → a minyan
    anywhere. Optional documentary photography of travelers/Shabbat.
 5. **Social-proof drip** — community quotes/logos mid-page and a testimonial beside the CTA.

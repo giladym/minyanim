@@ -35,15 +35,15 @@ async function createStay(
     // Controlled number input: confirm the value settled before submitting.
     await expect(men).toHaveValue(String(opts.numMen));
   }
-  await page.getByRole("button", { name: /שמירת מיקום|Save location/ }).click();
+  await page.getByRole("button", { name: /שמירת יעד|Save location/ }).click();
   await page.waitForURL(/\/stays(\?|$)/);
 }
 
 test("empty state shows explainer + a single prominent CTA", async ({ page }) => {
   await signIn(page);
   await page.goto("/stays");
-  await expect(page.getByText(/עדיין לא רשמתם מיקום|haven't registered a location/)).toBeVisible();
-  const cta = page.getByRole("link", { name: /הוסף מיקום|Add a location/ });
+  await expect(page.getByText(/עדיין לא רשמתם יעד|haven't registered a location/)).toBeVisible();
+  const cta = page.getByRole("link", { name: /הוסף יעד|Add a location/ });
   await expect(cta).toBeVisible();
   await cta.click();
   await expect(page).toHaveURL(/\/stays\/new/);
@@ -53,8 +53,8 @@ test("create a Stay (manual entry) → it appears on the dashboard", async ({ pa
   await signIn(page);
   await createStay(page, { city: "לונדון", country: "בריטניה", arrivalDays: 10, departureDays: 12 });
   await expect(page.getByRole("heading", { name: "לונדון, בריטניה" })).toBeVisible();
-  // After a create, the just-saved card confirms ("המיקום נשמר") and promotes hosting a minyan (#4).
-  await expect(page.getByText("המיקום נשמר")).toBeVisible();
+  // After a create, the just-saved card confirms ("היעד נשמר") and promotes hosting a minyan (#4).
+  await expect(page.getByText("היעד נשמר")).toBeVisible();
   await expect(page.getByText(/רוצים מניין כאן|Want a minyan here/)).toBeVisible();
 });
 
@@ -100,11 +100,11 @@ test("cancel a Stay → it leaves the active list", async ({ page }) => {
   await signIn(page);
   await createStay(page, { city: "רומא", country: "איטליה", arrivalDays: 6, departureDays: 9 });
   await page.getByLabel(/פעולות נוספות|More actions/).first().click();
-  await page.getByRole("button", { name: /ביטול מיקום|Cancel location/ }).first().click();
+  await page.getByRole("button", { name: /ביטול יעד|Cancel location/ }).first().click();
   // Confirmation dialog (Profile danger-zone pattern).
-  await page.getByRole("button", { name: /כן, בטל את המיקום|Yes, cancel the location/ }).click();
+  await page.getByRole("button", { name: /כן, בטל את היעד|Yes, cancel the location/ }).click();
   await expect(page.getByRole("heading", { name: "רומא, איטליה" })).toHaveCount(0);
-  await expect(page.getByText(/עדיין לא רשמתם מיקום|haven't registered a location/)).toBeVisible();
+  await expect(page.getByText(/עדיין לא רשמתם יעד|haven't registered a location/)).toBeVisible();
 });
 
 test("WCAG 2.1 AA: dashboard with a Stay is axe-clean", async ({ page }) => {
@@ -118,7 +118,7 @@ test("WCAG 2.1 AA: dashboard with a Stay is axe-clean", async ({ page }) => {
 test("WCAG 2.1 AA: the add-Stay form is axe-clean and RTL", async ({ page }) => {
   await signIn(page);
   await page.goto("/stays/new");
-  await expect(page.getByRole("heading", { name: /מיקום חדש|New location/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /יעד חדש|New location/ })).toBeVisible();
   // Form is rendered RTL (Hebrew-first).
   await expect(page.locator("div[dir='rtl']").first()).toBeVisible();
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
