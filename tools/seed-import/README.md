@@ -47,6 +47,36 @@ Use `profile.json` to answer **"what does a row represent?"** (one person + one 
 with many trips across rows? does a row also describe a hosted minyan?) — that decision drives the
 seed schema and steps 2–4.
 
+## Steps 2–4 — map → gate → SQL (dry-run)  ✅
+
+One command runs the rest of the pipeline and writes reviewable artifacts (never touches a DB):
+
+```sh
+# 1) capture the phones already owned by REAL users (collision-gate input):
+wrangler d1 execute minyanim --remote --json \
+  --command "SELECT p.e164 AS e164 FROM phone_number p JOIN \"user\" u ON u.id=p.user_id WHERE u.kind='real'" \
+  > existing-real-phones.json
+
+# 2) map + gate + generate SQL (dry-run):
+node tools/seed-import/src/build.ts <export.csv> --out <outdir> --existing-phones existing-real-phones.json
+```
+
+Writes `records.json` (Step 2 map), `accepted.json` / `rejected.json` (Step 3 gates), and `upsert.sql`
+(Step 4). Gates: **E.164 phone**, **resolvable city** (`MappingConfig.cityCountry`), **valid dates**,
+and the **collision gate** — a seed whose phone already belongs to a real user is reported + excluded
+(never create a redundant seed the person would "claim" from themselves). Candidate minyanim are derived
+from stay coverage (a person attends a Shabbat within their dates); each event is hosted by a real seed
+attendee. `upsert.sql` leads with `DELETE FROM "user" WHERE kind='seed'` → idempotent re-apply.
+
+The sheet layout lives in **`ZAKOPANE_MAPPING`** (`mapping.ts`) — header-row offset + column→field map
++ city→country/coords + the season's Shabbatot. Point it at a different sheet by editing/adding a config.
+
+**Apply (dev only, manual — writes real PII):**
+
+```sh
+wrangler d1 execute minyanim --remote --file <outdir>/upsert.sql
+```
+
 ## Tests
 
 ```sh
@@ -56,6 +86,6 @@ node --test tools/seed-import/src/*.test.ts
 ## Status
 
 - [x] Step 1 — inspect / convert (`inspect.ts`, `csv.ts`, `profile.ts`)
-- [ ] Step 2 — map + Zod schema validation (pending: row-semantics decision from the profile)
-- [ ] Step 3 — quality gates (E.164 phone normalization; location resolution via the app's geocoder)
-- [ ] Step 4 — create seed users/stays(/events) against dev D1, `--dry-run` first
+- [x] Step 2 — map (`mapping.ts`: `MappingConfig` + `mapSheet`; `ZAKOPANE_MAPPING`)
+- [x] Step 3 — quality + collision gates (`gates.ts`: `toE164`, `toIso`, `gate`, `deriveEvents`)
+- [x] Step 4 — SQL generation + dry-run CLI (`sql.ts`, `build.ts`) → reviewable `upsert.sql`, applied manually via wrangler
