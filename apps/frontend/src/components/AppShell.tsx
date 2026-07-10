@@ -82,7 +82,7 @@ export function AppShell() {
 
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-line2 bg-header px-4 py-3 md:px-8">
         <a href="/stays" className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-clay text-lg font-extrabold text-on-clay">מ</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-clay text-lg font-extrabold text-on-clay">J</span>
           <span className="text-xl font-extrabold">{t("app.name")}</span>
         </a>
         <HeaderCalendar />

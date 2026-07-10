@@ -45,7 +45,7 @@ function Nav() {
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-line bg-bg/90 px-5 py-3.5 backdrop-blur md:px-12">
       <div className="flex items-center gap-2.5">
         <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-primary text-lg font-extrabold text-on-primary">
-          מ
+          J
         </div>
         <span className="font-display text-xl font-extrabold">{t("app.name")}</span>
       </div>
@@ -86,7 +86,7 @@ function Section({ id, className = "", children }: { id?: string; className?: st
   );
 }
 
-const eyebrow = "text-xs font-extrabold uppercase tracking-[0.14em] text-clay";
+const eyebrow = "text-sm font-extrabold uppercase tracking-[0.12em] text-clay";
 
 export function Home() {
   const { t } = useTranslation();
