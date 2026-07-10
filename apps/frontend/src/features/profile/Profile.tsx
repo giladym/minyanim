@@ -6,6 +6,9 @@ import { ApiError } from "../../lib/api";
 import { PhoneInput } from "./PhoneInput";
 import { useTheme, type Theme } from "../../theme/ThemeProvider";
 import { authClient } from "../../lib/auth-client";
+import { Avatar } from "../media/Avatar";
+import { ImageUploader } from "../media/ImageUploader";
+import { deleteImage } from "../../lib/media";
 
 const E164 = /^\+[1-9]\d{1,14}$/;
 const field = "w-full rounded-lg border border-line2 bg-surface px-3 py-2.5 text-ink outline-none transition focus:border-primary";
@@ -98,6 +101,25 @@ export function ProfilePage() {
       )}
 
       {saveErr && <p role="alert" className="rounded-lg bg-clay-soft px-4 py-2.5 text-sm font-bold text-clay-ink">{saveErr}</p>}
+
+      <section className={card}>
+        <span className={secHead}>{t("media.avatarTitle")}</span>
+        <div className="flex items-center gap-4">
+          <Avatar src={p.image} name={p.name} size={64} />
+          <div className="flex flex-col gap-2">
+            <ImageUploader kind="avatar" parentId={p.id} label={t("media.addPhoto")} onUploaded={load} />
+            {p.image && (
+              <button
+                type="button"
+                className="text-sm font-bold text-clay-ink"
+                onClick={() => void deleteImage(p.image!).then(load)}
+              >
+                {t("media.removeAvatar")}
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className={card}>
         <span className={secHead}>{t("profile.name")}</span>

@@ -15,3 +15,4 @@ export * from "./claim";
 export * from "./place";
 export * from "./moderation";
 export * from "./metrics";
+export * from "./media";

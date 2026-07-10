@@ -11,6 +11,9 @@ import { getStay, useCreateStay, useUpdateStay } from "../../lib/stays";
 import { useFolders, useCreateFolder } from "../../lib/folders";
 import { ApiError } from "../../lib/api";
 import { LocationPicker, type LocationValue } from "./LocationPicker";
+import { Gallery } from "../media/Gallery";
+import { ImageUploader } from "../media/ImageUploader";
+import { deleteImage } from "../../lib/media";
 import { PrayerNeeds } from "./PrayerNeeds";
 
 const fieldCls =
@@ -101,7 +104,8 @@ export function AddEditStayForm({
   const [addressPrivate, setAddressPrivate] = useState("");
   const [groupMembers, setGroupMembers] = useState("");
   const [notes, setNotes] = useState("");
-  const [contactName, setContactName] = useState("");
+  const [images, setImages] = useState<string[]>([]); // 012: stay photo gallery (edit mode)
+    const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [folderId, setFolderId] = useState<string | null>(null);
@@ -183,6 +187,7 @@ export function AddEditStayForm({
         setContactPhone(s.contactPhone ?? "");
         setContactEmail(s.contactEmail ?? "");
         setFolderId(s.folderId ?? null);
+        setImages(s.images ?? []);
         if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
       })
       .catch(() => setSubmitError(t("stays.loadError")));
@@ -540,6 +545,18 @@ export function AddEditStayForm({
         </Card>
 
         <p className="text-xs text-muted">{t("stays.formPrivacy")}</p>
+
+        {isEdit && stayId && (
+          <section className="flex flex-col gap-2 border-t border-line pt-4">
+            <span className="text-xs font-bold uppercase tracking-wide text-faint">{t("media.photos")}</span>
+            <Gallery
+              images={images}
+              itemName={location.city || t("stays.title")}
+              onRemove={(ref) => void deleteImage(ref).then(() => setImages((xs) => xs.filter((r) => r !== ref)))}
+            />
+            <ImageUploader kind="stay" parentId={stayId} onUploaded={(ref) => setImages((xs) => [...xs, ref])} />
+          </section>
+        )}
 
         {submitError && (
           <p role="alert" className="text-sm font-bold text-clay-ink">{submitError}</p>

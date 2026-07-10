@@ -21,7 +21,7 @@ const stay: OwnerStayDTO = {
   arrivalDate: Date.UTC(2026, 6, 14), departureDate: Date.UTC(2026, 6, 16), numMen: 2,
   bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
   status: "active", isPast: false, coversShabbat: false, contactName: null, contactPhone: null,
-  contactEmail: null, groupMembers: null, notes: null, folderId: null, historyTag: null,
+  contactEmail: null, groupMembers: null, notes: null, folderId: null, historyTag: null, images: null,
   createdAt: 0, updatedAt: 0,
 };
 

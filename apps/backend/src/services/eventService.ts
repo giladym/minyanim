@@ -62,6 +62,8 @@ function buildPublic(
     services: m.services,
     notes: m.notes,
     hostName: m.hostName,
+    hostImage: m.hostImage,
+    images: m.images ?? null,
     committedMen,
     status: deriveStatus(readiness),
     isShabbatShacharit: isShabbatShacharit(m.services, m.eventDate),

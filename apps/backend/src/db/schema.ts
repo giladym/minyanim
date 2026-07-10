@@ -149,6 +149,8 @@ export const stay = sqliteTable(
     contactEmail: text("contact_email"),
     groupMembers: text("group_members"),
     notes: text("notes"),
+    // 012: owner-managed photo gallery (R2 refs). Follows the Stay's visibility/moderation state.
+    images: text("images", { mode: "json" }).$type<string[]>(),
     // 004 D4: "Unfiled" = NULL. ON DELETE SET NULL reassigns a deleted folder's Stays to Unfiled
     // in a single DELETE (no app-side loop, no interactive txn).
     folderId: text("folder_id").references(() => folder.id, { onDelete: "set null" }),
@@ -189,6 +191,8 @@ export const event = sqliteTable(
     addressNotes: text("address_notes"),
     eventDate: integer("event_date", { mode: "timestamp" }).notNull(),
     notes: text("notes"),
+    // 012: host-managed photo gallery (R2 refs). Follows the Minyan's visibility/moderation state.
+    images: text("images", { mode: "json" }).$type<string[]>(),
     status: text("status").notNull().default("forming"),
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

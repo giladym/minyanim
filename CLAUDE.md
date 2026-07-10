@@ -1,5 +1,14 @@
 <!-- SPECKIT START -->
-No active feature plan. **011 Beit Chabad → Places consolidation** is built
+No active feature plan. **012 Media uploads** is built (`specs/012-media-uploads/`): one shared R2-backed
+pipeline (`mediaService` + `storageRepository` over the `IMAGES` bucket; `POST/DELETE/GET /api/media`)
+for user avatars (`user.image`), Stay/Minyan galleries (`stay.images`/`event.images`, migration 0013) and
+admin place photos (`place.images`). Parent-scoped keys `{kind}/{parentId}/{uuid}` drive authz + orphan
+cleanup; uploads are magic-byte-sniffed + size-capped + server-side EXIF/GPS-stripped (zero-dep
+`lib/imageMeta`, + client `<canvas>` downscale); images are served via a visibility-gated Worker route
+(a moderation-hidden minyan / a private stay gate their images). FE media components (`features/media/`:
+`ImageUploader`/`Gallery`/`Avatar`) are **provider-free** (plain `lib/media` fns + local state). Needs a
+one-time R2 bucket per env (`wrangler r2 bucket create`; dev = `minyanim-images-dev`).
+**011 Beit Chabad → Places consolidation** is built
 (`specs/011-beit-chabad-consolidation/`): the legacy `beit_chabad_pin` table + bespoke discovery overlay
 are retired; the generic `place`/`layer` model (010) is the single source of truth for Chabad houses
 (migration 0012 reconciles then drops the table). Discovery now sources Chabad houses (and any active
@@ -76,7 +85,9 @@ structured logging via Workers Observability (**no Winston**); JSDoc on exports;
 client). Tests: vitest-pool-workers, Vitest+Testing Library, Playwright + axe-core (WCAG AA).
 Latest migrations: 0009 (`user.kind`), 0010 (`place` + `layer` tables + `user.is_admin`), 0011 (006:
 `flag` reshaped polymorphic + reason + reportedUser; `stay.hidden`; `user.status` + `suspended_until`),
-0012 (011: reconcile `beit_chabad_pin` → `place` then DROP the table). Dev-only import tools live outside
-the workspace: `tools/seed-import/` (009) + `tools/places-import/` (010) — Node built-ins, `node --test`.
-Decisions: docs/adr/ (through 0011). 001–011 shipped; next v1 remainder: import steps 2–4 of feature 009.
+0012 (011: reconcile `beit_chabad_pin` → `place` then DROP the table), 0013 (012: `stay.images` +
+`event.images`). Object storage: R2 bucket `IMAGES` (012; dev `minyanim-images-dev`) holds uploaded image
+bytes. Dev-only import tools live outside the workspace: `tools/seed-import/` (009) +
+`tools/places-import/` (010) — Node built-ins, `node --test`. Decisions: docs/adr/ (through 0012).
+001–012 shipped; next v1 remainder: import steps 2–4 of feature 009.
 <!-- SPECKIT END -->

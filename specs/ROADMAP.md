@@ -140,7 +140,10 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
 **Recommended build order:** 001 → 002 → 003, with 004 and 005 in parallel after 002.
 006 (Admin) can be built any time after 001 but is most useful once 003 produces real data.
 After 001 + 002 the product is usable single-player; 003 adds the multiplayer quorum loop.
-**Status (2026-07-10):** 001–011 shipped to dev. **006 Admin built** — moderation (flag+reason,
+**Status (2026-07-10):** 001–012 shipped to dev. **012 Media uploads built** — one shared R2-backed
+pipeline (`/api/media` upload/delete/serve) for user avatars, Stay/Minyan photo galleries, and admin
+place photos; magic-byte validation + server-side EXIF/GPS strip + visibility-gated serving + orphan
+cleanup (migration 0013; R2 bucket `minyanim-images-dev`). **006 Admin built** — moderation (flag+reason,
 auto-hide at 3, admin queue, dismiss/remove), user sanctions (warn/suspend/ban/reinstate + last-admin
 guard) with create-path enforcement, and a metrics dashboard (counts + form→host→quorum funnel + top
 locations); US4 Beit Chabad curation delivered via 010's places manager. **011 built** — retired
@@ -148,7 +151,8 @@ locations); US4 Beit Chabad curation delivered via 010's places manager. **011 b
 houses; discovery sources them via the generic places layer path with per-layer toggles (no regression).
 Feature 010 established the **admin foundation** (role + guard + `/admin`). Remaining v1: feature 009
 import steps 2–4 (map → gate → create seed rows) pending a real-sheet row-semantics decision
-(`tools/seed-import/` step 1 is built).
+(`tools/seed-import/` step 1 is built); + thin 012 follow-ups (roster/message avatars; user/seed avatar
+cleanup on delete/merge).
 
 ---
 

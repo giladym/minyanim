@@ -105,6 +105,7 @@ function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
     notes: row.notes,
     folderId: row.folderId,
     historyTag,
+    images: row.images ?? null,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
   };

@@ -42,6 +42,10 @@ export const ERROR_CODES = {
   ADMIN_LAST_ADMIN: "admin.last_admin",
   USER_SUSPENDED: "user.suspended",
   USER_BANNED: "user.banned",
+  // 012 — Media uploads.
+  IMAGE_TYPE_INVALID: "image.type_invalid",
+  IMAGE_TOO_LARGE: "image.too_large",
+  IMAGE_GALLERY_FULL: "image.gallery_full",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | string;

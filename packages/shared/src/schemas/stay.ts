@@ -119,6 +119,8 @@ export interface OwnerStayDTO {
    * `attended` if past, else `null` (active/upcoming). Owner-only — omitted from `PublicStayDTO`.
    */
   historyTag: "attended" | "cancelled" | null;
+  /** Owner-managed photo gallery refs (012); owner-only. */
+  images: string[] | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -129,7 +131,7 @@ export interface OwnerStayDTO {
  */
 export type PublicStayDTO = Omit<
   OwnerStayDTO,
-  "addressPrivate" | "contactPhone" | "contactEmail" | "historyTag"
+  "addressPrivate" | "contactPhone" | "contactEmail" | "historyTag" | "images"
 >;
 
 /**

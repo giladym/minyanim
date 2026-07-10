@@ -1,6 +1,9 @@
 /** Worker bindings + secrets. Secrets resolved via env (see docs/secrets.md). */
 export interface Env {
   DB: D1Database;
+  /** 012: R2 bucket for uploaded image bytes (avatars / stay+minyan galleries / place photos).
+   * Refs live on the parent D1 rows; keys are `{kind}/{parentId}/{uuid}.{ext}`. */
+  IMAGES: R2Bucket;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   BETTER_AUTH_SECRET: string;

@@ -49,6 +49,7 @@ const stay = (id: string, departure: number, tag: "attended" | "cancelled"): Own
   notes: null,
   folderId: null,
   historyTag: tag,
+  images: null,
   createdAt: 0,
   updatedAt: 0,
 });
