@@ -9,6 +9,8 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 // Signed-in viewer (so the public-but-authed path shows the Join form, not the sign-in CTA).
 vi.mock("../../lib/auth-client", () => ({ authClient: { useSession: () => ({ data: { user: { id: "viewer" } } }) } }));
+// KosherPlacesCard (nearby entry) fetches active layers via useLayers — stub it (no QueryClient).
+vi.mock("../../lib/places", () => ({ useLayers: () => ({ data: { layers: [] } }) }));
 
 const useMinyan = vi.fn();
 const commitMutateAsync = vi.fn();

@@ -20,6 +20,7 @@ import {
 import { useMinyanZmanim } from "../../lib/zmanim";
 import { useProfile } from "../../lib/profile";
 import { ZmanimSection } from "../stays/ZmanimSection";
+import { KosherPlacesCard } from "../places/KosherPlacesCard";
 import { Avatar } from "../media/Avatar";
 import { Gallery } from "../media/Gallery";
 import { ImageUploader } from "../media/ImageUploader";
@@ -424,6 +425,10 @@ export function MinyanDetail() {
           />
         </section>
       )}
+
+      {/* Kosher places near the minyan — prefilled entry to the full places map (city-fuzzed coords
+          are fine for "nearby"). */}
+      <KosherPlacesCard lat={m.lat} lng={m.lng} city={m.city} country={m.country} />
 
       {isOwner(m) && m.status !== "cancelled" && (
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">

@@ -1,25 +1,50 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LayerDTO, PlaceDTO } from "@minyanim/shared";
 import { usePlaces } from "../../lib/places";
+import { searchPlaces } from "../../lib/geo";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { PlacesMap } from "./PlacesMap";
 import { googleMapsUrl, wazeUrl } from "./navLinks";
 
-/** Read optional lat/lng from the URL (entry from a Stay) without needing router context (testable). */
-function coordsFromUrl(): { lat: number; lng: number } | null {
+/** Read the location prefill from the URL (entry from a Stay / Minyan / Discovery) without needing
+ * router context (keeps this testable). Coordinates anchor directly; a city-only entry is geocoded. */
+function prefillFromUrl(): { lat: number; lng: number } | null {
   const q = new URLSearchParams(window.location.search);
   const lat = Number(q.get("lat"));
   const lng = Number(q.get("lng"));
   return q.get("lat") && q.get("lng") && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 }
+function cityFromUrl(): { city: string; country: string } {
+  const q = new URLSearchParams(window.location.search);
+  return { city: q.get("city") ?? "", country: q.get("country") ?? "" };
+}
 
 /** Kosher/Jewish places near a location (010 US1): layer toggles + clustered map + an accessible list
  * (the source of truth) with one-tap Google Maps / Waze navigation per place. */
 export function PlacesView() {
-  const { t } = useTranslation();
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(coordsFromUrl);
-  const [picker, setPicker] = useState<LocationValue>({ city: "", country: "", lat: null, lng: null });
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage === "en" ? "en" : "he";
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(prefillFromUrl);
+  // Seed the fallback picker with any city passed in the URL so a coordless entry still shows where
+  // it means — and lets the geocode effect (below) resolve coordinates without the user re-typing.
+  const [picker, setPicker] = useState<LocationValue>(() => ({ ...cityFromUrl(), lat: null, lng: null }));
+
+  // City-only entry (a Stay with no stored coordinates): geocode the city name to a centre once, so
+  // reaching places from a Stay/Minyan prefills the map instead of dropping the user on "pick a place".
+  useEffect(() => {
+    if (coords || !picker.city) return;
+    let cancelled = false;
+    searchPlaces(picker.city, lang)
+      .then((r) => {
+        const hit = r.results[0];
+        if (!cancelled && hit) setCoords({ lat: hit.lat, lng: hit.lng });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // Run once for the initial city prefill; later manual picks set coords directly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { data, isLoading } = usePlaces(coords?.lat ?? null, coords?.lng ?? null);
   const [off, setOff] = useState<Set<string>>(new Set()); // retired-from-view layer ids (toggles)
 

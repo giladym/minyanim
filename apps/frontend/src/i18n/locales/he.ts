@@ -211,6 +211,8 @@ export const he = {
     },
     places: {
       title: "מקומות כשרים באזור",
+      nearbyTitle: "מקומות כשרים בסביבה",
+      openMap: "פתחו מפת מקומות כשרים",
       pickLocation: "בחרו מיקום כדי לראות מקומות כשרים בסביבה.",
       layers: "שכבות",
       empty: "לא נמצאו מקומות באזור זה.",
@@ -338,6 +340,7 @@ export const he = {
       phone: "טלפון",
       placeInfo: "למידע בלבד — לא ניתן להצטרף",
       placeLayers: "שכבות מקומות",
+      placesTitle: "מקומות יהודיים באזור",
     },
     host: {
       title: "אירוח מניין",
@@ -494,6 +497,8 @@ export const he = {
         searching: "מחפש…",
         noResults: "לא נמצאו תוצאות. אפשר להזין עיר ומדינה ידנית.",
         selected: "מיקום נבחר",
+        change: "שנה מיקום",
+        done: "סיום",
         manualToggle: "הכנס עיר ידנית",
         searchToggle: "חזרה לחיפוש על המפה",
         city: "עיר",

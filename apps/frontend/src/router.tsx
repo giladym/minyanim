@@ -139,10 +139,11 @@ const adminMetricsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, 
 const placesRoute = createRoute({
   getParentRoute: () => authedLayout,
   path: "/places",
-  validateSearch: (s): { lat?: number; lng?: number; city?: string } => ({
+  validateSearch: (s): { lat?: number; lng?: number; city?: string; country?: string } => ({
     lat: typeof s.lat === "number" ? s.lat : undefined,
     lng: typeof s.lng === "number" ? s.lng : undefined,
     city: typeof s.city === "string" ? s.city : undefined,
+    country: typeof s.country === "string" ? s.country : undefined,
   }),
   component: lazyRouteComponent(() => import("./features/places/PlacesView"), "PlacesView"),
 });

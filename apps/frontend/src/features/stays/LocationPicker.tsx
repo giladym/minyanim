@@ -52,7 +52,9 @@ export function LocationPicker({
 }) {
   const { t, i18n } = useTranslation();
   const [manual, setManual] = useState(false);
-  const [query, setQuery] = useState("");
+  // Seed the search box with any city already on the value (edit/expand) so the field isn't blank —
+  // the current location is visible and re-searchable, not lost behind an empty input.
+  const [query, setQuery] = useState(value.city ?? "");
   const [results, setResults] = useState<GeoResult[]>([]);
   const [attribution, setAttribution] = useState("");
   const [searching, setSearching] = useState(false);

@@ -20,6 +20,15 @@ export function usePlaces(lat: number | null, lng: number | null) {
   });
 }
 
+/** Active place layers (for filter chips / entry points) — no coordinates needed. Cached 5 min. */
+export function useLayers() {
+  return useQuery({
+    queryKey: ["layers"] as const,
+    queryFn: () => api<{ layers: LayerDTO[] }>("/layers"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export const ADMIN_ME_KEY = ["admin", "me"] as const;
 export const ADMIN_LAYERS_KEY = ["admin", "layers"] as const;
 export const adminPlacesKey = (layerId?: string) => ["admin", "places", layerId ?? "all"] as const;
