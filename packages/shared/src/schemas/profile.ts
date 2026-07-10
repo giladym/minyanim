@@ -35,5 +35,7 @@ export interface Profile {
   sharePhone: boolean;
   /** Whether the user accepts in-app messages from others (008). */
   acceptMessages: boolean;
+  /** Avatar ref (012); null = none → initials placeholder. */
+  image: string | null;
   phones: PhoneNumber[];
 }

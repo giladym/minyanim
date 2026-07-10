@@ -41,6 +41,7 @@ function toOwnerResponse(dto: OwnerStayDTO): OwnerStayDTO {
     notes: dto.notes,
     folderId: dto.folderId,
     historyTag: dto.historyTag,
+    images: dto.images,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
   };

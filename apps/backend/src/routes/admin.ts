@@ -30,6 +30,7 @@ import {
   type SanctionAction,
 } from "../services/moderationService";
 import { getMetrics } from "../services/metricsService";
+import { cleanupParent } from "../services/mediaService";
 import type { Env } from "../env";
 
 /** Narrow the `:contentType` route param to the moderated set, or 404 (defence-in-depth). */
@@ -108,7 +109,9 @@ admin.patch("/api/admin/places/:id", async (c) => {
 
 admin.delete("/api/admin/places/:id", async (c) => {
   await requireAdmin(c);
-  await deletePlace(createDb(c.env.DB), c.req.param("id"));
+  const id = c.req.param("id");
+  await deletePlace(createDb(c.env.DB), id);
+  await cleanupParent(c.env.IMAGES, "place", id).catch(() => {}); // 012: best-effort image cleanup
   return c.body(null, 204);
 });
 

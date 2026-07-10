@@ -13,6 +13,8 @@ export interface MinyanJoined {
   type: string;
   hostUserId: string;
   hostName: string;
+  hostImage: string | null;
+  images: string[] | null;
   city: string;
   country: string;
   lat: number;
@@ -46,6 +48,8 @@ const SELECT_JOINED = {
   type: event.type,
   hostUserId: event.hostUserId,
   hostName: user.name,
+  hostImage: user.image,
+  images: event.images,
   city: event.city,
   country: event.country,
   lat: event.lat,
@@ -69,6 +73,8 @@ function mapJoined(r: Record<string, unknown>): MinyanJoined {
     type: r.type as string,
     hostUserId: r.hostUserId as string,
     hostName: r.hostName as string,
+    hostImage: (r.hostImage as string | null) ?? null,
+    images: (r.images as string[] | null) ?? null,
     city: r.city as string,
     country: r.country as string,
     lat: r.lat as number,

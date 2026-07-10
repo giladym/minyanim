@@ -131,6 +131,9 @@ export const he = {
       "user.suspended": "החשבון שלך מושעה זמנית ולכן לא ניתן לפרסם תוכן.",
       "user.banned": "החשבון שלך נחסם ולכן לא ניתן לפרסם תוכן.",
       "admin.last_admin": "לא ניתן להשעות או לחסום את מנהל המערכת האחרון.",
+      "image.type_invalid": "יש להעלות קובץ תמונה תקין (JPEG, PNG או WebP).",
+      "image.too_large": "התמונה גדולה מדי (עד 5MB).",
+      "image.gallery_full": "הגעת למספר המרבי של תמונות.",
     },
     messages: {
       title: "הודעות",
@@ -194,6 +197,17 @@ export const he = {
       autoHidden: "הוסתרו אוטומטית",
       topLocations: "המקומות הפעילים ביותר",
       noLocations: "עדיין אין פעילות.",
+    },
+    media: {
+      addPhoto: "הוספת תמונה",
+      uploading: "מעלה…",
+      uploadFailed: "העלאת התמונה נכשלה. אפשר לנסות שוב.",
+      remove: "הסרה",
+      photos: "תמונות",
+      photoAlt: "{{name}} — תמונה {{n}}",
+      avatarAlt: "תמונת הפרופיל של {{name}}",
+      avatarTitle: "תמונת פרופיל",
+      removeAvatar: "הסרת תמונת הפרופיל",
     },
     places: {
       title: "מקומות כשרים באזור",

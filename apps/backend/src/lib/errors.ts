@@ -28,3 +28,11 @@ export const LastAdmin = () => new AppError(409, ERROR_CODES.ADMIN_LAST_ADMIN);
 export const UserBanned = () => new AppError(403, ERROR_CODES.USER_BANNED);
 /** A suspended user cannot create content until `until` (epoch-ms) — carried for the UI countdown. */
 export const UserSuspended = (until: number) => new AppError(403, ERROR_CODES.USER_SUSPENDED, null, { until });
+
+// 012 — media uploads.
+/** Upload is not a real JPEG/PNG/WebP (magic-byte sniff). */
+export const ImageTypeInvalid = () => new AppError(400, ERROR_CODES.IMAGE_TYPE_INVALID, "file");
+/** Upload exceeds the max byte size. */
+export const ImageTooLarge = () => new AppError(400, ERROR_CODES.IMAGE_TOO_LARGE, "file");
+/** The gallery is already at its max image count. */
+export const ImageGalleryFull = () => new AppError(409, ERROR_CODES.IMAGE_GALLERY_FULL, "file");

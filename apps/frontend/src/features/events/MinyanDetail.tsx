@@ -20,6 +20,10 @@ import {
 import { useMinyanZmanim } from "../../lib/zmanim";
 import { useProfile } from "../../lib/profile";
 import { ZmanimSection } from "../stays/ZmanimSection";
+import { Avatar } from "../media/Avatar";
+import { Gallery } from "../media/Gallery";
+import { ImageUploader } from "../media/ImageUploader";
+import { deleteImage } from "../../lib/media";
 
 /** Roster + contact are present for any signed-in viewer (roster/participant/owner tiers). */
 function hasRoster(m: AnyMinyanDTO): m is RosterMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO {
@@ -249,15 +253,33 @@ function ParticipantRoster({ participants, viewerId }: { participants: Participa
 /** The organizer, given prominence: who runs this minyan + how to reach them. Name shows for every
  * viewer (public tier); WhatsApp / call / email surface only once the viewer is signed in (roster
  * tier carries `hostContact`, phone gated on the host's share preference, email committed-only). */
+/** Minyan photos (012): a gallery for everyone; the host can add/remove (host-managed listing photos). */
+function MinyanPhotos({ id, m }: { id: string; m: AnyMinyanDTO }) {
+  const { t } = useTranslation();
+  const owner = isOwner(m);
+  const [refs, setRefs] = useState<string[]>(m.images ?? []);
+  if (!owner && refs.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+      <span className="text-xs font-bold uppercase tracking-wide text-faint">{t("media.photos")}</span>
+      <Gallery
+        images={refs}
+        itemName={m.city}
+        onRemove={owner ? (ref) => { void deleteImage(ref); setRefs((xs) => xs.filter((r) => r !== ref)); } : undefined}
+      />
+      {owner && <ImageUploader kind="event" parentId={id} onUploaded={(ref) => setRefs((xs) => [...xs, ref])} />}
+    </section>
+  );
+}
+
 function OrganizerCard({ m }: { m: AnyMinyanDTO }) {
   const { t } = useTranslation();
   const name = hasRoster(m) ? m.hostContact.name : m.hostName;
   const contact = hasRoster(m) ? m.hostContact : null;
-  const initial = name.trim().charAt(0) || "?";
   const btn = "inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold";
   return (
     <section className="mn-fadeup flex items-start gap-3.5 rounded-2xl border border-line bg-surface p-5 shadow-card">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-clay-soft text-lg font-extrabold text-clay-ink">{initial}</span>
+      <Avatar src={m.hostImage} name={name} size={44} />
       <div className="flex min-w-0 flex-col gap-1">
         <span className="text-xs font-bold uppercase tracking-wide text-clay-ink">{t("minyanDetail.hostTitle")}</span>
         <span className="text-lg font-extrabold text-ink">{name}</span>
@@ -367,6 +389,8 @@ export function MinyanDetail() {
       </section>
 
       {active && <CommitSection id={id} m={m} />}
+
+      <MinyanPhotos id={id} m={m} />
 
       {!isOwner(m) && <OrganizerCard m={m} />}
 

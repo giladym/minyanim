@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { CreateStayInput, UpdateStayInput, flagContentSchema } from "@minyanim/shared";
 import { flagContent } from "../services/moderationService";
+import { cleanupParent } from "../services/mediaService";
 import { createAuth } from "../auth";
 import { createDb } from "../db/client";
 import { Unauthorized } from "../lib/errors";
@@ -86,6 +87,7 @@ stays.delete("/api/stays/:id/permanent", async (c) => {
   const id = c.req.param("id");
   const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };
   const res = await permanentDeleteStayController(createDb(c.env.DB), userId, id, body.confirm === true);
+  await cleanupParent(c.env.IMAGES, "stay", id).catch(() => {}); // 012: best-effort image cleanup
   c.get("log")?.info("stay.permanently_deleted", { stayId: id });
   return c.json(res);
 });

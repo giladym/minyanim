@@ -4,6 +4,9 @@ import type { CreatePlaceInput, PlaceDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { useAdminLayers, useAdminPlaces, useCreatePlace, useUpdatePlace, useDeletePlace } from "../../lib/places";
+import { Gallery } from "../media/Gallery";
+import { ImageUploader } from "../media/ImageUploader";
+import { deleteImage } from "../../lib/media";
 
 const field = "w-full rounded-lg border border-line2 bg-surface px-3 py-2.5 text-ink outline-none transition focus:border-primary";
 const label = "mb-1.5 block text-sm font-bold text-ink";
@@ -19,6 +22,7 @@ export function AdminPlacesManager() {
   const create = useCreatePlace();
   const update = useUpdatePlace();
   const del = useDeletePlace();
+  const [editImages, setEditImages] = useState<string[]>([]); // 012: photos of the place being edited
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [layerId, setLayerId] = useState("");
@@ -31,12 +35,12 @@ export function AdminPlacesManager() {
 
   const layerName = (id: string) => layers.find((l) => l.id === id)?.name ?? id;
   function reset() {
-    setEditingId(null); setLayerId(""); setName(""); setLoc(emptyLoc); setAddress(""); setPhone(""); setDietary(""); setErr("");
+    setEditingId(null); setLayerId(""); setName(""); setLoc(emptyLoc); setAddress(""); setPhone(""); setDietary(""); setErr(""); setEditImages([]);
   }
   function edit(p: PlaceDTO) {
     setEditingId(p.id); setLayerId(p.layerId); setName(p.name);
     setLoc({ city: "", country: "", lat: p.lat, lng: p.lng });
-    setAddress(p.address ?? ""); setPhone(p.phone ?? ""); setDietary(p.kosherMeta?.dietary ?? ""); setErr("");
+    setAddress(p.address ?? ""); setPhone(p.phone ?? ""); setDietary(p.kosherMeta?.dietary ?? ""); setErr(""); setEditImages(p.images ?? []);
   }
 
   async function save() {
@@ -98,6 +102,17 @@ export function AdminPlacesManager() {
               <option value="parve">{t("admin.dietaryParve")}</option>
             </select>
           </label>
+          {editingId && (
+            <div className="flex flex-col gap-2 border-t border-line pt-3">
+              <span className="text-xs font-bold uppercase tracking-wide text-faint">{t("media.photos")}</span>
+              <Gallery
+                images={editImages}
+                itemName={name}
+                onRemove={(ref) => { void deleteImage(ref); setEditImages((xs) => xs.filter((r) => r !== ref)); }}
+              />
+              <ImageUploader kind="place" parentId={editingId} onUploaded={(ref) => setEditImages((xs) => [...xs, ref])} />
+            </div>
+          )}
           {err && <p role="alert" className="text-sm font-semibold text-clay-ink">{err}</p>}
           <div className="flex gap-2">
             <button type="button" className="rounded-lg bg-primary px-5 py-2.5 font-extrabold text-on-primary disabled:opacity-50" disabled={create.isPending || update.isPending} onClick={() => void save()}>

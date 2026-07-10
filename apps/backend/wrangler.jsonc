@@ -19,6 +19,14 @@
       "migrations_dir": "migrations"
     }
   ],
+  // 012 media uploads — image bytes live in R2 (refs live on the parent D1 rows). Dev bucket here;
+  // override bucket_name per environment for staging/prod (provision with `wrangler r2 bucket create`).
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "minyanim-images-dev"
+    }
+  ],
   // Native Rate Limiting binding (research D13) — auth/write endpoints. period ∈ {10,60}.
   "unsafe": {
     "bindings": [

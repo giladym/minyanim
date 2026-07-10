@@ -114,6 +114,10 @@ export interface PublicMinyanDTO {
   services: MinyanService[];
   notes: string | null;
   hostName: string;
+  /** Host avatar ref (012); null = none → render an initials placeholder. */
+  hostImage: string | null;
+  /** Host-managed photo gallery refs (012). */
+  images: string[] | null;
   committedMen: number;
   status: MinyanStatus;
   /** Derived: the gathering includes a Shabbat-morning Shacharit (Torah-reading) (R4). */
@@ -169,6 +173,8 @@ export function toPublicMinyanDTO(m: PublicMinyanDTO): PublicMinyanDTO {
     services: m.services,
     notes: m.notes,
     hostName: m.hostName,
+    hostImage: m.hostImage,
+    images: m.images,
     committedMen: m.committedMen,
     status: m.status,
     isShabbatShacharit: m.isShabbatShacharit,

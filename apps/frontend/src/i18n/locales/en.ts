@@ -131,6 +131,9 @@ export const en = {
       "user.suspended": "Your account is temporarily suspended, so you can't post content.",
       "user.banned": "Your account is banned, so you can't post content.",
       "admin.last_admin": "You can't suspend or ban the last admin.",
+      "image.type_invalid": "Upload a valid image file (JPEG, PNG or WebP).",
+      "image.too_large": "That image is too large (max 5MB).",
+      "image.gallery_full": "You've reached the maximum number of photos.",
     },
     messages: {
       title: "Messages",
@@ -194,6 +197,17 @@ export const en = {
       autoHidden: "Auto-hidden",
       topLocations: "Busiest locations",
       noLocations: "No activity yet.",
+    },
+    media: {
+      addPhoto: "Add photo",
+      uploading: "Uploading…",
+      uploadFailed: "Upload failed. Please try again.",
+      remove: "Remove",
+      photos: "Photos",
+      photoAlt: "{{name}} — photo {{n}}",
+      avatarAlt: "{{name}}'s profile photo",
+      avatarTitle: "Profile photo",
+      removeAvatar: "Remove profile photo",
     },
     places: {
       title: "Kosher places nearby",

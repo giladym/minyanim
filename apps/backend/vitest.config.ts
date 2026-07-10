@@ -18,6 +18,8 @@ export default defineWorkersConfig({
       workers: {
         wrangler: { configPath: "./wrangler.jsonc" },
         miniflare: {
+          // 012: in-memory R2 bucket for the media pipeline (isolated per test file).
+          r2Buckets: ["IMAGES"],
           bindings: {
             TEST_MIGRATIONS: migrations,
             REQUIRE_EMAIL_VERIFICATION: "false",

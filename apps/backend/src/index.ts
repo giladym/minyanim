@@ -14,6 +14,7 @@ import { notifications } from "./routes/notifications";
 import { messages } from "./routes/messages";
 import { admin } from "./routes/admin";
 import { places } from "./routes/places";
+import { media } from "./routes/media";
 import { requestContext, rateLimit } from "./middleware";
 import { AppError } from "./lib/errors";
 import { createLogger, type Logger } from "./lib/logger";
@@ -68,6 +69,8 @@ app.route("/", messages);
 app.route("/", admin);
 // Places (010 US1) — nearby kosher/Jewish places + active layers, auth-guarded.
 app.route("/", places);
+// Media (012) — image upload/delete/serve backed by R2.
+app.route("/", media);
 
 // Public client config (no auth) — the PUBLIC MapTiler tile key for client-side maps, served at
 // runtime so the map needs no build-time var. Only client-safe values; never secrets. (005-followup)
