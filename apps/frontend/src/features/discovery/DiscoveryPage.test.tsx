@@ -13,6 +13,8 @@ const useDiscovery = vi.fn();
 vi.mock("../../lib/discovery", () => ({ useDiscovery: (p: unknown) => useDiscovery(p) }));
 // DiscoveryMap reads the runtime tile key; stub it so the optional map stays hidden in tests.
 vi.mock("../../lib/config", () => ({ useMaptilerTileKey: () => undefined }));
+// KosherPlacesCard (day-to-day entry) fetches active layers via useLayers — stub it (no QueryClient).
+vi.mock("../../lib/places", () => ({ useLayers: () => ({ data: { layers: [] } }) }));
 // No pre-fill seed in these tests (the search params come from the FR-019 link in real use).
 vi.mock("@tanstack/react-router", () => ({
   useSearch: () => ({}),

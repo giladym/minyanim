@@ -211,6 +211,8 @@ export const en = {
     },
     places: {
       title: "Kosher places nearby",
+      nearbyTitle: "Kosher places nearby",
+      openMap: "Open kosher places map",
       pickLocation: "Choose a location to see kosher places around it.",
       layers: "Layers",
       empty: "No places found in this area.",
@@ -338,6 +340,7 @@ export const en = {
       phone: "Phone",
       placeInfo: "Informational — not joinable",
       placeLayers: "Place layers",
+      placesTitle: "Jewish places in the area",
     },
     host: {
       title: "Host a minyan",
@@ -494,6 +497,8 @@ export const en = {
         searching: "Searching…",
         noResults: "No results. You can enter a city and country manually.",
         selected: "Selected location",
+        change: "Change location",
+        done: "Done",
         manualToggle: "Enter city manually",
         searchToggle: "Back to map search",
         city: "City",

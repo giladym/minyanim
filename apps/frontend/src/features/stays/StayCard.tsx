@@ -85,7 +85,9 @@ export function StayCard({
       data-testid="stay-card"
       data-stay-id={stay.id}
       className={
-        "overflow-hidden rounded-2xl bg-surface shadow-card transition " +
+        // No overflow-hidden here: it would clip the ⋮ actions dropdown. The header image is clipped
+        // by HeaderShell's own rounded-t-2xl overflow-hidden instead.
+        "rounded-2xl bg-surface shadow-card transition " +
         (isCurrent ? "border-2 border-primary " : "border border-line ") +
         (highlighted ? "ring-2 ring-clay " : "") +
         (stay.isPast ? "opacity-60" : "")
@@ -203,7 +205,7 @@ export function StayCard({
  * Uses a Link (not a whole-card <a>) so the inner status line / ⋮ menu stay independently clickable
  * without nesting anchors. */
 function HeaderShell({ stay, label, children }: { stay: OwnerStayDTO; label: string; children: ReactNode }) {
-  const cls = "relative block h-28 w-full overflow-hidden";
+  const cls = "relative block h-28 w-full overflow-hidden rounded-t-2xl";
   if (stay.isPast) return <div className={cls}>{children}</div>;
   return (
     <Link to="/stays/$id/edit" params={{ id: stay.id }} className={cls} aria-label={label}>
@@ -250,7 +252,7 @@ function CardMenu({ stay, onCancel, onMove, folders }: { stay: OwnerStayDTO; onC
       <summary className="flex h-9 w-9 list-none items-center justify-center rounded-[10px] border border-line text-muted [&::-webkit-details-marker]:hidden" aria-label={t("stays.moreActions")}>
         <Icon name="more" size={18} />
       </summary>
-      <div className="absolute top-11 end-0 z-10 w-56 max-w-[80vw] rounded-xl border border-line bg-surface p-1.5 shadow-card">
+      <div className="absolute top-11 end-0 z-20 max-h-[70vh] w-56 max-w-[80vw] overflow-y-auto rounded-xl border border-line bg-surface p-1.5 shadow-card">
         <Link to="/stays/$id/edit" params={{ id: stay.id }} className={item}><Icon name="calendar" size={16} className="text-faint" />{t("stays.edit")}</Link>
         <div className="my-1 h-px bg-line" />
         <Link to="/discovery" search={discoverySearch(stay)} className={item}><Icon name="search" size={16} className="text-faint" />{t("stays.findMinyanim")}</Link>

@@ -5,6 +5,7 @@ import type { GeoResult, Nusach, PublicMinyanDTO, MinyanStatus } from "@minyanim
 import { searchPlaces } from "../../lib/geo";
 import { useDiscovery, type DiscoveryParams } from "../../lib/discovery";
 import { DiscoveryMap } from "./DiscoveryMap";
+import { KosherPlacesCard } from "../places/KosherPlacesCard";
 
 /** Epoch-ms → "YYYY-MM-DD" for seeding the date inputs (UTC, matching the date convention). */
 function epochToInput(epoch: number): string {
@@ -162,6 +163,13 @@ export function DiscoveryPage() {
         </div>
       </section>
 
+      {/* Kosher places are day-to-day (not Shabbat-gated): the moment a location is picked — before
+          any dates — offer the prefilled places entry. Once dates load the dated results below, the
+          titled "Jewish places in the area" section takes over, so this only shows pre-dates. */}
+      {center && !params && (
+        <KosherPlacesCard lat={center.lat} lng={center.lng} city={center.city} country={center.country} />
+      )}
+
       {center && !params && (
         <p role="status" className="rounded-xl bg-chip px-4 py-3 text-sm font-semibold text-ink">
           {t("discovery.pickDatesHint")}
@@ -170,28 +178,42 @@ export function DiscoveryPage() {
 
       {params && (
         <>
-          {/* PRIMARY: minyanim you can join here (clickable → detail → join). */}
+          {/* PRIMARY: minyanim you can join here (clickable → detail → join). The empty state sits
+              directly under the heading so "no minyanim yet" is unambiguous — it is NOT swallowed by
+              the map or mistaken for the (separately titled) places below. */}
           <section aria-live="polite" className="flex flex-col gap-3">
             <h2 className="text-lg font-extrabold text-ink">{t("discovery.minyanimTitle")}</h2>
-            {data && data.layers.length > 0 && (
-              <div className="flex flex-wrap gap-2" role="group" aria-label={t("discovery.placeLayers")}>
-                {data.layers.map((l) => {
-                  const on = !hiddenLayers.has(l.id);
-                  return (
-                    <button
-                      key={l.id}
-                      type="button"
-                      aria-pressed={on}
-                      className={"rounded-full px-3 py-1.5 text-sm font-bold " + (on ? "bg-primary text-on-primary" : "border border-line text-muted")}
-                      onClick={() => setHiddenLayers((s) => { const n = new Set(s); if (on) n.add(l.id); else n.delete(l.id); return n; })}
-                    >
-                      {l.name}
-                    </button>
-                  );
-                })}
-              </div>
+            {isFetching && !data && <p className="text-sm text-muted">{t("discovery.loading")}</p>}
+            {data && data.minyanim.length === 0 && (
+              <p className="text-sm text-muted">{t("discovery.minyanimEmpty")}</p>
             )}
-            {data && (
+            {data?.minyanim.map((m) => <MinyanRow key={m.id} m={m} />)}
+          </section>
+
+          {/* SECONDARY: Jewish places of interest (synagogues, kosher, cemeteries, Chabad…) — their
+              OWN titled section so it's clear the chips + map pins are places, not minyanim. The map
+              still overlays minyan pins for geographic context. */}
+          {data && (data.places.length > 0 || data.layers.length > 0) && (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-lg font-extrabold text-ink">{t("discovery.placesTitle")}</h2>
+              {data.layers.length > 0 && (
+                <div className="flex flex-wrap gap-2" role="group" aria-label={t("discovery.placeLayers")}>
+                  {data.layers.map((l) => {
+                    const on = !hiddenLayers.has(l.id);
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        aria-pressed={on}
+                        className={"rounded-full px-3 py-1.5 text-sm font-bold " + (on ? "bg-primary text-on-primary" : "border border-line text-muted")}
+                        onClick={() => setHiddenLayers((s) => { const n = new Set(s); if (on) n.add(l.id); else n.delete(l.id); return n; })}
+                      >
+                        {l.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <DiscoveryMap
                 center={{ lat: params.lat, lng: params.lng }}
                 minyanim={data.minyanim}
@@ -199,11 +221,8 @@ export function DiscoveryPage() {
                 layers={data.layers}
                 onSelectMinyan={(id) => void navigate({ to: "/minyan/$id", params: { id } })}
               />
-            )}
-            {data && data.minyanim.length === 0 && <p className="text-sm text-muted">{t("discovery.minyanimEmpty")}</p>}
-            {data?.minyanim.map((m) => <MinyanRow key={m.id} m={m} />)}
-            {isFetching && !data && <p className="text-sm text-muted">{t("discovery.loading")}</p>}
-          </section>
+            </section>
+          )}
 
           {/* SECONDARY: travelers in the area (potential) — an opportunity to host, not a join list. */}
           <section className="flex flex-col gap-3">

@@ -15,6 +15,8 @@ import { Gallery } from "../media/Gallery";
 import { ImageUploader } from "../media/ImageUploader";
 import { deleteImage } from "../../lib/media";
 import { PrayerNeeds } from "./PrayerNeeds";
+import { KosherPlacesCard } from "../places/KosherPlacesCard";
+import { Icon } from "../../components/Icon";
 
 const fieldCls =
   "w-full rounded-xl border border-line2 bg-surface px-3.5 py-3 text-ink outline-none transition focus:border-primary";
@@ -113,6 +115,10 @@ export function AddEditStayForm({
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderError, setNewFolderError] = useState("");
 
+  // Location editor is collapsed by default when editing a saved Stay (reviewing is the common case;
+  // changing where you're staying is the edge case) and open when creating. A city/country validation
+  // error force-expands it (see `showPicker`) so the flagged field is reachable.
+  const [locationOpen, setLocationOpen] = useState(!stayId);
   const [showDetails, setShowDetails] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState("");
@@ -121,6 +127,9 @@ export function AddEditStayForm({
   const [failedAttempt, setFailedAttempt] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const errorCount = Object.keys(errors).length;
+  // Show the full location editor when creating, when the user expands it on edit, or when a
+  // location field failed validation (so the flagged input is reachable rather than hidden).
+  const showPicker = !isEdit || locationOpen || !!errors.city || !!errors.country;
 
   // Soft past-floor for the date pickers: one day back, mirroring the server's ±1-day tolerance
   // for coordinate-less stays. A hard `today` floor would wrongly block a "today at destination"
@@ -189,6 +198,7 @@ export function AddEditStayForm({
         setFolderId(s.folderId ?? null);
         setImages(s.images ?? []);
         if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
+        if (!s.city) setLocationOpen(true); // no city to summarise → start expanded
       })
       .catch(() => setSubmitError(t("stays.loadError")));
   }, [stayId, t]);
@@ -310,14 +320,52 @@ export function AddEditStayForm({
 
       <form ref={formRef} onSubmit={submit} className="flex flex-col gap-5" noValidate>
         <Card>
-          <LocationPicker
-            value={location}
-            onChange={setLocation}
-            invalid={!!(errors.city || errors.country)}
-          />
+          {showPicker ? (
+            <>
+              <LocationPicker
+                value={location}
+                onChange={setLocation}
+                invalid={!!(errors.city || errors.country)}
+              />
+              {isEdit && location.city && (
+                <button
+                  type="button"
+                  className="mt-3 self-start rounded-lg border border-line2 px-3 py-1.5 text-sm font-bold text-primary-ink"
+                  onClick={() => setLocationOpen(false)}
+                >
+                  {t("stays.location.done")}
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex min-w-0 flex-col">
+                <span className="text-sm font-bold text-ink">{t("stays.location.title")}</span>
+                <span className="flex items-center gap-2 text-ink">
+                  <Icon name="map-pin" size={16} className="text-faint" aria-hidden />
+                  <span className="truncate font-bold">
+                    {location.city}{location.country ? `, ${location.country}` : ""}
+                  </span>
+                </span>
+              </span>
+              <button
+                type="button"
+                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-bold text-primary-ink"
+                aria-label={t("stays.location.change")}
+                onClick={() => setLocationOpen(true)}
+              >
+                <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-chip text-lg leading-none text-primary-ink">+</span>
+                <span className="hidden sm:inline">{t("stays.location.change")}</span>
+              </button>
+            </div>
+          )}
           {fieldError("city")}
           {fieldError("country")}
         </Card>
+
+        {isEdit && (
+          <KosherPlacesCard lat={location.lat} lng={location.lng} city={location.city} country={location.country} />
+        )}
 
         <Card>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -15,7 +15,10 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
   useParams: () => ({ id: "stay_1" }),
   useSearch: () => ({}),
+  Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
+// KosherPlacesCard (shown on edit) fetches active layers via useLayers — stub it (no QueryClient).
+vi.mock("../../lib/places", () => ({ useLayers: () => ({ data: { layers: [] } }) }));
 
 vi.mock("../../lib/profile", () => ({
   getProfile: vi.fn(() =>
