@@ -7,8 +7,13 @@
 import type { LayerKey, PlaceRecord } from "./map.ts";
 
 const LAYER_META: Record<LayerKey, { id: string; name: string; order: number }> = {
+  // Reuse the id feature 011 created so imported Chabad houses merge into the existing layer
+  // (INSERT OR IGNORE is a no-op when the id already exists) rather than making a duplicate.
+  chabad: { id: "layer_chabad_houses", name: "Chabad houses", order: 5 },
   worship: { id: "lyr_osm_worship", name: "Synagogues", order: 10 },
   restaurants: { id: "lyr_osm_restaurants", name: "Kosher restaurants", order: 20 },
+  shops: { id: "lyr_osm_shops", name: "Kosher shops", order: 25 },
+  cemeteries: { id: "lyr_osm_cemeteries", name: "Jewish cemeteries", order: 40 },
   mikvehs: { id: "lyr_osm_mikvehs", name: "Mikvehs", order: 30 },
 };
 

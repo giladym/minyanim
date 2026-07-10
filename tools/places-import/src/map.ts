@@ -5,8 +5,9 @@
  * upsert time. Pure + testable.
  */
 import type { OverpassElement } from "./overpass.ts";
+import type { LayerKey } from "./categories.ts";
 
-export type LayerKey = "worship" | "restaurants" | "mikvehs";
+export type { LayerKey };
 
 export interface PlaceRecord {
   name: string;
@@ -25,10 +26,23 @@ export interface PlaceRecord {
 
 const ATTRIBUTION = "© OpenStreetMap contributors";
 
+function isChabad(tags: Record<string, string>): boolean {
+  const denom = (tags.denomination ?? "").toLowerCase();
+  if (denom.includes("chabad") || denom.includes("lubavitch")) return true;
+  return /chabad|lubavitch/i.test(tags.name ?? "");
+}
+
 function classify(tags: Record<string, string>): LayerKey | null {
   if (tags.amenity === "mikvah") return "mikvehs";
-  if (tags.amenity === "place_of_worship" && tags.religion === "jewish") return "worship";
-  if (/restaurant|cafe|fast_food/.test(tags.amenity ?? "") && /yes|only/.test(tags["diet:kosher"] ?? "")) return "restaurants";
+  if (isChabad(tags)) return "chabad"; // before worship — a Chabad shul is a Chabad house
+  if (tags.religion === "jewish") {
+    if (tags.amenity === "place_of_worship") return "worship";
+    if (tags.landuse === "cemetery" || tags.amenity === "grave_yard") return "cemeteries";
+  }
+  if (/^(yes|only)$/.test(tags["diet:kosher"] ?? "")) {
+    if (/^(restaurant|cafe|fast_food)$/.test(tags.amenity ?? "")) return "restaurants";
+    if (tags.shop) return "shops";
+  }
   return null;
 }
 
