@@ -56,22 +56,24 @@ export async function getConversations(db: Db, userId: string): Promise<Conversa
       convo = {
         userId: otherId,
         name: inbound ? r.senderName : "",
+        image: inbound ? r.senderImage ?? null : null,
         lastBody: r.body,
         lastAt: r.createdAt.getTime(),
         unread: 0,
       };
       byOther.set(otherId, convo);
     }
-    if (!convo.name && inbound) convo.name = r.senderName;
+    if (!convo.name && inbound) { convo.name = r.senderName; convo.image = r.senderImage ?? null; }
     if (inbound && !r.read) convo.unread += 1;
     if (!convo.name) missingName.add(otherId);
   }
-  // Resolve names for conversations where the viewer only ever sent (no inbound row to borrow from).
+  // Resolve name + avatar for conversations where the viewer only ever sent (no inbound row to borrow).
   for (const otherId of missingName) {
     const convo = byOther.get(otherId);
     if (convo && !convo.name) {
       const u = await findUser(db, otherId);
       convo.name = u?.name ?? "";
+      convo.image = u?.image ?? null;
     }
   }
   return [...byOther.values()].sort((a, b) => b.lastAt - a.lastAt);
@@ -90,7 +92,7 @@ export async function getThread(db: Db, userId: string, otherId: string): Promis
     read: r.read,
     createdAt: r.createdAt.getTime(),
   }));
-  return { userId: otherId, name: other.name, messages };
+  return { userId: otherId, name: other.name, image: other.image ?? null, messages };
 }
 
 export function getUnreadCount(db: Db, userId: string): Promise<number> {

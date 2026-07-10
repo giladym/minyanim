@@ -93,6 +93,8 @@ export interface ParticipantInfo {
   numMen: number;
   phone: string | null;
   email: string | null;
+  /** Avatar ref (012); null = none → initials placeholder. */
+  image: string | null;
   /** True for the host's own commitment (badged "organizer" in the roster). */
   isHost?: boolean;
 }
