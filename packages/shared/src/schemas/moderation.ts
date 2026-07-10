@@ -18,3 +18,29 @@ export type UserStatus = z.infer<typeof userStatusSchema>;
 
 /** The content kinds that can be flagged/moderated. */
 export type ModeratedContentType = "stay" | "event";
+
+/** One moderation-queue entry — flags aggregated per content item (US3). */
+export interface ModerationQueueEntryDTO {
+  contentType: ModeratedContentType;
+  contentId: string;
+  reporterCount: number;
+  reasons: FlagReason[];
+  /** true ⇒ auto-hidden (≥3) or admin-removed — needs review. */
+  hidden: boolean;
+  /** The content owner (the sanction target); null if unknowable. */
+  reportedUserId: string | null;
+  /** A light recognizer for the admin. */
+  content: { city: string; country: string; title?: string };
+  /** Earliest flag (age/urgency). Epoch-ms. */
+  createdAt: number;
+}
+
+export interface ModerationQueueResponse {
+  entries: ModerationQueueEntryDTO[];
+}
+
+/** Body for a user sanction — only `suspendDays` (suspend). The action comes from the route. */
+export const sanctionSchema = z.object({
+  suspendDays: z.number().int().positive().max(365).optional(),
+});
+export type SanctionInput = z.infer<typeof sanctionSchema>;

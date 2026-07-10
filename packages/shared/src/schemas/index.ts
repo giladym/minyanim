@@ -14,3 +14,4 @@ export * from "./message";
 export * from "./claim";
 export * from "./place";
 export * from "./moderation";
+export * from "./metrics";

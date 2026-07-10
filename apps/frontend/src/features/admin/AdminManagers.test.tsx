@@ -1,12 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { LayerDTO, PlaceDTO } from "@minyanim/shared";
+import type { LayerDTO, PlaceDTO, ModerationQueueEntryDTO, AdminMetricsDTO } from "@minyanim/shared";
 
 const createLayer = vi.fn(() => Promise.resolve({}));
 const createPlace = vi.fn(() => Promise.resolve({}));
+const contentAction = vi.fn();
+const sanction = vi.fn();
 let layers: LayerDTO[];
 let places: PlaceDTO[];
+let entries: ModerationQueueEntryDTO[];
 
 vi.mock("../../lib/places", () => ({
   useAdminLayers: () => ({ data: { layers }, isLoading: false }),
@@ -18,6 +21,15 @@ vi.mock("../../lib/places", () => ({
   useUpdatePlace: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useDeletePlace: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
+vi.mock("../../lib/moderation", () => ({
+  useModerationQueue: () => ({ data: { entries }, isLoading: false, isError: false }),
+  useContentAction: () => ({ mutate: contentAction, isPending: false }),
+  useSanctionUser: () => ({ mutate: sanction, isPending: false }),
+}));
+let metrics: AdminMetricsDTO;
+vi.mock("../../lib/metrics", () => ({
+  useAdminMetrics: () => ({ data: metrics, isLoading: false, isError: false }),
+}));
 // Stub the map picker (its MapLibre/geo deps aren't needed to test the manager UI).
 vi.mock("../stays/LocationPicker", () => ({
   LocationPicker: () => <div data-testid="location-picker" />,
@@ -25,12 +37,25 @@ vi.mock("../stays/LocationPicker", () => ({
 
 import { AdminLayersManager } from "./AdminLayersManager";
 import { AdminPlacesManager } from "./AdminPlacesManager";
+import { ModerationQueue } from "./ModerationQueue";
+import { AdminMetrics } from "./AdminMetrics";
 import "../../i18n";
 
 beforeEach(() => {
   vi.clearAllMocks();
   layers = [{ id: "l1", name: "מסעדות", icon: null, displayOrder: 0, active: true }];
   places = [{ id: "p1", layerId: "l1", name: "פיצה", description: null, lat: 48.87, lng: 2.35, address: null, phone: null, hours: null, images: [], kosherMeta: null, attribution: null }];
+  entries = [
+    { contentType: "event", contentId: "evt_1", reporterCount: 3, reasons: ["spam", "fake"], hidden: true, reportedUserId: "usr_owner", content: { city: "וינה", country: "AT" }, createdAt: 1_700_000_000_000 },
+  ];
+  metrics = {
+    users: { total: 12, admins: 2, suspended: 1, banned: 0 },
+    stays: { total: 8, active: 5, hidden: 1 },
+    minyanim: { total: 6, forming: 3, ready: 2, cancelled: 1, hidden: 0 },
+    funnel: { potential: 5, hosted: 6, quorum: 2 },
+    moderation: { openFlags: 3, autoHidden: 1 },
+    topLocations: [{ city: "וינה", country: "AT", count: 4 }],
+  };
 });
 
 describe("AdminLayersManager", () => {
@@ -59,5 +84,40 @@ describe("AdminPlacesManager", () => {
     await user.click(screen.getByRole("button", { name: "הוספה" }));
     expect(createPlace).not.toHaveBeenCalled();
     expect(screen.getByRole("alert")).toHaveTextContent("יש למלא שם, שכבה ומיקום על המפה.");
+  });
+});
+
+describe("ModerationQueue", () => {
+  it("shows a flagged item with its badge, and restores content / bans the owner", async () => {
+    const user = userEvent.setup();
+    render(<ModerationQueue />);
+    expect(screen.getByText("מוסתר")).toBeInTheDocument(); // hidden badge
+    expect(screen.getByText(/וינה/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "שחזור" }));
+    expect(contentAction).toHaveBeenCalledWith({ contentType: "event", contentId: "evt_1", action: "dismiss" });
+
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    await user.click(screen.getByRole("button", { name: "חסימה" }));
+    expect(sanction).toHaveBeenCalledWith({ userId: "usr_owner", action: "ban" });
+  });
+
+  it("renders an empty state when the queue is clear", () => {
+    entries = [];
+    render(<ModerationQueue />);
+    expect(screen.getByText("אין פריטים הממתינים לטיפול.")).toBeInTheDocument();
+  });
+});
+
+describe("AdminMetrics", () => {
+  it("renders the funnel (with the quorum north-star), counts and top locations", () => {
+    render(<AdminMetrics />);
+    // Funnel north-star + a couple of representative counts render.
+    expect(screen.getByText("הגיעו למניין")).toBeInTheDocument();
+    expect(screen.getByText("מתפללים פוטנציאליים")).toBeInTheDocument();
+    expect(screen.getAllByText("12").length).toBeGreaterThan(0); // users.total
+    // Top locations row.
+    expect(screen.getByText(/וינה/)).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
   });
 });

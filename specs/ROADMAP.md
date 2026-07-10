@@ -140,10 +140,13 @@ holds the implementation-ready tokens; it primarily drives Feature 001.
 **Recommended build order:** 001 → 002 → 003, with 004 and 005 in parallel after 002.
 006 (Admin) can be built any time after 001 but is most useful once 003 produces real data.
 After 001 + 002 the product is usable single-player; 003 adds the multiplayer quorum loop.
-**Status (2026-07-09):** 001–005 + 007–010 shipped to dev; 006 Admin specified but not built;
-feature 009 import steps 2–4 (map → gate → create seed rows) pending a real-sheet row-semantics
-decision (`tools/seed-import/` step 1 is built). Feature 010 established the **admin foundation**
-(role + guard + `/admin`) that 006 will build on.
+**Status (2026-07-10):** 001–010 shipped to dev; **006 Admin built** — moderation (flag+reason,
+auto-hide at 3, admin queue, dismiss/remove), user sanctions (warn/suspend/ban/reinstate + last-admin
+guard) with create-path enforcement, and a metrics dashboard (counts + form→host→quorum funnel + top
+locations); US4 Beit Chabad curation delivered via 010's places manager. Feature 009 import steps 2–4
+(map → gate → create seed rows) pending a real-sheet row-semantics decision (`tools/seed-import/`
+step 1 is built). Feature 010 established the **admin foundation** (role + guard + `/admin`) that 006
+built on. Next: 011 (retire `beit_chabad_pin`, fold Chabad into `place`).
 
 ---
 
