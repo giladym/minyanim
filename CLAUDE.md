@@ -1,5 +1,11 @@
 <!-- SPECKIT START -->
-No active feature plan. **011 Beit Chabad → Places consolidation** is built
+Active plan: **012 Media uploads** (`specs/012-media-uploads/plan.md`) — one shared R2-backed pipeline
+(`mediaService` + `storageRepository` over an `IMAGES` bucket; `POST/DELETE/GET /api/media`) for user
+avatars (`user.image`), Stay/Minyan galleries (new `stay.images`/`event.images`, migration 0013) and
+admin place photos (`place.images`). Parent-scoped keys `{kind}/{parentId}/{uuid}` drive authz + orphan
+cleanup; magic-byte sniff + size cap + server-side EXIF/GPS strip (zero-dep); served via a
+visibility-gated Worker route (hidden/contact-tier parents gate their images). Ready for `/speckit-tasks`.
+**011 Beit Chabad → Places consolidation** is built
 (`specs/011-beit-chabad-consolidation/`): the legacy `beit_chabad_pin` table + bespoke discovery overlay
 are retired; the generic `place`/`layer` model (010) is the single source of truth for Chabad houses
 (migration 0012 reconciles then drops the table). Discovery now sources Chabad houses (and any active
