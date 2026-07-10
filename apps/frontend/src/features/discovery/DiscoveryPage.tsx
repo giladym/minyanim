@@ -52,6 +52,7 @@ export function DiscoveryPage() {
   const [to, setTo] = useState(seed.to ? epochToInput(seed.to) : "");
   const [nusach, setNusach] = useState<Nusach | "">("");
   const [seferTorah, setSeferTorah] = useState(false);
+  const [hiddenLayers, setHiddenLayers] = useState<Set<string>>(new Set()); // toggled-off place layers
 
   // Debounced city search (reuses the 002 geo proxy).
   useEffect(() => {
@@ -85,6 +86,12 @@ export function DiscoveryPage() {
   }, [center, from, to, nusach, seferTorah]);
 
   const { data, isFetching } = useDiscovery(params);
+
+  // Places (Chabad houses + any other active layer) filtered by the per-layer toggles.
+  const visiblePlaces = useMemo(
+    () => (data?.places ?? []).filter((p) => !hiddenLayers.has(p.layerId)),
+    [data?.places, hiddenLayers],
+  );
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-5" dir="rtl">
@@ -166,11 +173,30 @@ export function DiscoveryPage() {
           {/* PRIMARY: minyanim you can join here (clickable → detail → join). */}
           <section aria-live="polite" className="flex flex-col gap-3">
             <h2 className="text-lg font-extrabold text-ink">{t("discovery.minyanimTitle")}</h2>
+            {data && data.layers.length > 0 && (
+              <div className="flex flex-wrap gap-2" role="group" aria-label={t("discovery.placeLayers")}>
+                {data.layers.map((l) => {
+                  const on = !hiddenLayers.has(l.id);
+                  return (
+                    <button
+                      key={l.id}
+                      type="button"
+                      aria-pressed={on}
+                      className={"rounded-full px-3 py-1.5 text-sm font-bold " + (on ? "bg-primary text-on-primary" : "border border-line text-muted")}
+                      onClick={() => setHiddenLayers((s) => { const n = new Set(s); if (on) n.add(l.id); else n.delete(l.id); return n; })}
+                    >
+                      {l.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {data && (
               <DiscoveryMap
                 center={{ lat: params.lat, lng: params.lng }}
                 minyanim={data.minyanim}
-                beitChabad={data.beitChabad}
+                places={visiblePlaces}
+                layers={data.layers}
                 onSelectMinyan={(id) => void navigate({ to: "/minyan/$id", params: { id } })}
               />
             )}

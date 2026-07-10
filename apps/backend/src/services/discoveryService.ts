@@ -23,10 +23,11 @@ import {
   activeStaysInBbox,
   activeStayUserIdsCoveringDate,
   coordlessActiveStays,
-  beitChabadInBbox,
   type Bbox,
   type PotentialStay,
 } from "../repositories/discoveryRepository";
+import { placesInBbox, listActiveLayers } from "../repositories/placesRepository";
+import { toPlaceDTO, toLayerDTO } from "./placesService";
 
 const ATTRIBUTION = "© MapTiler © OpenStreetMap contributors";
 
@@ -153,8 +154,18 @@ export async function discover(db: Db, q: DiscoveryQueryType, viewerId: string |
       .filter((m) => m.status !== "completed");
   }
 
-  const beitChabad = bbox ? await beitChabadInBbox(db, bbox) : [];
-  return { potential, minyanim, beitChabad, attribution: ATTRIBUTION };
+  // Kosher/Jewish places in the viewport via the generic 010 layer model (Chabad houses among them).
+  const [placeRows, layerRows] = await Promise.all([
+    bbox ? placesInBbox(db, bbox) : Promise.resolve([]),
+    listActiveLayers(db),
+  ]);
+  return {
+    potential,
+    minyanim,
+    places: placeRows.map(toPlaceDTO),
+    layers: layerRows.map(toLayerDTO),
+    attribution: ATTRIBUTION,
+  };
 }
 
 /** Build the discovery query that matches a Stay's location + date range (FR-019/D22). */

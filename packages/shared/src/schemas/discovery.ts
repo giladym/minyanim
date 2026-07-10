@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DISCOVERY_RADIUS_KM } from "../config";
 import { NusachSchema, type PublicMinyanDTO } from "./event";
+import type { PlaceDTO, LayerDTO } from "./place";
 
 /**
  * Discovery query (FR-001/008). A bounding box from centre + radius, or a city/country match for
@@ -40,22 +41,16 @@ export interface PotentialBucket {
   travelers: TravelerContact[];
 }
 
-/** Static Beit Chabad pin surfaced on the discovery map (D18). Informational only (not joinable). */
-export interface BeitChabadPinDTO {
-  id: string;
-  name: string;
-  address: string | null;
-  phone: string | null;
-  city: string;
-  country: string;
-  lat: number;
-  lng: number;
-}
-
-/** GET /api/discovery response (and /near-stay). */
+/**
+ * GET /api/discovery response (and /near-stay). Kosher/Jewish places in the viewport — including Chabad
+ * houses — are surfaced via the generic 010 places model (`places` grouped by `layerId`, toggled by the
+ * active `layers` list), the same shape `GET /api/places` returns. This replaces the retired bespoke
+ * Beit Chabad overlay (amends 003 D18; feature 011). Places are informational (not joinable).
+ */
 export interface DiscoveryResult {
   potential: PotentialBucket[];
   minyanim: PublicMinyanDTO[];
-  beitChabad: BeitChabadPinDTO[];
+  places: PlaceDTO[];
+  layers: LayerDTO[];
   attribution: string;
 }

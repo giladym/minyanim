@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { PublicMinyanDTO, BeitChabadPinDTO } from "@minyanim/shared";
+import type { PublicMinyanDTO, PlaceDTO, LayerDTO } from "@minyanim/shared";
 import { useMaptilerTileKey } from "../../lib/config";
 import { maptilerLogoControl } from "../../lib/maptilerLogo";
 
@@ -15,36 +15,41 @@ function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-/** Informational popup for a Beit Chabad pin (name + address + phone; not joinable — D18). */
-function beitChabadPopup(c: BeitChabadPinDTO, t: (k: string) => string): string {
+/** Informational popup for a place (name + address + phone + layer/attribution; not joinable). */
+function placePopup(p: PlaceDTO, layerName: string, t: (k: string) => string): string {
   const line = (label: string, val: string, href?: string) =>
     `<div style="margin-top:4px;font-size:13px;color:var(--ink)">${esc(label)}: ${href ? `<a href="${esc(href)}" style="color:var(--clay)">${esc(val)}</a>` : esc(val)}</div>`;
+  const meta = [layerName, t("discovery.placeInfo")].filter(Boolean).join(" · ");
   return (
     `<div dir="rtl" style="font-family:Assistant,system-ui,sans-serif;max-width:230px;color:var(--ink)">` +
-    `<div style="font-weight:800">${esc(c.name)}</div>` +
-    (c.address ? line(t("minyanDetail.address"), c.address) : "") +
-    (c.phone ? line(t("discovery.phone"), c.phone, `tel:${c.phone}`) : "") +
-    `<div style="margin-top:6px;font-size:12px;color:var(--muted)">${esc(c.city)}, ${esc(c.country)} · ${esc(t("discovery.beitChabadInfo"))}</div>` +
+    `<div style="font-weight:800">${esc(p.name)}</div>` +
+    (p.address ? line(t("minyanDetail.address"), p.address) : "") +
+    (p.phone ? line(t("discovery.phone"), p.phone, `tel:${p.phone}`) : "") +
+    `<div style="margin-top:6px;font-size:12px;color:var(--muted)">${esc(meta)}</div>` +
+    (p.attribution ? `<div style="margin-top:2px;font-size:11px;color:var(--muted)">${esc(p.attribution)}</div>` : "") +
     `</div>`
   );
 }
 
 /**
  * Discovery map (FR-018). Lazy-loaded MapLibre showing **user minyanim** (clay pins, clickable →
- * the minyan) and a distinct **Beit Chabad** static layer (gold pins, informational). Optional: if
- * the tile key is absent it renders nothing and the list view remains the full, keyboard-operable
- * surface (map/list parity). Minyan pins are focusable `<button>`s (keyboard-reachable). The map is
- * created once; markers/centre are updated imperatively as discovery data changes (per poll).
+ * the minyan) and **kosher/Jewish places** (gold pins, informational — Chabad houses and any other
+ * active layer, from the generic 010 places model; 011 retired the bespoke Beit Chabad overlay). The
+ * caller passes places already filtered by the layer toggles. Optional: if the tile key is absent it
+ * renders nothing and the list view remains the full, keyboard-operable surface (map/list parity).
+ * Minyan pins are focusable `<button>`s. The map is created once; markers/centre update imperatively.
  */
 export function DiscoveryMap({
   center,
   minyanim,
-  beitChabad,
+  places,
+  layers,
   onSelectMinyan,
 }: {
   center: { lat: number; lng: number };
   minyanim: PublicMinyanDTO[];
-  beitChabad: BeitChabadPinDTO[];
+  places: PlaceDTO[];
+  layers: LayerDTO[];
   onSelectMinyan: (id: string) => void;
 }) {
   const { t } = useTranslation();
@@ -129,10 +134,11 @@ export function DiscoveryMap({
         onClick: () => onSelectRef.current(m.id),
       });
     }
-    for (const c of beitChabad) {
-      addMarker(`${t("discovery.beitChabad")}: ${c.name}`, "var(--gold)", c.lng, c.lat, { popupHtml: beitChabadPopup(c, t) });
+    const layerName = (id: string) => layers.find((l) => l.id === id)?.name ?? "";
+    for (const p of places) {
+      addMarker(`${layerName(p.layerId)}: ${p.name}`, "var(--gold)", p.lng, p.lat, { popupHtml: placePopup(p, layerName(p.layerId), t) });
     }
-  }, [ready, minyanim, beitChabad, t]);
+  }, [ready, minyanim, places, layers, t]);
 
   if (!tileKey) return null;
   return <div ref={ref} role="application" aria-label={t("discovery.mapAlt")} className="h-72 w-full overflow-hidden rounded-2xl border border-line" />;
