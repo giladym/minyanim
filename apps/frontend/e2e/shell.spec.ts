@@ -12,7 +12,7 @@ async function signIn(page: import("@playwright/test").Page) {
 test("authenticated shell renders with header + nav, no WCAG AA violations", async ({ page }) => {
   await signIn(page);
   await page.goto("/stays");
-  await expect(page.getByRole("heading", { name: /המיקומים|My Locations/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /היעדים|My Locations/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /חיפוש|Search/ })).toBeVisible();
   await expect(page.getByTestId("hebrew-date")).toBeAttached(); // Hebrew calendar widget (US4)
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();

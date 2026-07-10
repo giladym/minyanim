@@ -12,7 +12,7 @@
 
 ## Summary
 
-The core data unit of the product. A signed-in user registers a **Stay** (שהייה) — where
+The core data unit of the product. A signed-in user registers a **Stay** (יעד) — where
 they will be, when, with how many men, and what prayer needs — using a map location
 picker. They see and manage all their Stays in a dashboard sorted nearest-first, and can
 edit or cancel them. After this feature, the product is usable single-player: a user can
@@ -82,7 +82,7 @@ below. Items needing external action are listed under **Follow-ups** at the end 
 - Q: What does "number of men" mean and what's the default? → A: **Men in the party including
   the user**, default **1**, labelled "כמה גברים בקבוצה (כולל אותך)".
 - Q: What does a first-time user with zero Stays see? → A: A calm **empty state** with a
-  one-line explanation of what a Stay is and a single prominent "הוסף שהייה" CTA (no
+  one-line explanation of what a Stay is and a single prominent "הוסף יעד" CTA (no
   auto-opening forms).
 - Q: How is the <90-second first-Stay goal (SC-001) met? → A: **Smart defaults + progressive
   disclosure** — pre-fill contact from the profile (name + first phone, snapshotted onto the
@@ -170,7 +170,7 @@ soonest first.
 3. **Given** a Stay whose departure date has passed, **When** the dashboard renders,
    **Then** it is visually distinguished as past (full history view is feature 004).
 4. **Given** a user with zero Stays, **When** they open the dashboard, **Then** they see an
-   empty state explaining what a Stay is and a single prominent "הוסף שהייה" call-to-action.
+   empty state explaining what a Stay is and a single prominent "הוסף יעד" call-to-action.
 
 ---
 
@@ -257,7 +257,7 @@ reflected immediately; cancelling removes it from the active list.
   search-first and manual entry; when no locality resolves, or when the map cannot load, the user
   MUST still be able to search by name or enter city/country manually.
 - **FR-009**: A user with zero Stays MUST see an empty state explaining what a Stay is with a
-  single prominent "הוסף שהייה" call-to-action. The Add-Stay form MUST minimize effort via
+  single prominent "הוסף יעד" call-to-action. The Add-Stay form MUST minimize effort via
   smart defaults (contact pre-filled from the profile and snapshotted onto the Stay,
   `num_men = 1`, Shabbat tefillot auto-enabled when the range covers a Saturday) and collapse
   optional fields (specific address, group members, notes, folder) behind a "פרטים נוספים"
@@ -284,7 +284,7 @@ reflected immediately; cancelling removes it from the active list.
 
 ### Key Entities
 
-- **Stay (שהייה)** — see [ROADMAP](../ROADMAP.md). This feature establishes the Stay record
+- **Stay (יעד)** — see [ROADMAP](../ROADMAP.md). This feature establishes the Stay record
   and its CRUD.
 
 ---

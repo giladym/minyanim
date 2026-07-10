@@ -146,7 +146,7 @@ The prototype themes via CSS variables on a container; dark mode swaps the same 
 - **Mobile-first**, RTL (`dir="rtl"`). Reference frame ~388 px wide.
 - **App chrome**: top header (logo `מ` + "מניין", Hebrew date + holiday chip, theme toggle
   `◐`, language pill `עב/EN`, profile avatar) + bottom tab nav.
-- **Bottom nav** (5): גילוי (Discovery), השהיות (Stays), **＋ FAB** (Add Stay), התראות
+- **Bottom nav** (5): גילוי (Discovery), היעדים (Stays), **＋ FAB** (Add Stay), התראות
   (Notifications), פרופיל (Profile). Active = `--clay`, inactive = `--faint`.
 - **Radii**: cards `18px`, buttons `12–14px`, pills/badges `999px`, FAB circle, sheet/modal
   large. **Shadows** soft and warm.
