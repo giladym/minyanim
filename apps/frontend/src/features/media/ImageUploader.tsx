@@ -49,6 +49,7 @@ export function ImageUploader({
         type="file"
         accept="image/jpeg,image/png,image/webp"
         className="sr-only"
+        tabIndex={-1}
         aria-label={label ?? t("media.addPhoto")}
         disabled={disabled || pending}
         onChange={(e) => void onPick(e)}

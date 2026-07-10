@@ -12,7 +12,8 @@ test("profile page: renders, adds a phone, axe AA clean", async ({ page }) => {
   await page.goto("/profile");
   await expect(page.getByRole("heading", { name: /הפרופיל שלי|My profile/ })).toBeVisible();
   // 012: the avatar upload control is present + accessible (its section is axe-scanned below).
-  await expect(page.getByRole("button", { name: /הוספת תמונה|Add photo/ })).toBeVisible();
+  // (Chromium exposes the sr-only <input type=file> as a button too, so match the visible one.)
+  await expect(page.getByRole("button", { name: /הוספת תמונה|Add photo/ }).first()).toBeVisible();
 
   // Add a phone: pick a country (defaults to Israel/+972) + a local number → normalized to E.164.
   await page.getByLabel(/מספר טלפון|Phone number/).fill("0501234999");
