@@ -1,6 +1,10 @@
 <!-- SPECKIT START -->
-No active feature plan — 001–010 are complete (merged to `develop`, deployed to dev, CI/CD via
-Workers Builds). 006 **Admin** is now built (`specs/006-admin/`): US1/US2 flag-with-reason +
+Active plan: **011 Beit Chabad → Places consolidation** (`specs/011-beit-chabad-consolidation/plan.md`)
+— retire the legacy `beit_chabad_pin` table + bespoke discovery overlay, make the generic `place`/`layer`
+model the single source of truth (migration 0012 reconciles then drops), and repoint discovery at the
+generic `placesInBbox`/`PlaceDTO` path (drops `beitChabad`/`BeitChabadPinDTO`; adds `places`+`layers` to
+`DiscoveryResult`). Ready for `/speckit-tasks`. 001–010 are complete (merged to `develop`, deployed to
+dev, CI/CD via Workers Builds). 006 **Admin** is built (`specs/006-admin/`): US1/US2 flag-with-reason +
 auto-hide at 3 distinct reporters (#43); US3 moderation queue + user sanctions (warn/suspend/ban/
 reinstate, FR-009 last-admin guard) + `assertUserActive` enforcement on create-stay/host-minyan/
 commit; US5 metrics dashboard (`GET /api/admin/metrics` → counts + form→host→quorum funnel +
