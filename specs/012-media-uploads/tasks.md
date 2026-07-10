@@ -118,14 +118,14 @@ provision the R2 bucket on deploy.
   functions with local `useState`, and consumers track gallery refs in local state (Profile reloads;
   Stay/place/minyan use local arrays). This avoids requiring a `QueryClientProvider` in every unit test
   that renders these components (the `lib/media` react-query hooks were dropped in favor of the plain fns).
-- **Avatar display surfaces (T014):** wired on **Profile** (upload/replace/remove) and the **minyan
-  organizer card** (host avatar via `PublicMinyanDTO.hostImage`). Extending avatars to the participant
-  **roster rows** and **message threads** needs `image` added to the `ParticipantInfo` + message DTOs —
-  deferred as a thin follow-up (the pipeline + `user.image` are in place; it's display-only wiring).
-- **Orphan cleanup (T022):** wired for **stay hard-delete** and **place delete** (the galleries with the
-  most objects). **User-account-delete + seed-merge avatar cleanup is deferred** — best-effort; an
-  orphaned single avatar object is harmless and can be swept later (the reconcile script in SC-004 covers
-  it). Avatar **replace** does delete the prior object (in `mediaService.upload`).
+- **Avatar display surfaces (T014):** wired on **Profile** (upload/replace/remove), the **minyan
+  organizer card** (`PublicMinyanDTO.hostImage`), the **participant roster** (`ParticipantInfo.image`),
+  and **messages** (inbox conversations + thread header, `ConversationDTO.image`/`ThreadDTO.image`) —
+  **done** in the 012-avatar-followups PR (added `image` to those DTOs + the repo selects that feed them).
+- **Orphan cleanup (T022):** wired for **stay hard-delete**, **place delete**, and **account delete**
+  (avatar). Avatar **replace** deletes the prior object (`mediaService.upload`). **Seed-merge** needs no
+  avatar cleanup: seed users are created by the import tool with no upload path, so they never have an
+  avatar object to orphan. The SC-004 reconcile (list bucket vs. referenced) remains the backstop.
 - **Stay photo visibility:** implemented as owner/admin-only (a Stay is the owner's private record — its
   detail is never shown to others), which is stricter than the "contact-tier" wording in some scenarios;
   minyan photos are public-until-hidden (they aid the join decision). Both satisfy FR-007 (no image

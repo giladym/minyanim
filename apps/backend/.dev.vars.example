@@ -3,8 +3,27 @@
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 BETTER_AUTH_SECRET=""
+# Transactional email (email-verification + password-reset). Google SSO works without it; leave empty
+# to skip sending in dev (the backend logs "RESEND_API_KEY unset — email skipped").
 RESEND_API_KEY=""
 MAPTILER_API_KEY=""
 # PUBLIC map-tile key (origin-restricted, usage-capped) — served to the client via GET /api/config.
 # Not a secret, but kept here so all key config lives in one place. Deployed envs set it as a var.
 MAPTILER_TILE_KEY=""
+# 010 admin bootstrap: comma-separated allowlist. A signed-in user whose account email is listed is
+# idempotently promoted to admin by the `requireAdmin` guard on their first /api/admin/* request.
+ADMIN_EMAILS=""
+
+# --- Optional local/dev toggles (deployed envs set GEO_MODE/APP_BASE_URL as vars in wrangler.jsonc) ---
+# "mock" returns canned geocoding (no live MapTiler calls); default "live".
+# GEO_MODE="live"
+# Frontend origin used for auth callbacks/links; default from wrangler.jsonc.
+# APP_BASE_URL="http://localhost:5173"
+# "false" disables email-verification gating (local test-auth path); default: required.
+# REQUIRE_EMAIL_VERIFICATION="true"
+# "true" disables rate limiting (e2e/local to avoid shared-IP throttling); default: on.
+# RATE_LIMIT_DISABLED="false"
+
+# NOTE (012): uploaded image bytes live in the R2 bucket bound as IMAGES — that's a *binding* in
+# wrangler.jsonc, not a secret, so there is nothing to set here. Local dev/tests use miniflare's
+# in-memory R2; deployed envs need a one-time `wrangler r2 bucket create <name>`.

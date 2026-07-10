@@ -60,3 +60,6 @@ coverage/
 # Package manager locks (keep only one — remove whichever you don't use)
 # yarn.lock
 # pnpm-lock.yaml
+
+# Real community data (PII) — never commit; used locally by tools/seed-import
+data/

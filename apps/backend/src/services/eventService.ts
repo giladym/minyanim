@@ -110,6 +110,7 @@ async function withRosterFields(
       numMen: p.numMen,
       email: emailOf(p.email),
       phone: phoneOf(p.userId, p.sharePhone),
+      image: p.image ?? null,
       isHost: p.userId === m.hostUserId,
     })),
     myRoles,

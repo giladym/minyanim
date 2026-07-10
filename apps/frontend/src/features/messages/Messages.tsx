@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "@tanstack/react-router";
 import { ApiError } from "../../lib/api";
 import { useConversations, useThread, useSendMessage } from "../../lib/messages";
+import { Avatar } from "../media/Avatar";
 
 /** Locale-aware short timestamp: time for today, otherwise a short date. */
 function useShortTime() {
@@ -37,9 +38,7 @@ export function MessagesPage() {
               params={{ userId: c.userId }}
               className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft font-extrabold text-primary-ink">
-                {c.name.trim().charAt(0) || "?"}
-              </span>
+              <Avatar src={c.image} name={c.name || t("messages.unknownUser")} size={40} />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="flex items-center justify-between gap-2">
                   <span className="truncate font-bold text-ink">{c.name || t("messages.unknownUser")}</span>
@@ -95,6 +94,7 @@ export function MessageThreadPage() {
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-xl flex-col p-4 md:p-6" dir="rtl">
       <div className="mb-3 flex items-center gap-2">
         <Link to="/messages" className="text-sm font-bold text-clay-ink">{t("messages.back")}</Link>
+        {data && <Avatar src={data.image} name={data.name} size={32} />}
         <h1 className="font-display text-lg font-extrabold text-ink">{data?.name || t("messages.title")}</h1>
       </div>
 

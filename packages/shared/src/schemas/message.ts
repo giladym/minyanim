@@ -22,15 +22,18 @@ export interface ConversationDTO {
   /** The other participant's user id. */
   userId: string;
   name: string;
+  /** The other participant's avatar ref (012); null = initials placeholder. */
+  image: string | null;
   lastBody: string;
   lastAt: number;
   /** Unread messages the viewer has received in this conversation. */
   unread: number;
 }
 
-/** GET /api/messages/:userId — a single thread + the other participant's display name. */
+/** GET /api/messages/:userId — a single thread + the other participant's display name + avatar. */
 export interface ThreadDTO {
   userId: string;
   name: string;
+  image: string | null;
   messages: MessageDTO[];
 }

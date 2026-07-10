@@ -4,6 +4,7 @@ import { createAuth } from "../auth";
 import { createDb } from "../db/client";
 import { getProfile, updateProfile, addUserPhone, removeUserPhone, deleteAccount } from "../services/profileService";
 import { getClaimableSeeds, claimSeedUsers } from "../services/claimService";
+import { cleanupParent } from "../services/mediaService";
 import { AppError, Unauthorized, NotFound } from "../lib/errors";
 import { ERROR_CODES } from "@minyanim/shared";
 import type { Env } from "../env";
@@ -84,5 +85,6 @@ me.delete("/api/me", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };
   if (body.confirm !== true) throw new AppError(400, ERROR_CODES.SERVER_ERROR, "confirm");
   await deleteAccount(createDb(c.env.DB), userId);
+  await cleanupParent(c.env.IMAGES, "avatar", userId).catch(() => {}); // 012: remove the avatar object
   return c.json({ ok: true });
 });

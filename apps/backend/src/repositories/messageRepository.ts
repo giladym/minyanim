@@ -41,6 +41,7 @@ export async function listUserMessages(db: Db, userId: string, limit = 500) {
       read: message.read,
       createdAt: message.createdAt,
       senderName: sender.name,
+      senderImage: sender.image,
     })
     .from(message)
     .innerJoin(sender, eq(sender.id, message.senderUserId))

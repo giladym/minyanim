@@ -209,7 +209,7 @@ export async function getCommitment(db: Db, eventId: string, userId: string) {
 /** Participants of an event with their display name + email + party size (for the participant view). */
 export async function participantsForEvent(db: Db, eventId: string) {
   return db
-    .select({ userId: commitment.userId, numMen: commitment.numMen, name: user.name, email: user.email, sharePhone: user.sharePhone })
+    .select({ userId: commitment.userId, numMen: commitment.numMen, name: user.name, email: user.email, sharePhone: user.sharePhone, image: user.image })
     .from(commitment)
     .innerJoin(user, eq(user.id, commitment.userId))
     .where(eq(commitment.eventId, eventId));

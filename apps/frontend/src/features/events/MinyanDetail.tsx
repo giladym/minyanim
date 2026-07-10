@@ -233,7 +233,8 @@ function ParticipantRoster({ participants, viewerId }: { participants: Participa
           return (
             <li key={p.userId} className="rounded-xl border border-line px-3.5 py-3">
               <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="font-bold text-ink">
+                <span className="flex items-center gap-2 font-bold text-ink">
+                  <Avatar src={p.image} name={p.name} size={28} />
                   {p.name}
                   {p.isHost && <span className="ms-2 rounded-full bg-clay-soft px-2 py-0.5 text-xs font-bold text-clay-ink">{t("minyanDetail.organizer")}</span>}
                   {isSelf && <span className="ms-2 text-xs font-normal text-muted">({t("minyanDetail.you")})</span>}
