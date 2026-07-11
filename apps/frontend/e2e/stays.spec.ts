@@ -84,7 +84,7 @@ test("edit a Stay → the change is reflected", async ({ page }) => {
   // Confirm the controlled input committed to 5 before submitting (avoids a fill/re-render race
   // where the PATCH would otherwise send the stale seeded value).
   await expect(men).toHaveValue("5");
-  await page.getByRole("button", { name: /שמירת שינויים|Save changes/ }).click();
+  await page.getByRole("button", { name: /עדכון היעד|Update destination/ }).click();
   await page.waitForURL(/\/stays(\?|$)/);
   // The redesigned card face is intentionally minimal (no man-count), so verify the change
   // persisted by reopening the edit form: the group size seeds as the updated 5.

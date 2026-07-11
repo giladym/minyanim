@@ -126,6 +126,8 @@ export function AddEditStayForm({
   // invalid (the errors object can be referentially equal across two failed attempts).
   const [failedAttempt, setFailedAttempt] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
+  // Snapshot (payload shape) of the loaded Stay, to detect whether anything actually changed on edit.
+  const initialSnapshot = useRef<string | null>(null);
   const errorCount = Object.keys(errors).length;
   // Show the full location editor when creating, when the user expands it on edit, or when a
   // location field failed validation (so the flagged input is reachable rather than hidden).
@@ -197,6 +199,15 @@ export function AddEditStayForm({
         setContactEmail(s.contactEmail ?? "");
         setFolderId(s.folderId ?? null);
         setImages(s.images ?? []);
+        // Snapshot in the SAME shape/order as `payload` so a byte-equal JSON means "nothing changed".
+        initialSnapshot.current = JSON.stringify({
+          city: s.city, country: s.country, lat: s.lat, lng: s.lng,
+          addressPrivate: s.addressPrivate || null,
+          arrivalDate: s.arrivalDate, departureDate: s.departureDate,
+          numMen: s.numMen, bringsSeferTorah: s.bringsSeferTorah, prayerNeeds: s.prayerNeeds,
+          contactName: s.contactName || null, contactPhone: s.contactPhone || null, contactEmail: s.contactEmail || null,
+          groupMembers: s.groupMembers || null, notes: s.notes || null, folderId: s.folderId ?? null,
+        });
         if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
         if (!s.city) setLocationOpen(true); // no city to summarise → start expanded
       })
@@ -249,6 +260,9 @@ export function AddEditStayForm({
     }),
     [location, addressPrivate, arrival, departure, numMen, bringsSeferTorah, prayerNeeds, contactName, contactPhone, contactEmail, groupMembers, notes, folderId],
   );
+
+  // Edit mode: enable "update" only once the form differs from the loaded Stay (nothing to save otherwise).
+  const dirty = !isEdit || initialSnapshot.current == null || JSON.stringify(payload) !== initialSnapshot.current;
 
   function applyApiError(err: unknown) {
     if (err instanceof ApiError && Array.isArray(err.body.errors)) {
@@ -330,10 +344,12 @@ export function AddEditStayForm({
               {isEdit && location.city && (
                 <button
                   type="button"
-                  className="mt-3 self-start rounded-lg border border-line2 px-3 py-1.5 text-sm font-bold text-primary-ink"
+                  className="mt-3 flex items-center gap-1.5 self-start rounded-lg px-2 py-1.5 text-sm font-bold text-primary-ink"
+                  aria-label={t("stays.location.close")}
                   onClick={() => setLocationOpen(false)}
                 >
-                  {t("stays.location.done")}
+                  <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-chip text-lg leading-none text-primary-ink">−</span>
+                  {t("stays.location.close")}
                 </button>
               )}
             </>
@@ -618,7 +634,7 @@ export function AddEditStayForm({
 
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || !dirty}
           className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary shadow-card transition disabled:opacity-60"
         >
           {busy ? t("auth.submitting") : isEdit ? t("stays.saveEdit") : t("stays.saveCreate")}

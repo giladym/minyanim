@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CreatePlaceInput, PlaceDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
@@ -32,6 +32,8 @@ export function AdminPlacesManager() {
   const [phone, setPhone] = useState("");
   const [dietary, setDietary] = useState("");
   const [err, setErr] = useState("");
+  const formRef = useRef<HTMLElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   const layerName = (id: string) => layers.find((l) => l.id === id)?.name ?? id;
   function reset() {
@@ -41,6 +43,10 @@ export function AdminPlacesManager() {
     setEditingId(p.id); setLayerId(p.layerId); setName(p.name);
     setLoc({ city: "", country: "", lat: p.lat, lng: p.lng });
     setAddress(p.address ?? ""); setPhone(p.phone ?? ""); setDietary(p.kosherMeta?.dietary ?? ""); setErr(""); setEditImages(p.images ?? []);
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      nameRef.current?.focus();
+    });
   }
 
   async function save() {
@@ -66,14 +72,14 @@ export function AdminPlacesManager() {
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-2xl border border-line bg-surface p-5">
+      <section ref={formRef} className="rounded-2xl border border-line bg-surface p-5">
         <span className="mb-3 block text-xs font-bold uppercase tracking-wide text-faint">
           {editingId ? t("admin.editPlace") : t("admin.newPlace")}
         </span>
         <div className="flex flex-col gap-3">
           <label className="block">
             <span className={label}>{t("admin.placeName")}</span>
-            <input className={field} value={name} aria-label={t("admin.placeName")} onChange={(e) => setName(e.target.value)} />
+            <input ref={nameRef} className={field} value={name} aria-label={t("admin.placeName")} onChange={(e) => setName(e.target.value)} />
           </label>
           <label className="block">
             <span className={label}>{t("admin.placeLayer")}</span>

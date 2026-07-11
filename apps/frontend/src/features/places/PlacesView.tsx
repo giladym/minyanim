@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LayerDTO, PlaceDTO } from "@minyanim/shared";
-import { usePlaces } from "../../lib/places";
+import { usePlaces, usePlacesInBbox, type PlacesBbox } from "../../lib/places";
+import { layerLabel } from "../../lib/layerLabel";
 import { searchPlaces } from "../../lib/geo";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { PlacesMap } from "./PlacesMap";
@@ -45,7 +46,14 @@ export function PlacesView() {
     // Run once for the initial city prefill; later manual picks set coords directly.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const { data, isLoading } = usePlaces(coords?.lat ?? null, coords?.lng ?? null);
+  // The map emits a viewport bbox on every pan/zoom; once we have one, places reload from the bbox
+  // (keeping the previous set visible during the fetch). Before the first `moveend`, the initial
+  // point+radius query around `coords` seeds the view.
+  const [viewport, setViewport] = useState<PlacesBbox | null>(null);
+  const point = usePlaces(coords?.lat ?? null, coords?.lng ?? null);
+  const box = usePlacesInBbox(viewport);
+  const data = viewport ? box.data : point.data;
+  const isFetching = viewport ? box.isFetching : point.isLoading;
   const [off, setOff] = useState<Set<string>>(new Set()); // retired-from-view layer ids (toggles)
 
   const layers = data?.layers ?? [];
@@ -87,16 +95,16 @@ export function PlacesView() {
                 className={"rounded-full px-3 py-1.5 text-sm font-bold " + (on ? "bg-primary text-on-primary" : "border border-line text-muted")}
                 onClick={() => setOff((s) => { const n = new Set(s); if (on) n.add(l.id); else n.delete(l.id); return n; })}
               >
-                {l.name}
+                {layerLabel(l, t)}
               </button>
             );
           })}
         </div>
       )}
 
-      <PlacesMap places={visible} center={coords} />
+      <PlacesMap places={visible} center={coords} onViewportChange={setViewport} />
 
-      {isLoading && <p className="text-sm text-muted">{t("discovery.loading")}</p>}
+      {isFetching && <p className="text-sm text-muted">{t("discovery.loading")}</p>}
       {data && visible.length === 0 && <p className="text-sm text-muted">{t("places.empty")}</p>}
 
       <ul className="flex flex-col gap-2">
@@ -121,7 +129,7 @@ function PlaceRow({ place: p, layer }: { place: PlaceDTO; layer?: LayerDTO }) {
           {p.address && <span className="text-sm text-muted">{p.address}</span>}
         </span>
         <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-          {layer && <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">{layer.name}</span>}
+          {layer && <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">{layerLabel(layer, t)}</span>}
           {p.kosherMeta?.dietary && <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary-ink">{t(DIETARY_KEY[p.kosherMeta.dietary] ?? "")}</span>}
         </span>
       </div>

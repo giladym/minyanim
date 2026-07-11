@@ -46,12 +46,25 @@ export interface PlacesResponse {
   places: PlaceDTO[];
 }
 
-/** GET /api/places query — a point + optional radius (km). Reuses the 003 bbox convention. */
-export const placesQuerySchema = z.object({
-  lat: z.coerce.number().min(-90).max(90),
-  lng: z.coerce.number().min(-180).max(180),
-  radiusKm: z.coerce.number().min(0.1).max(50).optional(),
-});
+/** GET /api/places query — accepts EITHER a point (`lat`+`lng` [+`radiusKm`]) OR a full viewport
+ * bbox (`minLat`/`maxLat`/`minLng`/`maxLng`, for pan/zoom-driven reloads). Reuses the 003 bbox
+ * convention; the service clamps an over-large bbox rather than rejecting it. */
+export const placesQuerySchema = z
+  .object({
+    lat: z.coerce.number().min(-90).max(90).optional(),
+    lng: z.coerce.number().min(-180).max(180).optional(),
+    radiusKm: z.coerce.number().min(0.1).max(50).optional(),
+    minLat: z.coerce.number().min(-90).max(90).optional(),
+    maxLat: z.coerce.number().min(-90).max(90).optional(),
+    minLng: z.coerce.number().min(-180).max(180).optional(),
+    maxLng: z.coerce.number().min(-180).max(180).optional(),
+  })
+  .refine(
+    (q) =>
+      (q.lat != null && q.lng != null) ||
+      (q.minLat != null && q.maxLat != null && q.minLng != null && q.maxLng != null),
+    { message: "place.query_point_or_bbox_required" },
+  );
 export type PlacesQuery = z.infer<typeof placesQuerySchema>;
 
 // ── Admin inputs ────────────────────────────────────────────────────────────
