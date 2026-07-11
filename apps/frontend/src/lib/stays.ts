@@ -9,8 +9,23 @@ import type {
   UpdateStayInputType,
   OwnerStayDTO,
   HistoryPage,
+  LinkedMinyanDTO,
 } from "@minyanim/shared";
 import { api } from "./api";
+
+/** Active minyanim linked to a Stay (013 location-change guard). Disabled until a stay id is known. */
+export function useLinkedMinyanim(stayId: string | null) {
+  return useQuery({
+    queryKey: ["stay-linked-minyanim", stayId] as const,
+    queryFn: () => api<{ minyanim: LinkedMinyanDTO[] }>(`/stays/${stayId}/linked-minyanim`),
+    enabled: !!stayId,
+  });
+}
+
+/** Clear the stay↔minyan link on a Stay's commitments (013 "keep minyanim, unlink" action). */
+export function useUnlinkMinyanim() {
+  return useMutation({ mutationFn: (stayId: string) => api(`/stays/${stayId}/unlink-minyanim`, { method: "POST" }) });
+}
 
 /** Query key for the active-dashboard Stay list. Parameterized by scope (004 D13) — History uses
  * `["stays","history"]` with an InfiniteData shape (see `useStaysInfinite`). */

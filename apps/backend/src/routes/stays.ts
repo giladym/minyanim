@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { CreateStayInput, UpdateStayInput, flagContentSchema } from "@minyanim/shared";
 import { flagContent } from "../services/moderationService";
+import { linkedMinyanimForStay, unlinkStayCommitments } from "../services/commitmentService";
 import { cleanupParent } from "../services/mediaService";
 import { createAuth } from "../auth";
 import { createDb } from "../db/client";
@@ -59,6 +60,20 @@ stays.post("/api/stays", async (c) => {
 stays.get("/api/stays/:id", async (c) => {
   const userId = await requireUserId(c);
   return c.json(await getStayController(createDb(c.env.DB), userId, c.req.param("id"), clientTz(c)));
+});
+
+/** GET /api/stays/:id/linked-minyanim — active minyanim linked to this Stay (013 location guard). */
+stays.get("/api/stays/:id/linked-minyanim", async (c) => {
+  const userId = await requireUserId(c);
+  const minyanim = await linkedMinyanimForStay(createDb(c.env.DB), userId, c.req.param("id"));
+  return c.json({ minyanim });
+});
+
+/** POST /api/stays/:id/unlink-minyanim — clear the stay↔minyan link (013 "keep, unlink" action). */
+stays.post("/api/stays/:id/unlink-minyanim", async (c) => {
+  const userId = await requireUserId(c);
+  await unlinkStayCommitments(createDb(c.env.DB), userId, c.req.param("id"));
+  return c.json({ ok: true });
 });
 
 stays.patch("/api/stays/:id", async (c) => {

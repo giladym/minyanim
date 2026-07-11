@@ -64,6 +64,9 @@ export const CreateEventInput = z.object({
   notes: z.string().max(2000).nullish(),
   minyan: MinyanAttrsSchema,
   hostNumMen: z.number().int().min(1, "party_size.invalid").max(PARTY_SIZE_MAX, "party_size.invalid"),
+  // When a minyan is hosted "from a Stay", the originating stay id — persisted on the host's
+  // self-commitment so the minyan is trackable back to that Stay (013 location-change guard).
+  stayId: z.string().nullish(),
 });
 export type CreateEventInputType = z.infer<typeof CreateEventInput>;
 
@@ -103,6 +106,16 @@ export interface ParticipantInfo {
  * Public Minyan representation (discovery, WhatsApp share, pre-auth join). Private fields
  * (specific address, host/participant contact) are STRUCTURALLY ABSENT (D4/SC-005).
  */
+/** A minyan linked to a Stay via the user's commitment (013 location-change guard) — enough to warn
+ * about it and choose an action. `isHost` is true when the viewer hosts this minyan. */
+export interface LinkedMinyanDTO {
+  eventId: string;
+  city: string;
+  country: string;
+  eventDate: number;
+  isHost: boolean;
+}
+
 export interface PublicMinyanDTO {
   id: string;
   type: EventType;

@@ -21,6 +21,14 @@ export const minyanKey = (id: string) => ["event", id] as const;
 
 export const getMinyan = (id: string) => api<AnyMinyanDTO>(`/events/${id}`);
 export const hostMinyan = (input: CreateEventInputType) => api<OwnerMinyanDTO>("/events", { method: "POST", body: JSON.stringify(input) });
+
+/** Reassign a minyan's host to a committed participant (013 guard). */
+export function useTransferHost() {
+  return useMutation({
+    mutationFn: ({ eventId, newHostUserId }: { eventId: string; newHostUserId: string }) =>
+      api(`/events/${eventId}/transfer-host`, { method: "POST", body: JSON.stringify({ newHostUserId }) }),
+  });
+}
 export const updateMinyan = (id: string, input: UpdateEventInputType) => api<OwnerMinyanDTO>(`/events/${id}`, { method: "PATCH", body: JSON.stringify(input) });
 export const cancelMinyan = (id: string) => api<{ ok: true }>(`/events/${id}/cancel`, { method: "POST", body: JSON.stringify({ confirm: true }) });
 export const commitToMinyan = (id: string, numMen: number, stayId?: string | null) =>

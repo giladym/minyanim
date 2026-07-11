@@ -30,7 +30,20 @@ self-commitment (`eventService.hostMinyan`). So:
    `CreateEventInput`/commit → `eventService.hostMinyan` self-commit.
 2. **No silent auto-cascade.** On a Stay location change we do **not** silently withdraw people or cancel
    events. We **warn** and let the user choose.
-3. **The user chose "warn + duplicate"** as the primary path (over a full auto-cascade or doing nothing).
+3. **Full option set chosen** (2026-07-11): on a location change with linked minyanim, the user
+   picks one of — **Duplicate to new destination** · **Reassign host, then change** (host case) ·
+   **Keep minyanim, unlink from stay** · **Change anyway** · **Cancel**. No silent cascade.
+4. **Test setup:** a dev seed (regular + admin + a host + a linked participant on one shared minyan)
+   for manual testing, plus e2e + backend integration tests.
+
+### Build status
+- [x] Persist linkage — `CreateEventInput.stayId`; host self-commit stores it (`eventService`);
+      `HostMinyanForm` sends `fromStay`.
+- [x] Read — `GET /api/stays/:id/linked-minyanim` → `LinkedMinyanDTO[]` (`commitmentService.linkedMinyanimForStay`,
+      `commitmentRepository.linkedMinyanimForStay`); FE `useLinkedMinyanim`.
+- [ ] Actions — `POST /api/events/:id/transfer-host`; unlink (`commitment.stayId = null`); change-anyway (plain update).
+- [ ] FE guard dialog on location change.
+- [ ] Dev seed + tests.
 
 ## Proposed behavior
 

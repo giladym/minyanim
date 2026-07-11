@@ -9,7 +9,7 @@ import {
   cancelMinyanController,
 } from "../controllers/eventController";
 import { minyanZmanimController } from "../controllers/zmanimController";
-import { commit, changeCommitment, withdraw } from "../services/commitmentService";
+import { commit, changeCommitment, withdraw, transferHost } from "../services/commitmentService";
 import { claimRole, releaseRole } from "../services/roleService";
 import { flagContent } from "../services/moderationService";
 import { createDb } from "../db/client";
@@ -54,6 +54,15 @@ events.patch("/api/events/:id", async (c) => {
 });
 
 /** POST /api/events/:id/cancel — host-only soft cancel (requires confirm). */
+/** POST /api/events/:id/transfer-host — reassign host to a committed participant (013 guard). */
+events.post("/api/events/:id/transfer-host", async (c) => {
+  const userId = await requireUserId(c);
+  const body = (await c.req.json().catch(() => ({}))) as { newHostUserId?: string };
+  if (!body.newHostUserId) return c.json({ errors: [{ field: "newHostUserId", code: "message.recipient_required" }] }, 400);
+  await transferHost(createDb(c.env.DB), userId, c.req.param("id"), body.newHostUserId);
+  return c.json({ ok: true });
+});
+
 events.post("/api/events/:id/cancel", async (c) => {
   const userId = await requireUserId(c);
   const body = (await c.req.json().catch(() => ({}))) as { confirm?: boolean };

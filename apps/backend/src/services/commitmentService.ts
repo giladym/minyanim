@@ -3,13 +3,15 @@ import {
   type CreateCommitmentInputType,
   type ParticipantMinyanDTO,
   type OwnerMinyanDTO,
+  type LinkedMinyanDTO,
 } from "@minyanim/shared";
+import { getStayById } from "../repositories/stayRepository";
 import type { Ctx } from "../lib/context";
 import type { Db } from "../db/client";
 import { AppError, NotFound } from "../lib/errors";
 import { assertUserActive } from "../lib/enforcement";
 import { isCompleted } from "../lib/minyanStatus";
-import { getMinyanById } from "../repositories/eventRepository";
+import { getMinyanById, getCommitment, updateEventRow } from "../repositories/eventRepository";
 import { getMinyan } from "./eventService";
 import { onQuorumChange } from "./notificationService";
 import * as repo from "../repositories/commitmentRepository";
@@ -75,6 +77,38 @@ export async function withdraw(ctx: Ctx, userId: string, eventId: string): Promi
   await repo.deleteRolesForUserEvent(ctx.db, eventId, userId);
   ctx.log.info("commitment.changed", { eventId, delta: 0, withdrew: true });
   await onQuorumChange(ctx, eventId); // may fire a deduped quorum_lost on a downward crossing
+}
+
+/**
+ * Active minyanim linked to a Stay via the owner's commitments (013 location-change guard). Returns
+ * [] when the Stay isn't the caller's. `isHost` distinguishes minyanim the user hosts (→ cancel /
+ * reassign) from ones they only joined (→ withdraw / keep).
+ */
+export async function linkedMinyanimForStay(db: Db, userId: string, stayId: string): Promise<LinkedMinyanDTO[]> {
+  const s = await getStayById(db, userId, stayId);
+  if (!s) return [];
+  const rows = await repo.linkedMinyanimForStay(db, stayId);
+  return rows.map((r) => ({ eventId: r.eventId, city: r.city, country: r.country, eventDate: Number(r.eventDate), isHost: r.hostUserId === userId }));
+}
+
+/**
+ * Reassign a minyan's host to another committed participant (013 "reassign host" guard action). The
+ * caller must be the current host; the new host must already be committed to the event.
+ */
+export async function transferHost(db: Db, userId: string, eventId: string, newHostUserId: string): Promise<void> {
+  const m = await getMinyanById(db, eventId);
+  if (!m || m.hostUserId !== userId) throw NotFound();
+  if (newHostUserId === userId) return; // no-op
+  const c = await getCommitment(db, eventId, newHostUserId);
+  if (!c) throw new AppError(400, "transfer.not_participant");
+  await updateEventRow(db, eventId, { hostUserId: newHostUserId, updatedAt: new Date() });
+}
+
+/** Clear the stay↔minyan link for a Stay's commitments (013 "keep minyanim, unlink"). Owner only. */
+export async function unlinkStayCommitments(db: Db, userId: string, stayId: string): Promise<void> {
+  const s = await getStayById(db, userId, stayId);
+  if (!s) throw NotFound();
+  await repo.clearStayLink(db, stayId);
 }
 
 /**
