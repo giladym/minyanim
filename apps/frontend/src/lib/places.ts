@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CreateLayerInput,
   CreatePlaceInput,
@@ -17,6 +17,23 @@ export function usePlaces(lat: number | null, lng: number | null) {
     queryKey: ["places", lat, lng] as const,
     queryFn: () => api<PlacesResponse>(`/places?lat=${lat}&lng=${lng}`),
     enabled: lat != null && lng != null,
+  });
+}
+
+/** Viewport bbox used to reload places as the map is panned/zoomed. */
+export type PlacesBbox = { minLat: number; maxLat: number; minLng: number; maxLng: number };
+
+/** Kosher/Jewish places + active layers within a viewport bbox (pan/zoom-driven reloads). Disabled
+ * until a viewport exists; keeps the previous places visible while a new box loads (smooth pan). */
+export function usePlacesInBbox(bbox: PlacesBbox | null) {
+  return useQuery({
+    queryKey: ["places", "bbox", bbox?.minLat, bbox?.maxLat, bbox?.minLng, bbox?.maxLng] as const,
+    queryFn: () =>
+      api<PlacesResponse>(
+        `/places?minLat=${bbox!.minLat}&maxLat=${bbox!.maxLat}&minLng=${bbox!.minLng}&maxLng=${bbox!.maxLng}`,
+      ),
+    enabled: bbox != null,
+    placeholderData: keepPreviousData,
   });
 }
 

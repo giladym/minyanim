@@ -18,7 +18,7 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
 // KosherPlacesCard (shown on edit) fetches active layers via useLayers — stub it (no QueryClient).
-vi.mock("../../lib/places", () => ({ useLayers: () => ({ data: { layers: [] } }) }));
+vi.mock("../../lib/places", () => ({ usePlaces: () => ({ data: undefined }) }));
 
 vi.mock("../../lib/profile", () => ({
   getProfile: vi.fn(() =>
@@ -215,7 +215,7 @@ describe("AddEditStayForm — folder assignment (004 US1 / R10)", () => {
     await user.click(screen.getByRole("button", { name: "תיקייה חדשה" }));
     await user.type(screen.getByLabelText("תיקייה חדשה"), "טיול");
     await user.click(screen.getByRole("button", { name: "יצירה" }));
-    await user.click(screen.getByRole("button", { name: "שמירת שינויים" }));
+    await user.click(screen.getByRole("button", { name: "עדכון היעד" }));
     await waitFor(() => expect(updateMutate).toHaveBeenCalledTimes(1));
     expect(updateMutate).toHaveBeenCalledWith({ id: "stay_1", input: expect.objectContaining({ folderId: "fld_new" }) });
   });

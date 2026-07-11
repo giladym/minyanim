@@ -134,7 +134,10 @@ export function DiscoveryMap({
         onClick: () => onSelectRef.current(m.id),
       });
     }
-    const layerName = (id: string) => layers.find((l) => l.id === id)?.name ?? "";
+    const layerName = (id: string) => {
+      const l = layers.find((x) => x.id === id);
+      return l ? t(`layers.${l.id}`, { defaultValue: l.name }) : "";
+    };
     for (const p of places) {
       addMarker(`${layerName(p.layerId)}: ${p.name}`, "var(--gold)", p.lng, p.lat, { popupHtml: placePopup(p, layerName(p.layerId), t) });
     }

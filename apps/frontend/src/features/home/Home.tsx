@@ -41,6 +41,9 @@ function Nav() {
   const { theme, setTheme } = useTheme();
   const { data: session } = authClient.useSession();
   const pill = "rounded-full border border-line px-3 py-1.5 text-xs font-bold text-muted";
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-line bg-bg/90 px-5 py-3.5 backdrop-blur md:px-12">
       <div className="flex items-center gap-2.5">
@@ -51,8 +54,12 @@ function Nav() {
       </div>
       <div className="flex items-center gap-3 md:gap-6">
         <a href="#how" className="hidden text-sm font-bold text-muted sm:block">{t("nav.how")}</a>
-        <button className={pill} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-          {t("theme.toggle")}
+        <button
+          className={pill}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          aria-label={t("theme.toggle")}
+        >
+          <Icon name={isDark ? "sun" : "moon"} size={18} aria-hidden />
         </button>
         <button
           className={pill}

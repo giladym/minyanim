@@ -5,6 +5,7 @@ import { useTheme, type Theme } from "../theme/ThemeProvider";
 import { getProfile, patchProfile } from "../lib/profile";
 import { authClient } from "../lib/auth-client";
 import { RouteAnnouncer } from "./RouteAnnouncer";
+import { Icon } from "./Icon";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 import { useNotifications } from "../lib/notifications";
 import { useConversations } from "../lib/messages";
@@ -73,6 +74,9 @@ export function AppShell() {
   }
 
   const pill = "rounded-full border border-line px-3 py-1.5 text-xs font-bold text-muted";
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   return (
     <div className="min-h-screen bg-bg font-sans text-ink">
@@ -88,7 +92,9 @@ export function AppShell() {
         <HeaderCalendar />
         <div className="flex items-center gap-2">
           {isAdmin && <a href="/admin" className={pill}>{t("admin.nav")}</a>}
-          <button className={pill} onClick={toggleTheme}>{t("theme.toggle")}</button>
+          <button className={pill} onClick={toggleTheme} aria-label={t("theme.toggle")}>
+            <Icon name={isDark ? "sun" : "moon"} size={18} aria-hidden />
+          </button>
           <button className={pill} onClick={toggleLang}>{i18n.resolvedLanguage === "he" ? "EN" : "עב"}</button>
           <a href="/messages" aria-label={t("messages.title")} className="relative flex h-8 w-8 items-center justify-center rounded-full border border-line text-muted">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
