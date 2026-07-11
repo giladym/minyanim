@@ -6,6 +6,7 @@ import { searchPlaces } from "../../lib/geo";
 import { useDiscovery, type DiscoveryParams } from "../../lib/discovery";
 import { DiscoveryMap } from "./DiscoveryMap";
 import { KosherPlacesCard } from "../places/KosherPlacesCard";
+import { layerLabel } from "../../lib/layerLabel";
 
 /** Epoch-ms → "YYYY-MM-DD" for seeding the date inputs (UTC, matching the date convention). */
 function epochToInput(epoch: number): string {
@@ -208,7 +209,7 @@ export function DiscoveryPage() {
                         className={"rounded-full px-3 py-1.5 text-sm font-bold " + (on ? "bg-primary text-on-primary" : "border border-line text-muted")}
                         onClick={() => setHiddenLayers((s) => { const n = new Set(s); if (on) n.add(l.id); else n.delete(l.id); return n; })}
                       >
-                        {l.name}
+                        {layerLabel(l, t)}
                       </button>
                     );
                   })}

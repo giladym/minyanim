@@ -13,12 +13,26 @@ type MapInstance = InstanceType<MapLib["Map"]>;
  * source of truth; if the tile key is missing or tiles fail, this renders nothing and the list
  * still works. Mirrors the PickableMap seam (tile key via GET /api/config; MapTiler logo control).
  */
-export function PlacesMap({ places, center }: { places: PlaceDTO[]; center: { lat: number; lng: number } }) {
+type Bbox = { minLat: number; maxLat: number; minLng: number; maxLng: number };
+
+export function PlacesMap({
+  places,
+  center,
+  onViewportChange,
+}: {
+  places: PlaceDTO[];
+  center: { lat: number; lng: number };
+  /** Called (debounced) after each pan/zoom with the map's current bounds, to reload places. */
+  onViewportChange?: (bbox: Bbox) => void;
+}) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapInstance | null>(null);
   const libRef = useRef<MapLib | null>(null);
   const tileKey = useMaptilerTileKey();
+  // Hold the latest callback so the once-only init effect always calls the current one.
+  const onViewportChangeRef = useRef(onViewportChange);
+  onViewportChangeRef.current = onViewportChange;
 
   const featureCollection = {
     type: "FeatureCollection" as const,
@@ -60,6 +74,20 @@ export function PlacesMap({ places, center }: { places: PlaceDTO[]; center: { la
             if (geo) new mod.Popup().setLngLat(geo.coordinates).setText(name).addTo(map);
           });
         });
+        // Reload places as the user pans/zooms — debounced so a drag emits one request on settle.
+        let moveTimer: ReturnType<typeof setTimeout> | undefined;
+        map.on("moveend", () => {
+          if (moveTimer) clearTimeout(moveTimer);
+          moveTimer = setTimeout(() => {
+            const b = map.getBounds();
+            onViewportChangeRef.current?.({
+              minLat: b.getSouth(),
+              maxLat: b.getNorth(),
+              minLng: b.getWest(),
+              maxLng: b.getEast(),
+            });
+          }, 350);
+        });
         mapRef.current = map;
       })
       .catch(() => {});
@@ -78,7 +106,12 @@ export function PlacesMap({ places, center }: { places: PlaceDTO[]; center: { la
     const apply = () => {
       const src = map.getSource("places") as { setData?: (d: unknown) => void } | undefined;
       src?.setData?.(featureCollection);
-      map.setCenter([center.lng, center.lat]);
+      // Only recenter on a genuine `center` change (a Stay/pick). A pan/zoom keeps `center` fixed,
+      // so this must NOT snap the map back and fight the user's viewport.
+      const cur = map.getCenter();
+      if (Math.abs(cur.lng - center.lng) > 1e-4 || Math.abs(cur.lat - center.lat) > 1e-4) {
+        map.setCenter([center.lng, center.lat]);
+      }
     };
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);

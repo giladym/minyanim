@@ -10,6 +10,7 @@ import type {
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
 import { AppError, NotFound } from "../lib/errors";
+import type { Bbox } from "../repositories/discoveryRepository";
 import { bboxFrom } from "./discoveryService";
 import {
   countPlacesInLayer,
@@ -146,4 +147,29 @@ export async function nearPlaces(db: Db, lat: number, lng: number, radiusKm?: nu
   const bbox = bboxFrom(lat, lng, radiusKm ?? PLACES_RADIUS_KM);
   const [layers, rows] = await Promise.all([listActiveLayers(db), placesInBbox(db, bbox)]);
   return { layers: layers.map(toLayerDTO), places: rows.map(toPlaceDTO) };
+}
+
+/** Max viewport span (degrees) — a larger bbox is clamped around its centre so a world-size box
+ * can't dump the whole table on a zoomed-out pan. */
+const MAX_BBOX_SPAN_DEG = 10;
+
+/** Places within a viewport bbox (active layers only) + the active-layer list, for pan/zoom-driven
+ * reloads of the places view. Clamps an over-large span around the box centre before querying. */
+export async function placesInBboxView(db: Db, bbox: Bbox): Promise<PlacesResponse> {
+  const clamped = clampBbox(bbox);
+  const [layers, rows] = await Promise.all([listActiveLayers(db), placesInBbox(db, clamped)]);
+  return { layers: layers.map(toLayerDTO), places: rows.map(toPlaceDTO) };
+}
+
+/** Shrink a bbox to at most `MAX_BBOX_SPAN_DEG` per axis, keeping its centre fixed. */
+function clampBbox(b: Bbox): Bbox {
+  const clampAxis = (min: number, max: number): [number, number] => {
+    const span = max - min;
+    if (span <= MAX_BBOX_SPAN_DEG) return [min, max];
+    const centre = (min + max) / 2;
+    return [centre - MAX_BBOX_SPAN_DEG / 2, centre + MAX_BBOX_SPAN_DEG / 2];
+  };
+  const [minLat, maxLat] = clampAxis(b.minLat, b.maxLat);
+  const [minLng, maxLng] = clampAxis(b.minLng, b.maxLng);
+  return { minLat, maxLat, minLng, maxLng };
 }

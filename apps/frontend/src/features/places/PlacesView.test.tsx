@@ -4,7 +4,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlacesResponse } from "@minyanim/shared";
 
 let data: PlacesResponse;
-vi.mock("../../lib/places", () => ({ usePlaces: () => ({ data, isLoading: false }) }));
+vi.mock("../../lib/places", () => ({
+  usePlaces: () => ({ data, isLoading: false }),
+  usePlacesInBbox: () => ({ data: undefined, isFetching: false }),
+}));
 vi.mock("./PlacesMap", () => ({ PlacesMap: () => <div data-testid="places-map" /> }));
 vi.mock("../stays/LocationPicker", () => ({ LocationPicker: () => <div data-testid="location-picker" /> }));
 

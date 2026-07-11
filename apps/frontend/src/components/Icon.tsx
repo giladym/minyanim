@@ -17,7 +17,9 @@ export type IconName =
   | "check"
   | "close"
   | "star"
-  | "chevron-start";
+  | "chevron-start"
+  | "sun"
+  | "moon";
 
 const GLYPHS: Record<IconName, ReactNode> = {
   "map-pin": (
@@ -67,6 +69,13 @@ const GLYPHS: Record<IconName, ReactNode> = {
   close: <path d="M6 6l12 12M18 6 6 18" />,
   star: <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.9 6.2 21l1.1-6.5L2.6 9.4l6.5-.9z" />,
   "chevron-start": <path d="m15 18-6-6 6-6" />,
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </>
+  ),
+  moon: <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />,
 };
 
 /** Icons drawn as filled shapes rather than stroked outlines (the "more" dots). */
