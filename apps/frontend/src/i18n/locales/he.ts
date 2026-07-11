@@ -127,6 +127,7 @@ export const he = {
       "message.recipient_required": "יש לבחור נמען.",
       "message.body_required": "יש להזין תוכן להודעה.",
       "message.body_too_long": "ההודעה ארוכה מדי (עד 2000 תווים).",
+      "transfer.not_participant": "ניתן להעביר את האירוח רק למשתתף רשום.",
       "auth.forbidden": "אין לך הרשאה לפעולה הזו.",
       "user.suspended": "החשבון שלך מושעה זמנית ולכן לא ניתן לפרסם תוכן.",
       "user.banned": "החשבון שלך נחסם ולכן לא ניתן לפרסם תוכן.",

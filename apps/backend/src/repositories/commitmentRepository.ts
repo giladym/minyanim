@@ -76,6 +76,11 @@ export async function commitmentsByStay(db: Db, stayId: string) {
     .where(eq(commitment.stayId, stayId));
 }
 
+/** Unlink a Stay from its commitments (013 "keep minyanim, unlink" action): clear their stay_id. */
+export async function clearStayLink(db: Db, stayId: string): Promise<void> {
+  await db.update(commitment).set({ stayId: null, updatedAt: new Date() }).where(eq(commitment.stayId, stayId));
+}
+
 /**
  * Active (non-cancelled) minyanim linked to a Stay via the user's commitments (013 location guard).
  * Includes the host id + status so the caller can tell whether the viewer hosts each one.

@@ -127,6 +127,7 @@ export const en = {
       "message.recipient_required": "Pick a recipient.",
       "message.body_required": "Enter a message.",
       "message.body_too_long": "Message is too long (max 2000 characters).",
+      "transfer.not_participant": "You can only reassign hosting to a committed participant.",
       "auth.forbidden": "You don't have permission to do that.",
       "user.suspended": "Your account is temporarily suspended, so you can't post content.",
       "user.banned": "Your account is banned, so you can't post content.",
