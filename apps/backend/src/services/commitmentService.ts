@@ -3,7 +3,9 @@ import {
   type CreateCommitmentInputType,
   type ParticipantMinyanDTO,
   type OwnerMinyanDTO,
+  type LinkedMinyanDTO,
 } from "@minyanim/shared";
+import { getStayById } from "../repositories/stayRepository";
 import type { Ctx } from "../lib/context";
 import type { Db } from "../db/client";
 import { AppError, NotFound } from "../lib/errors";
@@ -82,6 +84,18 @@ export async function withdraw(ctx: Ctx, userId: string, eventId: string): Promi
  * commitment's event date, auto-withdraw that commitment (releasing roles). Called by 002's
  * stayService after a cancel/update. db-only for now; US5 upgrades to Ctx to notify the user.
  */
+/**
+ * Active minyanim linked to a Stay via the owner's commitments (013 location-change guard). Returns
+ * [] when the Stay isn't the caller's. `isHost` distinguishes minyanim the user hosts (→ cancel /
+ * reassign) from ones they only joined (→ withdraw / keep).
+ */
+export async function linkedMinyanimForStay(db: Db, userId: string, stayId: string): Promise<LinkedMinyanDTO[]> {
+  const s = await getStayById(db, userId, stayId);
+  if (!s) return [];
+  const rows = await repo.linkedMinyanimForStay(db, stayId);
+  return rows.map((r) => ({ eventId: r.eventId, city: r.city, country: r.country, eventDate: Number(r.eventDate), isHost: r.hostUserId === userId }));
+}
+
 export async function reconcileCommitmentsForStay(db: Db, stayId: string): Promise<void> {
   const coverage = await repo.getStayCoverage(db, stayId);
   const linked = await repo.commitmentsByStay(db, stayId);

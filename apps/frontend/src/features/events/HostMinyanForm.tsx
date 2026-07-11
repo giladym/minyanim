@@ -126,6 +126,7 @@ export function HostMinyanForm() {
         services: services.map((s) => ({ tefilla: s.tefilla, time: s.time || null })),
       },
       hostNumMen,
+      stayId: fromStay ?? null, // link the minyan back to the originating Stay (013)
     };
     const parsed = CreateEventInput.safeParse(payload);
     if (!parsed.success) {

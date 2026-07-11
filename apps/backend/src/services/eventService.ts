@@ -189,7 +189,7 @@ export async function hostMinyan(ctx: Ctx, userId: string, input: CreateEventInp
       updatedAt: now,
     },
     { eventId: id, nusach: attrs.nusach, seferTorah: attrs.seferTorah, services: attrs.services },
-    { id: `cmt_${crypto.randomUUID()}`, eventId: id, userId, numMen: input.hostNumMen, stayId: null, createdAt: now, updatedAt: now },
+    { id: `cmt_${crypto.randomUUID()}`, eventId: id, userId, numMen: input.hostNumMen, stayId: input.stayId ?? null, createdAt: now, updatedAt: now },
   );
   ctx.log.info("event.hosted", { eventId: id });
   // Notify people with an active location near this minyan's place + date (in-app; host excluded).

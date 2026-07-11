@@ -75,3 +75,22 @@ export async function commitmentsByStay(db: Db, stayId: string) {
     .innerJoin(event, eq(event.id, commitment.eventId))
     .where(eq(commitment.stayId, stayId));
 }
+
+/**
+ * Active (non-cancelled) minyanim linked to a Stay via the user's commitments (013 location guard).
+ * Includes the host id + status so the caller can tell whether the viewer hosts each one.
+ */
+export async function linkedMinyanimForStay(db: Db, stayId: string) {
+  return db
+    .selectDistinct({
+      eventId: event.id,
+      city: event.city,
+      country: event.country,
+      eventDate: event.eventDate,
+      hostUserId: event.hostUserId,
+      status: event.status,
+    })
+    .from(commitment)
+    .innerJoin(event, eq(event.id, commitment.eventId))
+    .where(and(eq(commitment.stayId, stayId), ne(event.status, "cancelled")));
+}
