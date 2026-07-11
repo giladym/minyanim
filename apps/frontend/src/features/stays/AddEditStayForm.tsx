@@ -7,7 +7,8 @@ import {
   type PrayerNeeds as PrayerNeedsValue,
 } from "@minyanim/shared";
 import { getProfile } from "../../lib/profile";
-import { getStay, useCreateStay, useUpdateStay } from "../../lib/stays";
+import { getStay, useCreateStay, useUpdateStay, useLinkedMinyanim, useUnlinkMinyanim } from "../../lib/stays";
+import { LocationChangeGuard } from "./LocationChangeGuard";
 import { useFolders, useCreateFolder } from "../../lib/folders";
 import { ApiError } from "../../lib/api";
 import { LocationPicker, type LocationValue } from "./LocationPicker";
@@ -154,6 +155,11 @@ export function AddEditStayForm({
 
   const create = useCreateStay();
   const update = useUpdateStay();
+  const unlinkMinyanim = useUnlinkMinyanim();
+  // 013 guard: minyanim linked to this Stay (edit mode only) + whether the location actually changed.
+  const linkedMinyanim = useLinkedMinyanim(isEdit ? (stayId ?? null) : null).data?.minyanim ?? [];
+  const initialLocation = useRef<{ city: string; lat: number | null; lng: number | null } | null>(null);
+  const [guardOpen, setGuardOpen] = useState(false);
   const { data: folders } = useFolders();
   const createFolder = useCreateFolder();
   const busy = create.isPending || update.isPending;
@@ -210,6 +216,7 @@ export function AddEditStayForm({
         });
         if (s.addressPrivate || s.groupMembers || s.notes) setShowDetails(true);
         if (!s.city) setLocationOpen(true); // no city to summarise → start expanded
+        initialLocation.current = { city: s.city, lat: s.lat, lng: s.lng }; // baseline for the 013 guard
       })
       .catch(() => setSubmitError(t("stays.loadError")));
   }, [stayId, t]);
@@ -263,6 +270,25 @@ export function AddEditStayForm({
 
   // Edit mode: enable "update" only once the form differs from the loaded Stay (nothing to save otherwise).
   const dirty = !isEdit || initialSnapshot.current == null || JSON.stringify(payload) !== initialSnapshot.current;
+  // 013: the location specifically changed (city or coords) — triggers the linked-minyanim guard.
+  const locationChanged =
+    isEdit &&
+    initialLocation.current != null &&
+    (location.city !== initialLocation.current.city ||
+      location.lat !== initialLocation.current.lat ||
+      location.lng !== initialLocation.current.lng);
+
+  /** Perform the actual Stay update (optionally clearing linked-minyan links first — 013 guard). */
+  async function runUpdate(unlink: boolean) {
+    if (!stayId) return;
+    try {
+      if (unlink) await unlinkMinyanim.mutateAsync(stayId);
+      const dto = await update.mutateAsync({ id: stayId, input: payload });
+      navigateToDashboard(dto.id, "updated");
+    } catch (err) {
+      applyApiError(err);
+    }
+  }
 
   function applyApiError(err: unknown) {
     if (err instanceof ApiError && Array.isArray(err.body.errors)) {
@@ -297,16 +323,20 @@ export function AddEditStayForm({
       return;
     }
     setErrors({});
-    try {
-      if (isEdit && stayId) {
-        const dto = await update.mutateAsync({ id: stayId, input: parsed.data });
-        navigateToDashboard(dto.id, "updated");
-      } else {
+    if (isEdit && stayId) {
+      // Location changed AND minyanim are linked → let the user decide (013 guard), don't save silently.
+      if (locationChanged && linkedMinyanim.length > 0) {
+        setGuardOpen(true);
+        return;
+      }
+      await runUpdate(false);
+    } else {
+      try {
         const dto = await create.mutateAsync(parsed.data);
         navigateToDashboard(dto.id, "saved");
+      } catch (err) {
+        applyApiError(err);
       }
-    } catch (err) {
-      applyApiError(err);
     }
   }
 
@@ -640,6 +670,18 @@ export function AddEditStayForm({
           {busy ? t("auth.submitting") : isEdit ? t("stays.saveEdit") : t("stays.saveCreate")}
         </button>
       </form>
+
+      {guardOpen && stayId && (
+        <LocationChangeGuard
+          stayId={stayId}
+          linked={linkedMinyanim}
+          onCancel={() => setGuardOpen(false)}
+          onProceed={({ unlink }) => {
+            setGuardOpen(false);
+            void runUpdate(unlink);
+          }}
+        />
+      )}
     </div>
   );
 }

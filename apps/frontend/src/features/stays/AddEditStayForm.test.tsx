@@ -30,6 +30,8 @@ vi.mock("../../lib/stays", () => ({
   useCreateStay: () => ({ isPending: false, mutateAsync: createMutate }),
   useUpdateStay: () => ({ isPending: false, mutateAsync: updateMutate }),
   getStay: (...args: unknown[]) => getStayMock(...args),
+  useLinkedMinyanim: () => ({ data: { minyanim: [] } }),
+  useUnlinkMinyanim: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock("../../lib/folders", () => ({
