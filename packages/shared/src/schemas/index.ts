@@ -7,7 +7,7 @@ export * from "./folder";
 export * from "./zmanim";
 export * from "./config";
 export * from "./event";
-export * from "./commitment";
+export * from "./attendance";
 export * from "./discovery";
 export * from "./notification";
 export * from "./message";

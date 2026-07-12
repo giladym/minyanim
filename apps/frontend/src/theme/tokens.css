@@ -55,6 +55,12 @@ button:not(:disabled),
   --on-teal: #ffffff;
   --gold: #7a5a22;
   --gold-soft: #f1e0cc;
+  /* Social-gathering accent (014). `--teal` now equals the primary green family and can't
+     differentiate a kind, so social gets its own AA-checked blue pair. Badge = soft bg + ink text. */
+  --sky: #1e5fa8;
+  --sky-soft: #e2edf8;
+  --sky-ink: #1a4f8a;                 /* ≈6.5:1 on white */
+  --on-sky: #ffffff;
   --chip: #f0edec;                    /* surface-container */
   --surface-hi: #eae7e7;              /* surface-container-high — medallions, tracks */
   --surface-hier: #e4e2e1;            /* surface-container-highest — pressed/hover */
@@ -90,6 +96,10 @@ button:not(:disabled),
   --on-teal: #002201;
   --gold: #d5c4b1;
   --gold-soft: #2a2418;
+  --sky: #5aa3e0;
+  --sky-soft: #14263a;
+  --sky-ink: #9dc8f0;                 /* light blue on the dark page */
+  --on-sky: #04223f;
   --chip: #26291f;
   --surface-hi: #2f332a;
   --surface-hier: #383d33;
@@ -124,6 +134,10 @@ button:not(:disabled),
   --color-on-primary-container: var(--on-primary-container);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
+  --color-sky: var(--sky);
+  --color-sky-soft: var(--sky-soft);
+  --color-sky-ink: var(--sky-ink);
+  --color-on-sky: var(--on-sky);
   --color-chip: var(--chip);
   --color-surface-hi: var(--surface-hi);
   --color-surface-hier: var(--surface-hier);

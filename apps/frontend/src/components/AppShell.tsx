@@ -9,6 +9,7 @@ import { Icon } from "./Icon";
 import { HeaderCalendar } from "../features/header-calendar/HeaderCalendar";
 import { useNotifications } from "../lib/notifications";
 import { useConversations } from "../lib/messages";
+import { useMyEvents } from "../lib/events";
 import { useAdminMe } from "../lib/places";
 import { PHONE_NUDGE_KEY } from "../lib/onboarding";
 
@@ -31,6 +32,10 @@ export function AppShell() {
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
   const unread = useNotifications().data?.unread ?? 0;
   const msgUnread = useConversations().data?.unread ?? 0;
+  // Host re-engagement (014, FR-017): fold pending seat-requests into the header envelope so a host
+  // is nudged even if they never open "My events".
+  const pendingReqs = (useMyEvents().data?.hosting ?? []).reduce((n, r) => n + (r.pendingRequestCount ?? 0), 0);
+  const envelopeCount = msgUnread + pendingReqs;
   const isAdmin = useAdminMe().data?.isAdmin ?? false;
   const initial = (session?.user?.name || session?.user?.email || "").trim().charAt(0).toUpperCase() || "•";
 
@@ -100,9 +105,9 @@ export function AppShell() {
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            {msgUnread > 0 && (
+            {envelopeCount > 0 && (
               <span className="absolute -top-1 -end-1 min-w-[16px] rounded-full bg-primary px-1 text-center text-[10px] font-bold text-on-primary" aria-hidden>
-                {msgUnread > 9 ? "9+" : msgUnread}
+                {envelopeCount > 9 ? "9+" : envelopeCount}
               </span>
             )}
           </a>

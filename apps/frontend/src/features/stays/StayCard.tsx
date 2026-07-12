@@ -34,6 +34,8 @@ function discoverySearch(stay: OwnerStayDTO) {
     country: stay.country,
     from: stay.arrivalDate,
     to: stay.departureDate,
+    // Minyan-specific entry point → discovery pre-applies the Minyanim kind filter (US2).
+    kind: "minyan" as const,
   };
 }
 

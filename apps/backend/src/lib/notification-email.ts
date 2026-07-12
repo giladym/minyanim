@@ -23,7 +23,7 @@ export function resendEmailSender(env: Env): EmailSender {
 export interface NotificationEmailContext {
   city: string;
   country: string;
-  /** Direct join/detail link (`/minyan/:id`). */
+  /** Direct join/detail link (type-aware: `/minyan/:id` for a minyan, `/event/:id` for a gathering). */
   url: string;
 }
 
@@ -54,6 +54,24 @@ const COPY: Record<NotificationKind, Record<Lang, { subject: string; heading: st
   host_changed: {
     he: { subject: "המארגן של המניין התחלף · מניין", heading: "המארגן התחלף", body: (c) => `המניין ב${c.city}, ${c.country} קיבל מארגן חדש.`, cta: "לצפייה במניין" },
     en: { subject: "The minyan's host changed · Minyan", heading: "The host changed", body: (c) => `The minyan in ${c.city}, ${c.country} has a new host.`, cta: "View the minyan" },
+  },
+  // 014 — hosting/gathering RSVP flows (R8/T031b). Each deep-links to the event (type-aware URL is
+  // built by the fan-out — `/event/:id` for a gathering).
+  seat_requested: {
+    he: { subject: "בקשת הצטרפות חדשה · אירוע", heading: "התקבלה בקשה חדשה", body: (c) => `מישהו ביקש להצטרף לאירוע שלכם ב${c.city}, ${c.country}. אפשר לאשר או לדחות את הבקשה מדף האירוע.`, cta: "לאישור הבקשה" },
+    en: { subject: "New seat request · Event", heading: "A new request to join", body: (c) => `Someone asked to join your event in ${c.city}, ${c.country}. You can approve or decline the request from the event page.`, cta: "Review the request" },
+  },
+  request_approved: {
+    he: { subject: "הבקשה שלכם אושרה · אירוע", heading: "אושרתם — נתראה!", body: (c) => `בקשתכם להצטרף לאירוע ב${c.city}, ${c.country} אושרה. פרטי הכתובת המדויקים זמינים כעת בדף האירוע.`, cta: "לצפייה בכתובת ובפרטים" },
+    en: { subject: "Your request was approved · Event", heading: "You're in!", body: (c) => `Your request to join the event in ${c.city}, ${c.country} was approved. The exact address is now available on the event page.`, cta: "View the address & details" },
+  },
+  request_declined: {
+    he: { subject: "הבקשה שלכם נדחתה · אירוע", heading: "הבקשה לא אושרה", body: (c) => `לצערנו בקשתכם להצטרף לאירוע ב${c.city}, ${c.country} לא אושרה הפעם. אפשר לגלות אירועים נוספים באזור.`, cta: "לגילוי אירועים נוספים" },
+    en: { subject: "Your request was declined · Event", heading: "Request not approved", body: (c) => `Unfortunately your request to join the event in ${c.city}, ${c.country} was not approved this time. You can discover other events nearby.`, cta: "Discover other events" },
+  },
+  waitlist_promoted: {
+    he: { subject: "התפנה מקום · אירוע", heading: "התפנה לכם מקום", body: (c) => `התפנה מקום ואתם עכשיו מאושרים לאירוע ב${c.city}, ${c.country}.`, cta: "לצפייה בפרטים" },
+    en: { subject: "A seat opened · Event", heading: "A seat opened up", body: (c) => `A seat freed up and you're now confirmed for the event in ${c.city}, ${c.country}.`, cta: "View the details" },
   },
 };
 

@@ -33,7 +33,7 @@ const RESULT = {
       { name: "אורח פרטי", phone: null, numMen: 1 },
     ],
   }],
-  minyanim: [
+  events: [
     {
       id: "evt_1", type: "minyan", city: "זקופנה", country: "פולין", lat: 49.3, lng: 19.95,
       eventDate: Date.UTC(2027, 7, 7), nusach: "ashkenaz", seferTorah: true,
@@ -83,7 +83,7 @@ describe("DiscoveryPage", () => {
   it("badges the viewer's own minyan and swaps the CTA to 'manage' (#2)", async () => {
     const own = {
       ...RESULT,
-      minyanim: [{ ...RESULT.minyanim[0], id: "evt_own", viewerIsHost: true }],
+      events: [{ ...RESULT.events[0], id: "evt_own", viewerIsHost: true }],
     };
     useDiscovery.mockReturnValue({ data: own, isFetching: false });
     const user = userEvent.setup();
@@ -111,6 +111,55 @@ describe("DiscoveryPage", () => {
     const toggle = await screen.findByRole("button", { name: "בתי חב״ד", pressed: true });
     await user.click(toggle);
     expect(screen.getByRole("button", { name: "בתי חב״ד", pressed: false })).toBeInTheDocument();
+  });
+
+  it("kind chips map to types/categories and hide the minyan-only sub-filters (US2)", async () => {
+    // A mixed result: a minyan + a hosting gathering + a social gathering.
+    const MIXED = {
+      ...RESULT,
+      events: [
+        RESULT.events[0],
+        {
+          id: "evt_host", type: "gathering", category: "hosting", city: "זקופנה", country: "פולין",
+          lat: 49.3, lng: 19.95, title: "שולחן שבת אצל משפחת לוי", occasion: "shabbat",
+          status: "forming", seatsRemaining: 4, confirmedCount: 2, notes: null,
+          attrs: { mealType: "shabbat_dinner", kashrut: "kosher", dietary: [], alcohol: false },
+        },
+        {
+          id: "evt_social", type: "gathering", category: "social", city: "זקופנה", country: "פולין",
+          lat: 49.3, lng: 19.95, title: "קידוש קהילתי", occasion: "none",
+          status: "forming", seatsRemaining: null, confirmedCount: 5, notes: null,
+          attrs: { subcategory: "kiddush" },
+        },
+      ],
+    };
+    useDiscovery.mockReturnValue({ data: MIXED, isFetching: false });
+    const user = userEvent.setup();
+    render(<DiscoveryPage />);
+    await user.type(screen.getByLabelText("חיפוש עיר"), "Zako");
+    await user.click(await screen.findByRole("button", { name: "Zakopane, Poland" }));
+    await user.type(screen.getByLabelText("מתאריך"), "2027-08-01");
+    await user.type(screen.getByLabelText("עד תאריך"), "2027-08-31");
+
+    // Default "All": every kind renders, with a qualified hosting badge + per-kind one-liners, and
+    // the minyan sub-filters (nusach / Sefer-Torah) are visible.
+    expect(await screen.findByText("שולחן שבת אצל משפחת לוי")).toBeInTheDocument();
+    expect(screen.getByText(/אירוח · סעודת ליל שבת/)).toBeInTheDocument();
+    expect(screen.getByText(/4 מקומות ליד השולחן/)).toBeInTheDocument();
+    expect(screen.getByText("קידוש קהילתי")).toBeInTheDocument();
+    expect(screen.getByLabelText("נוסח")).toBeInTheDocument();
+    expect(screen.getByLabelText("יש ספר תורה")).toBeInTheDocument();
+
+    // Activate the "gathering / social" chip → the query params carry types=gathering + categories=social.
+    await user.click(screen.getByRole("button", { name: "מפגש", pressed: false }));
+    const lastParams = useDiscovery.mock.calls.at(-1)![0];
+    expect(lastParams.types).toEqual(["gathering"]);
+    expect(lastParams.categories).toEqual(["social"]);
+    expect(lastParams.nusach).toBeUndefined();
+
+    // With only a gathering kind active, the minyan-only sub-filters collapse.
+    expect(screen.queryByLabelText("נוסח")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("יש ספר תורה")).not.toBeInTheDocument();
   });
 
   it("shows nothing until a center and dates are chosen", () => {

@@ -1,35 +1,70 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, inArray } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { commitment, event, eventRole, stay } from "../db/schema";
+import { attendance, event, eventRole, stay } from "../db/schema";
 
-export type CommitmentRow = typeof commitment.$inferSelect;
-export type CommitmentInsert = typeof commitment.$inferInsert;
+export type CommitmentRow = typeof attendance.$inferSelect;
+export type CommitmentInsert = typeof attendance.$inferInsert;
+
+/** Statuses a live (non-terminal) attendance can hold. Terminal = cancelled/declined (soft, R14). */
+const LIVE_STATUSES = ["confirmed", "waitlisted", "pending"] as const;
+const TERMINAL_STATUSES = ["cancelled", "declined"] as const;
 
 /**
- * Insert a commitment, returning the row — or `undefined` if the unique (event_id, user_id) guard
- * fires (already committed). This is the atomic compare-and-set for the double-commit race (R6).
+ * Insert an attendance, or RE-JOIN the soft-terminal `(event_id, user_id)` row (R14) — a guarded
+ * upsert. On a fresh insert it returns the row; on a conflict it updates ONLY a cancelled/declined
+ * row back to confirmed (and returns it). When the existing row is already live (confirmed/
+ * waitlisted/pending) the `setWhere` fails, nothing is updated, and RETURNING is empty → the caller
+ * treats that as the double-commit guard (`commitment.duplicate`). This is the minyan `/commit` path
+ * (always writes `confirmed`); gatherings use the attendance service's guarded writes.
  */
 export async function insertCommitment(db: Db, values: CommitmentInsert): Promise<CommitmentRow | undefined> {
-  const rows = await db.insert(commitment).values(values).onConflictDoNothing().returning();
+  const rows = await db
+    .insert(attendance)
+    .values(values)
+    .onConflictDoUpdate({
+      target: [attendance.eventId, attendance.userId],
+      set: {
+        partySize: values.partySize,
+        status: "confirmed",
+        stayId: values.stayId ?? null,
+        requestedAt: values.requestedAt,
+        updatedAt: values.updatedAt,
+      },
+      setWhere: inArray(attendance.status, [...TERMINAL_STATUSES]),
+    })
+    .returning();
   return rows[0];
 }
 
-/** Update a user's party size on an event; null if they aren't committed. */
+/**
+ * Update a user's party size on an event; null if they aren't in a LIVE attendance (SC-005 audit
+ * #13 — a soft-cancelled/declined row is never silently resized, and `onQuorumChange` is not fired
+ * for it).
+ */
 export async function updateCommitmentMen(db: Db, eventId: string, userId: string, numMen: number): Promise<CommitmentRow | null> {
   const rows = await db
-    .update(commitment)
-    .set({ numMen, updatedAt: new Date() })
-    .where(and(eq(commitment.eventId, eventId), eq(commitment.userId, userId)))
+    .update(attendance)
+    .set({ partySize: numMen, updatedAt: new Date() })
+    .where(
+      and(
+        eq(attendance.eventId, eventId),
+        eq(attendance.userId, userId),
+        inArray(attendance.status, [...LIVE_STATUSES]),
+      ),
+    )
     .returning();
   return rows[0] ?? null;
 }
 
-/** Delete a user's commitment; true if a row was removed. */
+/** Soft-cancel a user's attendance (R14): status → 'cancelled'. True if a non-cancelled row changed. */
 export async function deleteCommitment(db: Db, eventId: string, userId: string): Promise<boolean> {
   const rows = await db
-    .delete(commitment)
-    .where(and(eq(commitment.eventId, eventId), eq(commitment.userId, userId)))
-    .returning({ id: commitment.id });
+    .update(attendance)
+    .set({ status: "cancelled", updatedAt: new Date() })
+    .where(
+      and(eq(attendance.eventId, eventId), eq(attendance.userId, userId), ne(attendance.status, "cancelled")),
+    )
+    .returning({ id: attendance.id });
   return rows.length > 0;
 }
 
@@ -39,20 +74,21 @@ export async function deleteRolesForUserEvent(db: Db, eventId: string, userId: s
 }
 
 /**
- * A user's active commitments to OTHER events on the same date (the same Shabbat/day) — the D14
- * conflict surface. Joins event for the date + status filter.
+ * A user's CONFIRMED attendances to OTHER events on the same date (the D14 conflict surface, SC-005
+ * audit #7). Joins event for the date + status filter.
  */
 export async function userCommitmentsOnDate(db: Db, userId: string, eventDate: Date, exceptEventId: string) {
   return db
-    .select({ eventId: commitment.eventId })
-    .from(commitment)
-    .innerJoin(event, eq(event.id, commitment.eventId))
+    .select({ eventId: attendance.eventId })
+    .from(attendance)
+    .innerJoin(event, eq(event.id, attendance.eventId))
     .where(
       and(
-        eq(commitment.userId, userId),
+        eq(attendance.userId, userId),
+        eq(attendance.status, "confirmed"),
         eq(event.eventDate, eventDate),
         eq(event.status, "forming"),
-        ne(commitment.eventId, exceptEventId),
+        ne(attendance.eventId, exceptEventId),
       ),
     );
 }
@@ -67,23 +103,24 @@ export async function getStayCoverage(db: Db, stayId: string) {
   return rows[0] ?? null;
 }
 
-/** Commitments linked to a Stay (for D12 reconciliation), with their event's date. */
+/** CONFIRMED attendances linked to a Stay (for D12 reconciliation), with their event's date. */
 export async function commitmentsByStay(db: Db, stayId: string) {
   return db
-    .select({ id: commitment.id, eventId: commitment.eventId, userId: commitment.userId, eventDate: event.eventDate })
-    .from(commitment)
-    .innerJoin(event, eq(event.id, commitment.eventId))
-    .where(eq(commitment.stayId, stayId));
+    .select({ id: attendance.id, eventId: attendance.eventId, userId: attendance.userId, eventDate: event.eventDate })
+    .from(attendance)
+    .innerJoin(event, eq(event.id, attendance.eventId))
+    .where(and(eq(attendance.stayId, stayId), eq(attendance.status, "confirmed")));
 }
 
-/** Unlink a Stay from its commitments (013 "keep minyanim, unlink" action): clear their stay_id. */
+/** Unlink a Stay from its attendances (013 "keep minyanim, unlink" action): clear their stay_id. */
 export async function clearStayLink(db: Db, stayId: string): Promise<void> {
-  await db.update(commitment).set({ stayId: null, updatedAt: new Date() }).where(eq(commitment.stayId, stayId));
+  await db.update(attendance).set({ stayId: null, updatedAt: new Date() }).where(eq(attendance.stayId, stayId));
 }
 
 /**
- * Active (non-cancelled) minyanim linked to a Stay via the user's commitments (013 location guard).
- * Includes the host id + status so the caller can tell whether the viewer hosts each one.
+ * Active (non-cancelled) minyanim linked to a Stay via the user's CONFIRMED attendances (013
+ * location guard, SC-005 audit #8). Includes the host id + status so the caller can tell whether the
+ * viewer hosts each one.
  */
 export async function linkedMinyanimForStay(db: Db, stayId: string) {
   return db
@@ -95,7 +132,7 @@ export async function linkedMinyanimForStay(db: Db, stayId: string) {
       hostUserId: event.hostUserId,
       status: event.status,
     })
-    .from(commitment)
-    .innerJoin(event, eq(event.id, commitment.eventId))
-    .where(and(eq(commitment.stayId, stayId), ne(event.status, "cancelled")));
+    .from(attendance)
+    .innerJoin(event, eq(event.id, attendance.eventId))
+    .where(and(eq(attendance.stayId, stayId), eq(attendance.status, "confirmed"), ne(event.status, "cancelled")));
 }

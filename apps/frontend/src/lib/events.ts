@@ -7,6 +7,13 @@ import {
   type ParticipantMinyanDTO,
   type RosterMinyanDTO,
   type PublicMinyanDTO,
+  type PublicGatheringDTO,
+  type RosterGatheringDTO,
+  type ParticipantGatheringDTO,
+  type OwnerGatheringDTO,
+  type OwnerEventDTO,
+  type MyEventsDTO,
+  type AttendanceStatus,
   type EventRole,
   type FlagReason,
   type FlagContentInput,
@@ -16,11 +23,19 @@ import { api } from "./api";
 /** A Minyan in any of the four viewer shapes (the server picks by relationship): public
  * (signed-out), roster (signed-in, not committed), participant (committed), owner (host). */
 export type AnyMinyanDTO = PublicMinyanDTO | RosterMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO;
+/** A gathering (hosting/social) in any viewer shape. */
+export type AnyGatheringDTO = PublicGatheringDTO | RosterGatheringDTO | ParticipantGatheringDTO | OwnerGatheringDTO;
+/** Any event (minyan or gathering) in any viewer shape — discriminated on `type` (014). */
+export type AnyEventDTO = AnyMinyanDTO | AnyGatheringDTO;
 
 export const minyanKey = (id: string) => ["event", id] as const;
+export const myEventsKey = ["me", "events"] as const;
 
-export const getMinyan = (id: string) => api<AnyMinyanDTO>(`/events/${id}`);
+/** GET /events/:id — returns the viewer-appropriate tier for a minyan OR a gathering (014). */
+export const getMinyan = (id: string) => api<AnyEventDTO>(`/events/${id}`);
 export const hostMinyan = (input: CreateEventInputType) => api<OwnerMinyanDTO>("/events", { method: "POST", body: JSON.stringify(input) });
+/** POST /events — create any event type (014). Returns the owner tier for the new event. */
+export const hostEvent = (input: CreateEventInputType) => api<OwnerEventDTO>("/events", { method: "POST", body: JSON.stringify(input) });
 
 /** Reassign a minyan's host to a committed participant (013 guard). */
 export function useTransferHost() {
@@ -121,4 +136,80 @@ export const flagMinyan = (id: string, reason: FlagReason) =>
   api(`/events/${id}/flag`, { method: "POST", body: JSON.stringify({ reason } satisfies FlagContentInput) });
 export function useFlagMinyan(id: string) {
   return useMutation({ mutationFn: (reason: FlagReason) => flagMinyan(id, reason) });
+}
+
+// ── Generalized RSVP / attendance (014, T030) ─────────────────────────────────
+// These drive the kind-aware RSVP band + host RequestsPanel on a gathering. Each invalidates the
+// event detail query on settle so the seats meter / status / roster re-read; the shipped minyan
+// `/commit` hooks above are left untouched (SC-005).
+
+/** The attendance mutation response tier — the refreshed event DTO + the viewer's own status. */
+export interface AttendanceResult {
+  event: AnyEventDTO;
+  myStatus: AttendanceStatus;
+}
+
+export function useHostEvent() {
+  return useMutation({ mutationFn: hostEvent });
+}
+
+/** POST /events/:id/attendance — join / request a seat (mode decided server-side). */
+export function useRequestSeat(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ partySize, stayId }: { partySize: number; stayId?: string | null }) =>
+      api<AttendanceResult>(`/events/${id}/attendance`, { method: "POST", body: JSON.stringify({ partySize, stayId: stayId ?? null }) }),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+/** PATCH /events/:id/attendance — change own party size (reduce-to-fit or grow). */
+export function useChangePartySize(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (partySize: number) =>
+      api<AttendanceResult>(`/events/${id}/attendance`, { method: "PATCH", body: JSON.stringify({ partySize }) }),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+/** DELETE /events/:id/attendance — cancel own attendance/request. */
+export function useCancelAttendance(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api(`/events/${id}/attendance`, { method: "DELETE" }),
+    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+  });
+}
+
+/** POST /events/:id/requests/:attendanceId/approve — host approves a pending seat request. */
+export function useApproveRequest(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (attendanceId: string) =>
+      api<OwnerEventDTO>(`/events/${id}/requests/${attendanceId}/approve`, { method: "POST", body: "{}" }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: minyanKey(id) });
+      void qc.invalidateQueries({ queryKey: myEventsKey });
+    },
+  });
+}
+
+/** POST /events/:id/requests/:attendanceId/decline — host declines a pending seat request. */
+export function useDeclineRequest(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (attendanceId: string) =>
+      api<OwnerEventDTO>(`/events/${id}/requests/${attendanceId}/decline`, { method: "POST", body: "{}" }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: minyanKey(id) });
+      void qc.invalidateQueries({ queryKey: myEventsKey });
+    },
+  });
+}
+
+/** GET /api/me/events — the signed-in user's hosted + attending events (FR-017). */
+export const getMyEvents = () => api<MyEventsDTO>("/me/events");
+export function useMyEvents(enabled = true) {
+  return useQuery({ queryKey: myEventsKey, queryFn: getMyEvents, enabled });
 }

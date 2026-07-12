@@ -8,6 +8,11 @@ export const NotificationKindSchema = z.enum([
   "cancelled",
   "minyan_nearby",
   "host_changed",
+  // 014 — hosting/gathering RSVP flows (R8).
+  "seat_requested", // → host: a traveler requested a seat
+  "request_approved", // → requester: host approved
+  "request_declined", // → requester: host declined
+  "waitlist_promoted", // → guest: a freed seat promoted them (open mode)
 ]);
 export type NotificationKind = z.infer<typeof NotificationKindSchema>;
 

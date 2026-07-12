@@ -5,6 +5,8 @@ import { createDb } from "../db/client";
 import { getProfile, updateProfile, addUserPhone, removeUserPhone, deleteAccount } from "../services/profileService";
 import { getClaimableSeeds, claimSeedUsers } from "../services/claimService";
 import { cleanupParent } from "../services/mediaService";
+import { myEventsController } from "../controllers/eventController";
+import { buildCtx } from "../lib/context";
 import { AppError, Unauthorized, NotFound } from "../lib/errors";
 import { ERROR_CODES } from "@minyanim/shared";
 import type { Env } from "../env";
@@ -57,6 +59,13 @@ me.post("/api/me/claims", async (c) => {
   }
   const result = await claimSeedUsers(createDb(c.env.DB), userId, parsed.data.seedUserIds);
   return c.json(result);
+});
+
+// The signed-in user's events (FR-017): hosted + attending, with pending-request badges on hosted
+// approval-mode events — the reliable path back to the requests queue.
+me.get("/api/me/events", async (c) => {
+  const userId = await requireUserId(c);
+  return c.json(await myEventsController(buildCtx(c), userId));
 });
 
 me.post("/api/me/phones", async (c) => {

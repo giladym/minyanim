@@ -1,6 +1,6 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { notification, notificationEventLog, commitment, user, event } from "../db/schema";
+import { notification, notificationEventLog, attendance, user, event } from "../db/schema";
 import type { NotificationKind } from "@minyanim/shared";
 
 /** A fan-out recipient: who to notify + how to localize their email. */
@@ -10,23 +10,45 @@ export interface Recipient {
   language: string;
 }
 
-/** Committed participants of an event (the host is among them via self-commit). */
+/** CONFIRMED participants of an event (the host is among them via self-commit). Only confirmed
+ * attendances get fan-out mail (SC-005 audit #5 — a declined/cancelled requester is never notified
+ * of a cancellation/host change). */
 export async function recipientsForEvent(db: Db, eventId: string): Promise<Recipient[]> {
   return db
-    .select({ userId: commitment.userId, email: user.email, language: user.language })
-    .from(commitment)
-    .innerJoin(user, eq(user.id, commitment.userId))
-    .where(eq(commitment.eventId, eventId));
+    .select({ userId: attendance.userId, email: user.email, language: user.language })
+    .from(attendance)
+    .innerJoin(user, eq(user.id, attendance.userId))
+    .where(and(eq(attendance.eventId, eventId), eq(attendance.status, "confirmed")));
 }
 
-/** Public context for the notification (city/country + the event date + host) — no private fields. */
+/** Public context for the notification (city/country + type + the event date + host) — no private
+ * fields. `type` drives the type-aware deep link (`/minyan/:id` vs `/event/:id`, 014 T023). */
 export async function eventNotifyContext(db: Db, eventId: string) {
   const rows = await db
-    .select({ city: event.city, country: event.country, eventDate: event.eventDate, hostUserId: event.hostUserId })
+    .select({ city: event.city, country: event.country, type: event.type, eventDate: event.eventDate, hostUserId: event.hostUserId })
     .from(event)
     .where(eq(event.id, eventId))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/** One recipient (email + language) for a 1:1 fan-out (seat_requested / request_* / waitlist). */
+export async function recipientById(db: Db, userId: string): Promise<Recipient | null> {
+  const rows = await db
+    .select({ userId: user.id, email: user.email, language: user.language })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** Recipients (email + language) for a set of user ids — batched fan-out to pending requesters (T047). */
+export async function recipientsByIds(db: Db, userIds: string[]): Promise<Recipient[]> {
+  if (userIds.length === 0) return [];
+  return db
+    .select({ userId: user.id, email: user.email, language: user.language })
+    .from(user)
+    .where(inArray(user.id, userIds));
 }
 
 /**

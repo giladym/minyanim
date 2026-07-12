@@ -1,7 +1,7 @@
 import { ERROR_CODES, type EventRole, type ParticipantMinyanDTO, type OwnerMinyanDTO } from "@minyanim/shared";
 import type { Ctx } from "../lib/context";
 import { AppError } from "../lib/errors";
-import { getCommitment } from "../repositories/eventRepository";
+import { getConfirmedAttendance } from "../repositories/eventRepository";
 import { claimRole as repoClaim, releaseRole as repoRelease } from "../repositories/roleRepository";
 import { getMinyan } from "./eventService";
 
@@ -12,7 +12,9 @@ import { getMinyan } from "./eventService";
  * Shacharit minyan from quorum-reached to ready, R5/R4). A user may hold both roles.
  */
 export async function claimRole(ctx: Ctx, userId: string, eventId: string, role: EventRole): Promise<ParticipantMinyanDTO | OwnerMinyanDTO> {
-  if (!(await getCommitment(ctx.db, eventId, userId))) throw new AppError(403, ERROR_CODES.NOT_COMMITTED);
+  // A role claim requires a CONFIRMED attendance (SC-005 audit #11 — a withdrawn/cancelled
+  // participant must not hold Ba'al Korei, or the readiness derivation would lie).
+  if (!(await getConfirmedAttendance(ctx.db, eventId, userId))) throw new AppError(403, ERROR_CODES.NOT_COMMITTED);
   if (!(await repoClaim(ctx.db, eventId, role, userId))) throw new AppError(409, ERROR_CODES.ROLE_ALREADY_CLAIMED);
   return (await getMinyan(ctx, userId, eventId)) as ParticipantMinyanDTO | OwnerMinyanDTO;
 }

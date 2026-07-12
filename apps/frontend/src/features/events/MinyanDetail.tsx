@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useNavigate, Link } from "@tanstack/react-router";
+import { useParams, useNavigate, useSearch, Link } from "@tanstack/react-router";
 import type { RosterMinyanDTO, ParticipantMinyanDTO, OwnerMinyanDTO } from "@minyanim/shared";
 import { ApiError } from "../../lib/api";
 import type { EventRole, ParticipantInfo, PublicMinyanDTO } from "@minyanim/shared";
@@ -25,6 +25,7 @@ import { Avatar } from "../media/Avatar";
 import { Gallery } from "../media/Gallery";
 import { ImageUploader } from "../media/ImageUploader";
 import { deleteImage } from "../../lib/media";
+import { GatheringDetail } from "./GatheringDetail";
 
 /** Roster + contact are present for any signed-in viewer (roster/participant/owner tiers). */
 function hasRoster(m: AnyMinyanDTO): m is RosterMinyanDTO | ParticipantMinyanDTO | OwnerMinyanDTO {
@@ -311,9 +312,13 @@ function OrganizerCard({ m }: { m: AnyMinyanDTO }) {
   );
 }
 
-export function MinyanDetail() {
+/**
+ * Shared event-detail body (014, T028). The `type==='minyan'` branch renders TODAY'S minyan UI
+ * verbatim (hero/quorum/readiness/roles); a gathering delegates to {@link GatheringDetail}. Both the
+ * public `/minyan/$id` (unchanged) and `/event/$id` routes resolve here.
+ */
+function EventDetailContent({ id, justPublished }: { id: string; justPublished?: boolean }) {
   const { t, i18n } = useTranslation();
-  const { id } = useParams({ from: "/minyan/$id" });
   const { data: m, isLoading } = useMinyan(id);
   const { data: session } = authClient.useSession();
   const cancel = useCancelMinyan(id);
@@ -325,7 +330,7 @@ export function MinyanDetail() {
   const zmanimQuery = useMinyanZmanim(id, isShabbat);
 
   // Animate the quorum progress bar from 0 → target on mount (transition on width).
-  const pct = m ? Math.min(100, Math.round((m.committedMen / 10) * 100)) : 0;
+  const pct = m && m.type === "minyan" ? Math.min(100, Math.round((m.committedMen / 10) * 100)) : 0;
   const [barW, setBarW] = useState(0);
   useEffect(() => {
     const r = requestAnimationFrame(() => setBarW(pct));
@@ -334,6 +339,9 @@ export function MinyanDetail() {
 
   if (isLoading) return <p className="p-6 text-muted" dir="rtl">{t("discovery.loading")}</p>;
   if (!m) return <p className="p-6 text-muted" dir="rtl">{t("stays.loadError")}</p>;
+  // Gathering (hosting/social) → the generalized kind-driven body (T028). Minyan falls through to
+  // today's exact UI below; `m` is now narrowed to the minyan DTO union.
+  if (m.type !== "minyan") return <GatheringDetail id={id} g={m} justPublished={justPublished} />;
 
   const tefillot = m.services.map((s) => t(`tefilla.${s.tefilla}`) + (s.time ? ` ${s.time}` : "")).join(" · ");
   const active = m.status !== "cancelled" && m.status !== "completed";
@@ -451,6 +459,19 @@ export function MinyanDetail() {
       {!isOwner(m) && m.status !== "cancelled" && <FlagButton id={id} />}
     </div>
   );
+}
+
+/** Public minyan detail route (`/minyan/$id`) — kept so WhatsApp join links never break (D13). */
+export function MinyanDetail() {
+  const { id } = useParams({ from: "/minyan/$id" });
+  return <EventDetailContent id={id} />;
+}
+
+/** Generic event detail route (`/event/$id`) — renders any kind via the shared body (014). */
+export function EventDetail() {
+  const { id } = useParams({ from: "/event/$id" });
+  const search = useSearch({ from: "/event/$id" });
+  return <EventDetailContent id={id} justPublished={search.published === "unlisted"} />;
 }
 
 /** Discreet "report" affordance (FR-017/D19). Idempotent server-side; the UI just acknowledges. */

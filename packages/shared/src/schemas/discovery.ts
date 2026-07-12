@@ -1,7 +1,23 @@
 import { z } from "zod";
 import { DISCOVERY_RADIUS_KM } from "../config";
-import { NusachSchema, type PublicMinyanDTO } from "./event";
+import { NusachSchema, EventTypeSchema, CategorySchema, OccasionSchema, type PublicEventDTO } from "./event";
 import type { PlaceDTO, LayerDTO } from "./place";
+
+/** CSV query param → array of enum values (e.g. `types=minyan,gathering`). Empty/absent = no filter;
+ * unknown parts are dropped (lenient). */
+const csvEnum = <T extends string>(schema: z.ZodType<T>) =>
+  z
+    .string()
+    .optional()
+    .transform((s): T[] | undefined => {
+      if (!s) return undefined;
+      const out: T[] = [];
+      for (const raw of s.split(",")) {
+        const r = schema.safeParse(raw.trim());
+        if (r.success) out.push(r.data);
+      }
+      return out.length ? out : undefined;
+    });
 
 /**
  * Discovery query (FR-001/008). A bounding box from centre + radius, or a city/country match for
@@ -15,6 +31,11 @@ export const DiscoveryQuery = z.object({
   country: z.string().optional(),
   from: z.coerce.number().int(),
   to: z.coerce.number().int(),
+  // 014 kind filters: `types` (minyan,gathering) + `categories` (hosting,social) + `occasion`. Absent
+  // = all. nusach/seferTorah are minyan-only sub-filters (applied only to minyan rows).
+  types: csvEnum(EventTypeSchema),
+  categories: csvEnum(CategorySchema),
+  occasion: OccasionSchema.optional(),
   nusach: NusachSchema.optional(),
   // Present+true filters to Torah-only; absent or "false" = no filter (D17). NOT z.coerce.boolean
   // (which would turn the string "false" into true).
@@ -49,7 +70,11 @@ export interface PotentialBucket {
  */
 export interface DiscoveryResult {
   potential: PotentialBucket[];
-  minyanim: PublicMinyanDTO[];
+  /** All in-scope event kinds near the viewport (minyan + gatherings), address-free + fuzzed coords
+   * (SC-003). Filtered by the `types`/`categories`/`occasion` query params; FE reads `type`/`category`
+   * to render + the kind filter chips (US2). Minyan-only sub-filters (nusach/seferTorah) apply only to
+   * minyan rows. */
+  events: PublicEventDTO[];
   places: PlaceDTO[];
   layers: LayerDTO[];
   attribution: string;

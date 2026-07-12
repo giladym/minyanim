@@ -1,5 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { POLL_DISCOVERY_MS, type DiscoveryResult, type Nusach } from "@minyanim/shared";
+import {
+  POLL_DISCOVERY_MS,
+  type DiscoveryResult,
+  type Nusach,
+  type EventType,
+  type Category,
+  type Occasion,
+} from "@minyanim/shared";
 import { api } from "./api";
 
 /** Inputs to a discovery search (the map centre + date window + filters). */
@@ -11,6 +18,11 @@ export interface DiscoveryParams {
   country?: string;
   from: number;
   to: number;
+  /** 014 kind filters — CSV-serialized. Absent = all kinds (the flagship "see everything"). */
+  types?: EventType[];
+  categories?: Category[];
+  occasion?: Occasion;
+  /** Minyan-only sub-filters (applied server-side only to minyan rows). */
   nusach?: Nusach;
   seferTorah?: boolean;
 }
@@ -25,6 +37,9 @@ function toQuery(p: DiscoveryParams): string {
   if (p.country) q.set("country", p.country);
   q.set("from", String(p.from));
   q.set("to", String(p.to));
+  if (p.types && p.types.length) q.set("types", p.types.join(","));
+  if (p.categories && p.categories.length) q.set("categories", p.categories.join(","));
+  if (p.occasion) q.set("occasion", p.occasion);
   if (p.nusach) q.set("nusach", p.nusach);
   if (p.seferTorah) q.set("seferTorah", "true");
   return q.toString();

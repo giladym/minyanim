@@ -80,13 +80,13 @@ describe("permanent delete (004 D8 / SC-006)", () => {
       "INSERT INTO event (id, type, host_user_id, city, country, lat, lng, event_date, status, hidden, created_at, updated_at) VALUES (?, 'minyan', ?, 'מדריד', 'ספרד', 40.4, -3.7, ?, 'forming', 0, ?, ?)",
     ).bind("evt_x", userId, Date.UTC(2027, 0, 11), Date.now(), Date.now()).run();
     await env.DB.prepare(
-      "INSERT INTO commitment (id, event_id, user_id, num_men, stay_id, created_at, updated_at) VALUES ('cmt_x', 'evt_x', ?, 2, ?, ?, ?)",
-    ).bind(userId, s.id, Date.now(), Date.now()).run();
+      "INSERT INTO attendance (id, event_id, user_id, party_size, status, stay_id, requested_at, created_at, updated_at) VALUES ('cmt_x', 'evt_x', ?, 2, 'confirmed', ?, ?, ?, ?)",
+    ).bind(userId, s.id, Date.now(), Date.now(), Date.now()).run();
 
     expect((await permaDelete(cookie, s.id)).status).toBe(200);
 
-    // The commitment row survives (event still exists) with its stay_id nulled.
-    const cmt = (await env.DB.prepare("SELECT stay_id FROM commitment WHERE id = 'cmt_x'").first()) as { stay_id: string | null } | null;
+    // The attendance row survives (event still exists) with its stay_id nulled.
+    const cmt = (await env.DB.prepare("SELECT stay_id FROM attendance WHERE id = 'cmt_x'").first()) as { stay_id: string | null } | null;
     expect(cmt).not.toBeNull();
     expect(cmt!.stay_id).toBeNull();
   });

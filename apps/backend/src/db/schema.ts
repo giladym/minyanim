@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
-import type { PrayerNeeds, MinyanService, KosherMeta } from "@minyanim/shared";
+import type { PrayerNeeds, MinyanService, KosherMeta, GatheringAttrs } from "@minyanim/shared";
 
 // better-auth-owned tables (user/session/account/verification) + our phone_number.
 // Field KEYS match better-auth's model fields; DB column names are snake_case.
@@ -177,10 +177,15 @@ export const event = sqliteTable(
   "event",
   {
     id: text("id").primaryKey(),
+    // 014: behavior class — 'minyan' (quorum) | 'gathering' (capacity+RSVP). Was minyan-only.
     type: text("type").notNull().default("minyan"),
+    // 014: user-facing kind for gatherings ('hosting'|'social'|…). NULL for a minyan.
+    category: text("category"),
     hostUserId: text("host_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    // 014: host-set title; NULL for a minyan (its label is derived from services/place).
+    title: text("title"),
     city: text("city").notNull(),
     country: text("country").notNull(),
     lat: real("lat").notNull(),
@@ -190,8 +195,20 @@ export const event = sqliteTable(
     // committed participants alongside the address (D4).
     addressNotes: text("address_notes"),
     eventDate: integer("event_date", { mode: "timestamp" }).notNull(),
+    // 014: optional 'HH:MM' wall-clock start/end (event_date stays date-only). FR-002.
+    startTime: text("start_time"),
+    endTime: text("end_time"),
+    // 014: cross-cutting occasion tag (R5); NULL/'none' = no occasion.
+    occasion: text("occasion"),
+    // 014: independent RSVP + discoverability axes (R3). Defaults keep minyan behavior unchanged.
+    rsvpMode: text("rsvp_mode").notNull().default("open"),
+    visibility: text("visibility").notNull().default("public"),
+    // 014: guest seats (host not counted, R12); NULL = unlimited. Gatherings only.
+    capacity: integer("capacity"),
+    // 014: optional close time for new requests/joins (R11); also closed once event_date passes.
+    rsvpCutoff: integer("rsvp_cutoff", { mode: "timestamp" }),
     notes: text("notes"),
-    // 012: host-managed photo gallery (R2 refs). Follows the Minyan's visibility/moderation state.
+    // 012: host-managed photo gallery (R2 refs). Follows the event's visibility/moderation state.
     images: text("images", { mode: "json" }).$type<string[]>(),
     status: text("status").notNull().default("forming"),
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
@@ -215,8 +232,22 @@ export const minyan = sqliteTable("minyan", {
   services: text("services", { mode: "json" }).$type<MinyanService[]>().notNull(),
 });
 
-export const commitment = sqliteTable(
-  "commitment",
+// 014: one 1:1 detail table for ALL gathering categories. Category lives on event.category (for
+// discovery filtering); the category-specific fields live in `attrs` JSON, validated by the shared
+// ATTRS_BY_CATEGORY[category] schema on write/read (the extension seam — a new category = a new
+// attrs variant, no new table). No `meal` table: hosting is a gathering category.
+export const gathering = sqliteTable("gathering", {
+  eventId: text("event_id")
+    .primaryKey()
+    .references(() => event.id, { onDelete: "cascade" }),
+  attrs: text("attrs", { mode: "json" }).$type<GatheringAttrs>().notNull(),
+});
+
+// 014 (R2 Option A): unified attendance — a person's relationship to any event, with a status.
+// Replaces the 003 `commitment` table (num_men→party_size, + status/requested_at). "confirmed" is
+// the single predicate the address-reveal gate + quorum sum + roster key on (SC-003/SC-005).
+export const attendance = sqliteTable(
+  "attendance",
   {
     id: text("id").primaryKey(),
     eventId: text("event_id")
@@ -225,15 +256,21 @@ export const commitment = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    numMen: integer("num_men").notNull(),
+    partySize: integer("party_size").notNull(),
+    // 'pending'|'confirmed'|'waitlisted'|'declined'|'cancelled'. Minyan self-commit/join → confirmed.
+    status: text("status").notNull().default("confirmed"),
     stayId: text("stay_id").references(() => stay.id, { onDelete: "set null" }),
+    // Orders the pending/waitlist queue (earliest-first, R4).
+    requestedAt: integer("requested_at", { mode: "timestamp" }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
   (t) => [
-    uniqueIndex("commitment_event_user_uidx").on(t.eventId, t.userId),
-    index("commitment_event_idx").on(t.eventId),
-    index("commitment_user_idx").on(t.userId),
+    uniqueIndex("attendance_event_user_uidx").on(t.eventId, t.userId),
+    index("attendance_event_idx").on(t.eventId),
+    index("attendance_user_idx").on(t.userId),
+    // confirmed-count + earliest waitlisted promotion (R4).
+    index("attendance_event_status_req_idx").on(t.eventId, t.status, t.requestedAt),
   ],
 );
 
