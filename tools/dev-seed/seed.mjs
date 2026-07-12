@@ -122,7 +122,8 @@ class Session {
 
   /** fetch() wrapper that sends this session's cookie and JSON-encodes the body. */
   async request(method, path, body) {
-    const headers = { "content-type": "application/json" };
+    // better-auth enforces a same-origin/trusted-origin check; send the app origin explicitly.
+    const headers = { "content-type": "application/json", origin: API_BASE };
     if (this.cookie) headers.cookie = this.cookie;
     const res = await fetch(`${API_BASE}${path}`, {
       method,
