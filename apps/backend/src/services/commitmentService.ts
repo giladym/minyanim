@@ -11,7 +11,7 @@ import type { Db } from "../db/client";
 import { AppError, NotFound } from "../lib/errors";
 import { assertUserActive } from "../lib/enforcement";
 import { isCompleted } from "../lib/minyanStatus";
-import { getMinyanById, getCommitment, updateEventRow } from "../repositories/eventRepository";
+import { getMinyanById, getConfirmedAttendance, updateEventRow } from "../repositories/eventRepository";
 import { getMinyan } from "./eventService";
 import { onQuorumChange, onHostChanged } from "./notificationService";
 import { recipientsForEvent, eventNotifyContext } from "../repositories/notificationRepository";
@@ -43,11 +43,13 @@ export async function commit(
   const conflict = (await repo.userCommitmentsOnDate(ctx.db, userId, m.eventDate, eventId)).length > 0;
   const now = new Date();
   const row = await repo.insertCommitment(ctx.db, {
-    id: `cmt_${crypto.randomUUID()}`,
+    id: `att_${crypto.randomUUID()}`,
     eventId,
     userId,
-    numMen: input.numMen,
+    partySize: input.numMen,
+    status: "confirmed",
     stayId: input.stayId ?? null,
+    requestedAt: now,
     createdAt: now,
     updatedAt: now,
   });
@@ -100,7 +102,9 @@ export async function transferHost(ctx: Ctx, userId: string, eventId: string, ne
   const m = await getMinyanById(ctx.db, eventId);
   if (!m || m.hostUserId !== userId) throw NotFound();
   if (newHostUserId === userId) return; // no-op
-  const c = await getCommitment(ctx.db, eventId, newHostUserId);
+  // The new host must be a CONFIRMED participant (SC-005 audit #12 — never reassign to a withdrawn
+  // user, which would expose the exact address via OwnerMinyanDTO).
+  const c = await getConfirmedAttendance(ctx.db, eventId, newHostUserId);
   if (!c) throw new AppError(400, "transfer.not_participant");
   await updateEventRow(ctx.db, eventId, { hostUserId: newHostUserId, updatedAt: new Date() });
   // Notify participants that hosting changed (best-effort; the transfer already succeeded).

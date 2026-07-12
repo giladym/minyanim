@@ -1,7 +1,7 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 import { QUORUM } from "@minyanim/shared";
 import type { Db } from "../db/client";
-import { user, stay, event, commitment, flag } from "../db/schema";
+import { user, stay, event, attendance, flag } from "../db/schema";
 
 /** Coerce a single-row `count(*)` select to a number. */
 async function count(q: Promise<{ n: number }[]>): Promise<number> {
@@ -32,10 +32,10 @@ export async function collectMetrics(db: Db) {
   const quorumRows = db
     .select({ id: event.id })
     .from(event)
-    .innerJoin(commitment, eq(commitment.eventId, event.id))
+    .innerJoin(attendance, and(eq(attendance.eventId, event.id), eq(attendance.status, "confirmed")))
     .where(and(eq(event.type, "minyan"), ne(event.status, "cancelled")))
     .groupBy(event.id)
-    .having(sql`sum(${commitment.numMen}) >= ${QUORUM}`);
+    .having(sql`sum(${attendance.partySize}) >= ${QUORUM}`);
 
   // Moderation: distinct flagged content items + hidden content across both tables.
   const openFlags = count(

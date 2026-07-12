@@ -6,8 +6,10 @@ import type {
   UserStatus,
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
+import type { Ctx } from "../lib/context";
 import { LastAdmin, NotFound } from "../lib/errors";
 import { findUser } from "../repositories/userRepository";
+import { onEventUnavailable, onHostSanctioned } from "./notificationService";
 import {
   activeAdminCount,
   clearFlags,
@@ -37,14 +39,22 @@ export async function flagContent(
   contentId: string,
   reporterId: string,
   input: FlagContentInput,
+  ctx?: Ctx,
 ): Promise<void> {
   if (!(await contentExists(db, contentType, contentId))) throw NotFound();
 
   const reportedUserId = input.reportUser ? await getContentOwnerId(db, contentType, contentId) : null;
   await insertFlag(db, { contentType, contentId, userId: reporterId, reason: input.reason, reportedUserId });
 
-  if ((await distinctReporterCount(db, contentType, contentId)) >= AUTO_HIDE_THRESHOLD) {
+  const reporters = await distinctReporterCount(db, contentType, contentId);
+  if (reporters >= AUTO_HIDE_THRESHOLD) {
     await setContentHidden(db, contentType, contentId, true); // idempotent — a 4th+ flag re-fires nothing
+    // On the FIRST crossing of the threshold, tell an event's pending requesters it's unavailable
+    // (T047). In-app rows write in-request (source of truth); the helper defers only the emails and
+    // never throws. `=== threshold` avoids re-notifying on a 4th+ flag.
+    if (ctx && contentType === "event" && reporters === AUTO_HIDE_THRESHOLD) {
+      await onEventUnavailable(ctx, contentId);
+    }
   }
 }
 
@@ -121,6 +131,7 @@ export async function sanctionUser(
   targetId: string,
   action: SanctionAction,
   suspendDays?: number,
+  ctx?: Ctx,
 ): Promise<SanctionResult> {
   const target = await findUser(db, targetId);
   if (!target) throw NotFound();
@@ -137,10 +148,14 @@ export async function sanctionUser(
     case "suspend": {
       const until = new Date(Date.now() + (suspendDays ?? DEFAULT_SUSPEND_DAYS) * DAY_MS);
       await setUserStatus(db, targetId, "suspended", until);
+      // The host's hosted events can no longer proceed for pending requesters (T047). In-app rows
+      // write in-request; the helper defers only the emails and never throws.
+      if (ctx) await onHostSanctioned(ctx, targetId);
       return { status: "suspended", suspendedUntil: until.getTime() };
     }
     case "ban":
       await setUserStatus(db, targetId, "banned", null);
+      if (ctx) await onHostSanctioned(ctx, targetId);
       return { status: "banned", suspendedUntil: null };
     case "reinstate":
       await setUserStatus(db, targetId, "active", null);

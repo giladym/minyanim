@@ -48,8 +48,8 @@ describe("US7 — Minyanim near my stay", () => {
     const res = await SELF.fetch(`https://x/api/discovery/near-stay/${stayId}`, { headers: { cookie: e } });
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.minyanim.length).toBeGreaterThanOrEqual(1);
-    expect(body.minyanim[0]).not.toHaveProperty("addressPrivate");
+    expect(body.events.length).toBeGreaterThanOrEqual(1);
+    expect(body.events[0]).not.toHaveProperty("addressPrivate");
     expect(body.potential.length).toBeGreaterThanOrEqual(1); // the stay's own men bucket
   });
 
@@ -89,7 +89,7 @@ describe("US7 — Minyanim near my stay", () => {
     expect(counts[farStay]).toBe(0);
 
     const near = await (await SELF.fetch(`https://x/api/discovery/near-stay/${farStay}`, { headers: { cookie: e } })).json();
-    expect(near.minyanim).toHaveLength(0);
+    expect(near.events).toHaveLength(0);
     expect(near.potential.length).toBeGreaterThanOrEqual(1); // prompt-to-host, not a dead end
   });
 });

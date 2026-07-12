@@ -17,6 +17,9 @@ export type IconName =
   | "check"
   | "close"
   | "star"
+  | "star-of-david"
+  | "utensils"
+  | "sparkles"
   | "chevron-start"
   | "sun"
   | "moon";
@@ -68,6 +71,27 @@ const GLYPHS: Record<IconName, ReactNode> = {
   check: <path d="M20 6 9 17l-5-5" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,
   star: <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.9 6.2 21l1.1-6.5L2.6 9.4l6.5-.9z" />,
+  // Star of David — two overlaid triangles (minyan kind glyph).
+  "star-of-david": (
+    <>
+      <path d="M12 2.5 20 16H4z" />
+      <path d="M12 21.5 4 8h16z" />
+    </>
+  ),
+  // Utensils — fork + knife (hosting/seudah kind glyph).
+  utensils: (
+    <>
+      <path d="M7 2v9M4.5 2v4a2.5 2.5 0 0 0 5 0V2M7 11v11" />
+      <path d="M17 2c-1.7 0-3 2-3 5 0 2.2.9 3.6 2 4v11h2V2Z" />
+    </>
+  ),
+  // Sparkles — a spark + two accents (social gathering kind glyph).
+  sparkles: (
+    <>
+      <path d="M11 3.5 12.7 8l4.5 1.7-4.5 1.7L11 15.9 9.3 11.4 4.8 9.7l4.5-1.7z" />
+      <path d="M18 14.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" />
+    </>
+  ),
   "chevron-start": <path d="m15 18-6-6 6-6" />,
   sun: (
     <>

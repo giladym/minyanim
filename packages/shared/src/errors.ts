@@ -26,6 +26,22 @@ export const ERROR_CODES = {
   PARTY_SIZE_INVALID: "party_size.invalid",
   NOT_COMMITTED: "not_committed",
   EVENT_TIME_INVALID: "event.time_invalid",
+  // 014 — Multi-type events. `event.cancelled`/`event.completed` generalize the minyan-named codes
+  // above (the `/commit` alias keeps rendering the same localized minyan copy — SC-005/R13).
+  EVENT_TYPE_INVALID: "event.type_invalid",
+  EVENT_CANCELLED: "event.cancelled",
+  EVENT_COMPLETED: "event.completed",
+  CATEGORY_INVALID: "category.invalid",
+  OCCASION_INVALID: "occasion.invalid",
+  RSVP_MODE_INVALID: "rsvp.mode_invalid",
+  RSVP_CLOSED: "rsvp.closed",
+  VISIBILITY_INVALID: "visibility.invalid",
+  CAPACITY_INVALID: "capacity.invalid",
+  CAPACITY_FULL: "capacity.full",
+  REQUEST_NOT_PENDING: "request.not_pending",
+  REQUEST_NOT_HOST: "request.not_host",
+  ATTENDANCE_NOT_FOUND: "attendance.not_found",
+  GATHERING_ATTRS_INVALID: "gathering.attrs_invalid",
   // 004 — Folders & History.
   FOLDER_NAME_TAKEN: "folder.name_taken",
   FOLDER_NAME_REQUIRED: "folder.name_required",

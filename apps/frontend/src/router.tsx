@@ -94,14 +94,16 @@ const profileRoute = createRoute({
 const discoveryRoute = createRoute({
   getParentRoute: () => authedLayout,
   path: "/discovery",
-  // Optional pre-fill from the "Minyanim near this stay" link (FR-019).
-  validateSearch: (s): { lat?: number; lng?: number; city?: string; country?: string; from?: number; to?: number } => ({
+  // Optional pre-fill from the "Minyanim near this stay" link (FR-019). `kind=minyan` arrives from a
+  // minyan-specific entry point (Stay ⋮ "search minyanim") → pre-applies the Minyanim kind filter (US2).
+  validateSearch: (s): { lat?: number; lng?: number; city?: string; country?: string; from?: number; to?: number; kind?: "minyan" | "hosting" | "social" } => ({
     lat: typeof s.lat === "number" ? s.lat : undefined,
     lng: typeof s.lng === "number" ? s.lng : undefined,
     city: typeof s.city === "string" ? s.city : undefined,
     country: typeof s.country === "string" ? s.country : undefined,
     from: typeof s.from === "number" ? s.from : undefined,
     to: typeof s.to === "number" ? s.to : undefined,
+    kind: s.kind === "minyan" || s.kind === "hosting" || s.kind === "social" ? s.kind : undefined,
   }),
   component: lazyRouteComponent(() => import("./features/discovery/DiscoveryPage"), "DiscoveryPage"),
 });
@@ -122,6 +124,23 @@ const minyanNewRoute = createRoute({
   }),
   component: lazyRouteComponent(() => import("./features/events/HostMinyanForm"), "HostMinyanForm"),
 });
+// Host an event (014) — kind picker + hosting/social form. ?kind=minyan deep-links to /minyan/new.
+const eventNewRoute = createRoute({
+  getParentRoute: () => authedLayout,
+  path: "/event/new",
+  validateSearch: (s): { kind?: "minyan" | "hosting" | "social"; fromStay?: string; lat?: number; lng?: number; city?: string; country?: string; date?: string } => ({
+    kind: s.kind === "minyan" || s.kind === "hosting" || s.kind === "social" ? s.kind : undefined,
+    fromStay: typeof s.fromStay === "string" ? s.fromStay : undefined,
+    lat: typeof s.lat === "number" ? s.lat : undefined,
+    lng: typeof s.lng === "number" ? s.lng : undefined,
+    city: typeof s.city === "string" ? s.city : undefined,
+    country: typeof s.country === "string" ? s.country : undefined,
+    date: typeof s.date === "string" ? s.date : undefined,
+  }),
+  component: lazyRouteComponent(() => import("./features/events/HostEventForm"), "HostEventPage"),
+});
+// My events (014 US1 — Screen 7): hosted + attending, host requests-queue badge.
+const myEventsRoute = createRoute({ getParentRoute: () => authedLayout, path: "/my-events", component: lazyRouteComponent(() => import("./features/events/MyEvents"), "MyEvents") });
 // Notifications inbox (003 US5).
 const notificationsRoute = createRoute({ getParentRoute: () => authedLayout, path: "/notifications", component: lazyRouteComponent(() => import("./features/notifications/NotificationsInbox"), "NotificationsInbox") });
 // Direct messages (008): inbox + per-correspondent thread.
@@ -149,6 +168,14 @@ const placesRoute = createRoute({
 });
 // Minyan detail (003 US2) — PUBLIC (root-level) so the WhatsApp join link works pre-auth (D13).
 const minyanDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: "/minyan/$id", component: lazyRouteComponent(() => import("./features/events/MinyanDetail"), "MinyanDetail") });
+// Generic event detail (014) — PUBLIC so unlisted/link shares work pre-auth. ?published=unlisted
+// shows a one-time copy-link confirmation after publishing.
+const eventDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/event/$id",
+  validateSearch: (s): { published?: "unlisted" } => ({ published: s.published === "unlisted" ? "unlisted" : undefined }),
+  component: lazyRouteComponent(() => import("./features/events/MinyanDetail"), "EventDetail"),
+});
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -158,7 +185,8 @@ const routeTree = rootRoute.addChildren([
   resetRoute,
   verifyRoute,
   minyanDetailRoute,
-  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute, adminModerationRoute, adminMetricsRoute]), placesRoute]),
+  eventDetailRoute,
+  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, eventNewRoute, myEventsRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute, adminModerationRoute, adminMetricsRoute]), placesRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });

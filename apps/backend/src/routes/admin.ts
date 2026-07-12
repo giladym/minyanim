@@ -9,6 +9,7 @@ import {
   type ModeratedContentType,
 } from "@minyanim/shared";
 import { createDb } from "../db/client";
+import { buildCtx } from "../lib/context";
 import { requireAdmin } from "../lib/auth";
 import { NotFound } from "../lib/errors";
 import { createLogger } from "../lib/logger";
@@ -141,7 +142,7 @@ function sanctionRoute(action: SanctionAction) {
     const targetId = c.req.param("id");
     const p = await parse(c, sanctionSchema);
     if (!p.ok) return p.res;
-    const result = await sanctionUser(createDb(c.env.DB), targetId, action, p.data.suspendDays);
+    const result = await sanctionUser(createDb(c.env.DB), targetId, action, p.data.suspendDays, buildCtx(c));
     createLogger({ path: c.req.path }).info("admin.sanction", { action, adminId, targetId, status: result.status });
     return c.json({ ok: true, status: result.status, suspendedUntil: result.suspendedUntil });
   });

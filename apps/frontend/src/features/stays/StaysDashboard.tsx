@@ -61,6 +61,9 @@ export function StaysDashboard() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-ink">{t("stays.title")}</h1>
         <div className="flex items-center gap-3">
+          <Link to="/my-events" className="text-sm font-bold text-clay-ink">
+            {t("stays.myEventsLink")}
+          </Link>
           <Link to="/stays/history" className="text-sm font-bold text-clay-ink">
             {t("history.title")}
           </Link>
@@ -90,6 +93,18 @@ export function StaysDashboard() {
         <p role="status" className="rounded-xl bg-teal-soft px-4 py-3 text-sm font-bold text-teal-ink">
           {flash}
         </p>
+      )}
+
+      {/* Host-an-event entry (014): a persistent card for users with no upcoming Stay, routing to the
+          kind picker. Complements the minyan-context one-tap flows on the Stay cards. */}
+      {all.length === 0 && (
+        <section className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5 text-start">
+          <h2 className="text-lg font-extrabold text-ink">{t("stays.hostEventTitle")}</h2>
+          <p className="text-sm text-muted">{t("stays.hostEventBody")}</p>
+          <Link to="/event/new" className="mt-1 self-start rounded-xl border border-primary-container px-5 py-2.5 font-bold text-primary">
+            {t("stays.hostEventCta")}
+          </Link>
+        </section>
       )}
 
       {all.length === 0 ? (

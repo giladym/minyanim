@@ -1,7 +1,7 @@
 import { SELF, env } from "cloudflare:test";
 import { describe, it, expect } from "vitest";
 import { createDb } from "../src/db/client";
-import { user, stay, event, minyan, commitment, phoneNumber } from "../src/db/schema";
+import { user, stay, event, minyan, attendance, phoneNumber } from "../src/db/schema";
 import type { MinyanService } from "@minyanim/shared";
 
 const J = { "content-type": "application/json" };
@@ -76,9 +76,9 @@ describe("GET /api/discovery", () => {
       notes: "קומה 2", status: "forming", hidden: false, createdAt: new Date(), updatedAt: new Date(),
     });
     await db.insert(minyan).values({ eventId: evId, nusach: "ashkenaz", seferTorah: true, services });
-    await db.insert(commitment).values({
-      id: crypto.randomUUID(), eventId: evId, userId: hostId, numMen: 10, stayId: null,
-      createdAt: new Date(), updatedAt: new Date(),
+    await db.insert(attendance).values({
+      id: crypto.randomUUID(), eventId: evId, userId: hostId, partySize: 10, status: "confirmed", stayId: null,
+      requestedAt: new Date(), createdAt: new Date(), updatedAt: new Date(),
     });
 
     // A completed (past) and a hidden minyan — both must be excluded.
@@ -102,9 +102,10 @@ describe("GET /api/discovery", () => {
     expect(body.potential[0].menCount).toBe(10);
     expect(body.potential[0].seferTorahCount).toBe(1);
 
-    // Exactly the one active future minyan (completed + hidden excluded).
-    expect(body.minyanim.length).toBe(1);
-    const m = body.minyanim[0];
+    // Exactly the one active future minyan (completed + hidden excluded). With only minyanim seeded,
+    // the generalized `events` field contains just that minyan (US2 — gatherings could also appear).
+    expect(body.events.length).toBe(1);
+    const m = body.events[0];
     expect(m.id).toBe(evId);
     expect(m.committedMen).toBe(10);
     // ≥10 committed ⇒ quorum reached; "ready" further needs a Ba'al Korei iff it's Shabbat-Shacharit
@@ -129,7 +130,7 @@ describe("GET /api/discovery", () => {
     const res = await SELF.fetch(`https://x/api/discovery?lat=${LON.lat}&lng=${LON.lng}&from=${ymd(2030, 1, 1).getTime()}&to=${ymd(2030, 1, 31).getTime()}`, { headers: { cookie } });
     expect(res.status).toBe(200);
     const body = await res.json();
-    const mine = body.minyanim.find((mm: { viewerIsHost?: boolean }) => mm.viewerIsHost);
+    const mine = body.events.find((mm: { viewerIsHost?: boolean }) => mm.viewerIsHost);
     expect(mine).toBeTruthy();
   });
 

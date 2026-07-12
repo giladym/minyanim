@@ -9,8 +9,9 @@ import { describe, it, expect } from "vitest";
  * otherwise.
  */
 describe("migration 0004 — schema integrity after the stay/commitment rebuild", () => {
-  it("keeps commitment.stay_id → stay FK with ON DELETE SET NULL", async () => {
-    const fks = (await env.DB.prepare("PRAGMA foreign_key_list(commitment)").all()).results as Array<{
+  it("keeps attendance.stay_id → stay FK with ON DELETE SET NULL", async () => {
+    // 014 renamed `commitment` → `attendance` (migration 0014); the stay_id FK + SET NULL survives.
+    const fks = (await env.DB.prepare("PRAGMA foreign_key_list(attendance)").all()).results as Array<{
       table: string;
       from: string;
       to: string;

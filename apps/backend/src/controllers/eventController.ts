@@ -1,23 +1,28 @@
 import { NotFound } from "../lib/errors";
 import type { Ctx } from "../lib/context";
 import type { CreateEventInputType, UpdateEventInputType } from "@minyanim/shared";
-import { hostMinyan, getMinyan, updateMinyan, cancelMinyan } from "../services/eventService";
+import { createEvent, getEvent, updateEvent, cancelMinyan, getMyEvents } from "../services/eventService";
 
-/** Host a Minyan → OwnerMinyanDTO. */
-export async function hostMinyanController(ctx: Ctx, userId: string, input: CreateEventInputType) {
-  return hostMinyan(ctx, userId, input);
+/** Create any event type (minyan or gathering) → OwnerEventDTO. */
+export async function createEventController(ctx: Ctx, userId: string, input: CreateEventInputType) {
+  return createEvent(ctx, userId, input);
 }
 
-/** Fetch one Minyan in the viewer-appropriate shape; 404 if missing/hidden-to-non-host. */
+/** The signed-in user's hosted + attending events (FR-017) → MyEventsDTO. */
+export async function myEventsController(ctx: Ctx, userId: string) {
+  return getMyEvents(ctx, userId);
+}
+
+/** Fetch one event (minyan or gathering) in the viewer-appropriate tier; 404 if missing/hidden-to-non-host. */
 export async function getMinyanController(ctx: Ctx, viewerId: string | null, id: string) {
-  const dto = await getMinyan(ctx, viewerId, id);
+  const dto = await getEvent(ctx, viewerId, id);
   if (!dto) throw NotFound();
   return dto;
 }
 
-/** Host-only edit; 404 if not the host. */
+/** Host-only edit of any event type (minyan or gathering); 404 if not the host. */
 export async function updateMinyanController(ctx: Ctx, userId: string, id: string, input: UpdateEventInputType) {
-  const dto = await updateMinyan(ctx, userId, id, input);
+  const dto = await updateEvent(ctx, userId, id, input);
   if (!dto) throw NotFound();
   return dto;
 }

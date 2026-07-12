@@ -1,15 +1,16 @@
 import { Hono } from "hono";
-import { CreateEventInput, UpdateEventInput, CreateCommitmentInput, UpdateCommitmentInput, flagContentSchema } from "@minyanim/shared";
+import { CreateEventInput, UpdateEventInput, CreateAttendanceInput, UpdateAttendanceInput, CreateCommitmentInput, UpdateCommitmentInput, flagContentSchema } from "@minyanim/shared";
 import { buildCtx } from "../lib/context";
 import { requireUserId, optionalUserId } from "../lib/auth";
 import {
-  hostMinyanController,
+  createEventController,
   getMinyanController,
   updateMinyanController,
   cancelMinyanController,
 } from "../controllers/eventController";
 import { minyanZmanimController } from "../controllers/zmanimController";
 import { commit, changeCommitment, withdraw, transferHost } from "../services/commitmentService";
+import { requestOrJoin, changePartySize, cancel as cancelAttendance, listRequests, approve, decline } from "../services/attendanceService";
 import { claimRole, releaseRole } from "../services/roleService";
 import { flagContent } from "../services/moderationService";
 import { createDb } from "../db/client";
@@ -24,12 +25,12 @@ function envelope(issues: readonly { path: PropertyKey[]; message: string }[]) {
   return { errors: issues.map((i) => ({ field: i.path.map(String).join("."), code: i.message })) };
 }
 
-/** POST /api/events — host a Minyan (auth). */
+/** POST /api/events — create any event type (minyan or gathering) (auth). */
 events.post("/api/events", async (c) => {
   const userId = await requireUserId(c);
   const parsed = CreateEventInput.safeParse(await c.req.json().catch(() => ({})));
   if (!parsed.success) return c.json(envelope(parsed.error.issues), 400);
-  return c.json(await hostMinyanController(buildCtx(c), userId, parsed.data), 201);
+  return c.json(await createEventController(buildCtx(c), userId, parsed.data), 201);
 });
 
 /** GET /api/events/:id — viewer-appropriate shape; public (optional auth) for the join link (D13). */
@@ -92,6 +93,47 @@ events.delete("/api/events/:id/commit", async (c) => {
   return c.json({ ok: true });
 });
 
+/** POST /api/events/:id/attendance — join / request a seat (generalized RSVP, 014). */
+events.post("/api/events/:id/attendance", async (c) => {
+  const userId = await requireUserId(c);
+  const parsed = CreateAttendanceInput.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json(envelope(parsed.error.issues), 400);
+  return c.json(await requestOrJoin(buildCtx(c), userId, c.req.param("id"), parsed.data));
+});
+
+/** PATCH /api/events/:id/attendance — change the caller's own party size. */
+events.patch("/api/events/:id/attendance", async (c) => {
+  const userId = await requireUserId(c);
+  const parsed = UpdateAttendanceInput.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json(envelope(parsed.error.issues), 400);
+  return c.json(await changePartySize(buildCtx(c), userId, c.req.param("id"), parsed.data));
+});
+
+/** DELETE /api/events/:id/attendance — cancel the caller's own attendance (open mode may promote). */
+events.delete("/api/events/:id/attendance", async (c) => {
+  const userId = await requireUserId(c);
+  await cancelAttendance(buildCtx(c), userId, c.req.param("id"));
+  return c.json({ ok: true });
+});
+
+/** GET /api/events/:id/requests — host-only pending-request queue (approval mode). */
+events.get("/api/events/:id/requests", async (c) => {
+  const userId = await requireUserId(c);
+  return c.json({ requests: await listRequests(buildCtx(c), userId, c.req.param("id")) });
+});
+
+/** POST /api/events/:id/requests/:attendanceId/approve — host approves a pending request. */
+events.post("/api/events/:id/requests/:attendanceId/approve", async (c) => {
+  const userId = await requireUserId(c);
+  return c.json(await approve(buildCtx(c), userId, c.req.param("id"), c.req.param("attendanceId")));
+});
+
+/** POST /api/events/:id/requests/:attendanceId/decline — host declines a pending request. */
+events.post("/api/events/:id/requests/:attendanceId/decline", async (c) => {
+  const userId = await requireUserId(c);
+  return c.json(await decline(buildCtx(c), userId, c.req.param("id"), c.req.param("attendanceId")));
+});
+
 /** POST /api/events/:id/roles/:role — claim a prayer-role slot (US4). */
 events.post("/api/events/:id/roles/:role", async (c) => {
   const userId = await requireUserId(c);
@@ -116,6 +158,6 @@ events.post("/api/events/:id/flag", async (c) => {
   if (!parsed.success) {
     return c.json({ errors: parsed.error.issues.map((i) => ({ field: i.path.join("."), code: i.message })) }, 400);
   }
-  await flagContent(createDb(c.env.DB), "event", c.req.param("id"), userId, parsed.data);
+  await flagContent(createDb(c.env.DB), "event", c.req.param("id"), userId, parsed.data, buildCtx(c));
   return c.json({ ok: true });
 });

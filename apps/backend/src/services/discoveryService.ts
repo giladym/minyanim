@@ -5,19 +5,23 @@ import {
   type PotentialBucket,
   type TravelerContact,
   type PublicMinyanDTO,
+  type PublicGatheringDTO,
+  type PublicEventDTO,
 } from "@minyanim/shared";
 import type { Db } from "../db/client";
 import { getStayById, listStays } from "./../repositories/stayRepository";
 import { shabbatSaturdaysInRange } from "../lib/timezone";
-import { deriveStatus, missingForReady, isShabbatShacharit } from "../lib/minyanStatus";
+import { deriveStatus, missingForReady, isShabbatShacharit, isCompleted } from "../lib/minyanStatus";
+import { gatheringStatus, seatsRemaining } from "../lib/eventStrategy";
 import { fuzzCoord } from "../lib/geoPrivacy";
 import {
-  listMinyanimInBbox,
+  listEventsInBbox,
   committedMenByEvent,
   rolesByEvent,
   firstPhonesByUser,
   userCommittedNearby,
   type MinyanJoined,
+  type GatheringJoined,
 } from "../repositories/eventRepository";
 import {
   activeStaysInBbox,
@@ -89,15 +93,30 @@ function toPublicMinyan(
     services: m.services,
     baalKoreiClaimed: roles.baalKorei,
   };
+  const rsvpState =
+    (m.rsvpCutoff && m.rsvpCutoff.getTime() < Date.now()) || isCompleted(m.eventDate, m.lat, m.lng)
+      ? "closed"
+      : "open";
   return {
     id: m.id,
     type: "minyan",
+    category: null,
+    occasion: m.occasion,
+    title: m.title,
     city: m.city,
     country: m.country,
     // Discovery is public — fuzz the pin to ~neighbourhood (exact reveals on commit, D4).
     lat: fuzzCoord(m.lat),
     lng: fuzzCoord(m.lng),
     eventDate: m.eventDate.getTime(),
+    startTime: m.startTime,
+    endTime: m.endTime,
+    rsvpCutoff: m.rsvpCutoff ? m.rsvpCutoff.getTime() : null,
+    rsvpMode: m.rsvpMode,
+    visibility: m.visibility,
+    capacity: null,
+    seatsRemaining: null,
+    rsvpState,
     nusach: m.nusach,
     seferTorah: m.seferTorah,
     services: m.services,
@@ -116,10 +135,61 @@ function toPublicMinyan(
   };
 }
 
+/** Assemble the public DTO for one gathering (hosting/social) — fuzzed coords, address-free, with the
+ * validated `attrs`, derived `status`/`seatsRemaining`/`confirmedCount` (mirrors eventService's public
+ * gathering builder; kept local so discovery stays a single self-contained projection, like the minyan
+ * one above). `confirmedCount` is the confirmed party-size sum. */
+function toPublicGathering(g: GatheringJoined, confirmedCount: number, viewerId: string | null): PublicGatheringDTO {
+  const rsvpState =
+    (g.rsvpCutoff && g.rsvpCutoff.getTime() < Date.now()) || isCompleted(g.eventDate, g.lat, g.lng)
+      ? "closed"
+      : "open";
+  return {
+    id: g.id,
+    type: "gathering",
+    category: g.category,
+    occasion: g.occasion,
+    title: g.title,
+    city: g.city,
+    country: g.country,
+    // Discovery is public — fuzz the pin to ~neighbourhood (exact reveals on confirm, D4/SC-003).
+    lat: fuzzCoord(g.lat),
+    lng: fuzzCoord(g.lng),
+    eventDate: g.eventDate.getTime(),
+    startTime: g.startTime,
+    endTime: g.endTime,
+    rsvpCutoff: g.rsvpCutoff ? g.rsvpCutoff.getTime() : null,
+    rsvpMode: g.rsvpMode,
+    visibility: g.visibility,
+    capacity: g.capacity,
+    seatsRemaining: seatsRemaining(g.capacity, confirmedCount),
+    rsvpState,
+    notes: g.notes,
+    hostName: g.hostName,
+    hostImage: g.hostImage,
+    images: g.images ?? null,
+    attrs: g.attrs,
+    status: gatheringStatus({
+      storedStatus: g.storedStatus,
+      eventDate: g.eventDate,
+      lat: g.lat,
+      lng: g.lng,
+      capacity: g.capacity,
+      confirmedPartySize: confirmedCount,
+    }),
+    confirmedCount,
+    viewerIsHost: viewerId !== null && g.hostUserId === viewerId,
+    createdAt: g.createdAt.getTime(),
+    updatedAt: g.updatedAt.getTime(),
+  };
+}
+
 /**
- * Discovery (FR-001): per-Shabbat potential (summed men from Stays in the area) + hosted Minyanim
- * (address-free public DTOs), excluding `completed` (derived) and `cancelled`/`hidden` (in SQL).
- * Requires no Stay of the caller's own (D22).
+ * Discovery (FR-001, generalized in 014 US2): per-Shabbat potential (summed men from Stays in the
+ * area) + hosted events of ALL in-scope kinds (minyan + gatherings) as address-free public DTOs,
+ * filtered by `types`/`categories`/`occasion` (+ minyan-only `nusach`/`seferTorah`). Excludes
+ * `completed` (derived) and `cancelled`/`hidden`/non-`public` visibility (in SQL). Requires no Stay of
+ * the caller's own (D22).
  */
 export async function discover(db: Db, q: DiscoveryQueryType, viewerId: string | null = null): Promise<DiscoveryResult> {
   const from = new Date(q.from);
@@ -139,21 +209,30 @@ export async function discover(db: Db, q: DiscoveryQueryType, viewerId: string |
   const ownerPhones = await firstPhonesByUser(db, phoneUserIds);
   const potential = bucketPotential(stays, from, to, ownerPhones);
 
-  // Hosted minyanim (bbox + filters); derive status and drop `completed`.
-  let minyanim: PublicMinyanDTO[] = [];
+  // Hosted events of every in-scope kind (bbox + kind/occasion filters); derive status, drop `completed`.
+  let events: PublicEventDTO[] = [];
   if (bbox) {
-    const rows = await listMinyanimInBbox(db, {
+    const rows = await listEventsInBbox(db, {
       ...bbox,
       from,
       to,
+      types: q.types,
+      categories: q.categories,
+      occasion: q.occasion,
       nusach: q.nusach,
       seferTorah: q.seferTorah,
     });
     const ids = rows.map((r) => r.id);
+    // Confirmed party-size sums (a minyan reads it as committed men; a gathering as confirmedCount).
+    // Roles are minyan-only; a gathering id simply misses the map (default = none).
     const [men, roles] = await Promise.all([committedMenByEvent(db, ids), rolesByEvent(db, ids)]);
-    minyanim = rows
-      .map((r) => toPublicMinyan(r, men.get(r.id) ?? 0, roles.get(r.id) ?? { baalTefila: false, baalKorei: false }, viewerId))
-      .filter((m) => m.status !== "completed");
+    events = rows
+      .map((r): PublicEventDTO =>
+        r.type === "minyan"
+          ? toPublicMinyan(r, men.get(r.id) ?? 0, roles.get(r.id) ?? { baalTefila: false, baalKorei: false }, viewerId)
+          : toPublicGathering(r, men.get(r.id) ?? 0, viewerId),
+      )
+      .filter((e) => e.status !== "completed");
   }
 
   // Kosher/Jewish places in the viewport via the generic 010 layer model (Chabad houses among them).
@@ -163,7 +242,8 @@ export async function discover(db: Db, q: DiscoveryQueryType, viewerId: string |
   ]);
   return {
     potential,
-    minyanim,
+    // All in-scope kinds (minyan + gatherings), address-free + fuzzed (US2, T033).
+    events,
     places: placeRows.map(toPlaceDTO),
     layers: layerRows.map(toLayerDTO),
     attribution: ATTRIBUTION,
@@ -172,21 +252,22 @@ export async function discover(db: Db, q: DiscoveryQueryType, viewerId: string |
 
 /** Build the discovery query that matches a Stay's location + date range (FR-019/D22). */
 function queryForStay(s: { lat: number | null; lng: number | null; city: string; country: string; arrivalDate: Date; departureDate: Date }): DiscoveryQueryType {
-  const base = { radiusKm: DISCOVERY_RADIUS_KM, from: s.arrivalDate.getTime(), to: s.departureDate.getTime() };
+  const base = { radiusKm: DISCOVERY_RADIUS_KM, from: s.arrivalDate.getTime(), to: s.departureDate.getTime(), types: undefined, categories: undefined };
   return s.lat != null && s.lng != null
     ? { ...base, lat: s.lat, lng: s.lng }
     : { ...base, city: s.city, country: s.country };
 }
 
-/** Potential + hosted minyanim near an owned Stay (FR-019 pull). Null if the Stay isn't owned. */
+/** Potential + hosted events (all kinds) near an owned Stay (FR-019 pull). Null if the Stay isn't owned. */
 export async function nearStay(db: Db, userId: string, stayId: string): Promise<DiscoveryResult | null> {
   const stay = await getStayById(db, userId, stayId);
   if (!stay) return null;
   return discover(db, queryForStay(stay), userId);
 }
 
-/** Per-active-Stay dashboard signals (R15): count of nearby hosted minyanim, and whether the user
- * is already committed to a minyan at that place/time. */
+/** Per-active-Stay dashboard signals (R15): count of nearby hosted MINYANIM (the dashboard signal is
+ * minyan-specific — unchanged from today), and whether the user is already committed to a minyan at
+ * that place/time. Discovery now surfaces all kinds, so we count only the minyan events here. */
 export async function nearStayCounts(
   db: Db,
   userId: string,
@@ -195,7 +276,7 @@ export async function nearStayCounts(
   const counts: Record<string, number> = {};
   const committed: Record<string, boolean> = {};
   for (const s of stays) {
-    counts[s.id] = (await discover(db, queryForStay(s), userId)).minyanim.length;
+    counts[s.id] = (await discover(db, queryForStay(s), userId)).events.filter((e) => e.type === "minyan").length;
     committed[s.id] =
       s.lat != null && s.lng != null
         ? await userCommittedNearby(db, userId, bboxFrom(s.lat, s.lng, DISCOVERY_RADIUS_KM), s.arrivalDate, s.departureDate)
