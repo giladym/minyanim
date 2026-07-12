@@ -22,6 +22,9 @@ import { Gallery } from "../media/Gallery";
 import { ImageUploader } from "../media/ImageUploader";
 import { deleteImage } from "../../lib/media";
 import { Icon } from "../../components/Icon";
+import { useMinyanZmanim } from "../../lib/zmanim";
+import { useProfile } from "../../lib/profile";
+import { ZmanimSection } from "../stays/ZmanimSection";
 
 // ── Tier predicates (gathering) ───────────────────────────────────────────────
 type RosterG = Extract<AnyGatheringDTO, { hostContact: unknown }>;
@@ -472,6 +475,29 @@ function GuestsSummary({ g }: { g: AnyGatheringDTO }) {
   );
 }
 
+// ── Shabbat zmanim (hosting + occasion=shabbat) — reuses the server-side event zmanim (005/T046) ──
+function ShabbatZmanim({ id, g }: { id: string; g: AnyGatheringDTO }) {
+  const { t } = useTranslation();
+  const { data: profile } = useProfile();
+  // Only a hosting seudah on Shabbat carries candle-lighting/Havdalah (festivals are out of v1). The
+  // server computes the correct Shabbat for a Friday-eve dinner or a Saturday lunch (the zmanim
+  // library stays server-only — ADR 0007).
+  const enabled = g.category === "hosting" && g.occasion === "shabbat";
+  const q = useMinyanZmanim(id, enabled);
+  if (!enabled) return null;
+  return (
+    <section className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-5">
+      <h2 className="text-xs font-bold uppercase tracking-wide text-faint">{t("zmanim.title")}</h2>
+      <ZmanimSection
+        data={q.data}
+        isLoading={q.isLoading}
+        isError={q.isError}
+        havdalahOpinion={profile?.havdalahOpinion ?? "geonim"}
+      />
+    </section>
+  );
+}
+
 // ── Organizer card ─────────────────────────────────────────────────────────────
 function GatheringOrganizer({ g }: { g: AnyGatheringDTO }) {
   const { t } = useTranslation();
@@ -568,6 +594,8 @@ export function GatheringDetail({ id, g, justPublished }: { id: string; g: AnyGa
       {isOwnerG(g) && active && g.rsvpMode === "approval" && <RequestsPanel id={id} g={g} />}
 
       <GatheringFacts g={g} />
+
+      <ShabbatZmanim id={id} g={g} />
 
       <GatheringAddress g={g} />
 

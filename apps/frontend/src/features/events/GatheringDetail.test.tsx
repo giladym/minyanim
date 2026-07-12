@@ -26,6 +26,9 @@ vi.mock("../media/Avatar", () => ({ Avatar: ({ name }: { name: string }) => <spa
 vi.mock("../media/Gallery", () => ({ Gallery: () => <div /> }));
 vi.mock("../media/ImageUploader", () => ({ ImageUploader: () => <div data-testid="uploader" /> }));
 vi.mock("../../lib/media", () => ({ deleteImage: vi.fn() }));
+// T046: the Shabbat-zmanim panel uses React Query hooks (no provider in this test) — mock them.
+vi.mock("../../lib/zmanim", () => ({ useMinyanZmanim: () => ({ data: undefined, isLoading: false, isError: false }) }));
+vi.mock("../../lib/profile", () => ({ useProfile: () => ({ data: { havdalahOpinion: "geonim" } }) }));
 
 import { GatheringDetail } from "./GatheringDetail";
 import "../../i18n";
