@@ -59,7 +59,7 @@ events.post("/api/events/:id/transfer-host", async (c) => {
   const userId = await requireUserId(c);
   const body = (await c.req.json().catch(() => ({}))) as { newHostUserId?: string };
   if (!body.newHostUserId) return c.json({ errors: [{ field: "newHostUserId", code: "message.recipient_required" }] }, 400);
-  await transferHost(createDb(c.env.DB), userId, c.req.param("id"), body.newHostUserId);
+  await transferHost(buildCtx(c), userId, c.req.param("id"), body.newHostUserId);
   return c.json({ ok: true });
 });
 

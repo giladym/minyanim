@@ -7,6 +7,7 @@ export const NotificationKindSchema = z.enum([
   "quorum_lost",
   "cancelled",
   "minyan_nearby",
+  "host_changed",
 ]);
 export type NotificationKind = z.infer<typeof NotificationKindSchema>;
 
