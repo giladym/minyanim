@@ -418,6 +418,7 @@ export const he = {
         quorum_lost: "המניין ירד מתחת ל-10",
         cancelled: "מניין בוטל",
         minyan_nearby: "נפתח מניין חדש באזור שלכם",
+        host_changed: "המארגן של המניין התחלף",
       },
     },
     commit: {

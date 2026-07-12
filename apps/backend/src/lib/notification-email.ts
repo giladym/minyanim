@@ -51,6 +51,10 @@ const COPY: Record<NotificationKind, Record<Lang, { subject: string; heading: st
     he: { subject: "מניין חדש באזור · מניין", heading: "מניין חדש באזור", body: (c) => `נפתח מניין חדש ב${c.city}, ${c.country} בתאריך שאתם שוהים שם.`, cta: "לצפייה והצטרפות" },
     en: { subject: "New minyan nearby · Minyan", heading: "A new minyan nearby", body: (c) => `A new minyan was created in ${c.city}, ${c.country} while you have a location there.`, cta: "View & join" },
   },
+  host_changed: {
+    he: { subject: "המארגן של המניין התחלף · מניין", heading: "המארגן התחלף", body: (c) => `המניין ב${c.city}, ${c.country} קיבל מארגן חדש.`, cta: "לצפייה במניין" },
+    en: { subject: "The minyan's host changed · Minyan", heading: "The host changed", body: (c) => `The minyan in ${c.city}, ${c.country} has a new host.`, cta: "View the minyan" },
+  },
 };
 
 /** Language-driven email shell (parameterizes `lib/email-templates.ts#shell`'s dir/lang). */

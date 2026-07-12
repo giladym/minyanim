@@ -13,7 +13,8 @@ import { assertUserActive } from "../lib/enforcement";
 import { isCompleted } from "../lib/minyanStatus";
 import { getMinyanById, getCommitment, updateEventRow } from "../repositories/eventRepository";
 import { getMinyan } from "./eventService";
-import { onQuorumChange } from "./notificationService";
+import { onQuorumChange, onHostChanged } from "./notificationService";
+import { recipientsForEvent, eventNotifyContext } from "../repositories/notificationRepository";
 import * as repo from "../repositories/commitmentRepository";
 
 /** Guard: the event exists and is joinable (not cancelled / not completed). Returns the joined row. */
@@ -95,13 +96,16 @@ export async function linkedMinyanimForStay(db: Db, userId: string, stayId: stri
  * Reassign a minyan's host to another committed participant (013 "reassign host" guard action). The
  * caller must be the current host; the new host must already be committed to the event.
  */
-export async function transferHost(db: Db, userId: string, eventId: string, newHostUserId: string): Promise<void> {
-  const m = await getMinyanById(db, eventId);
+export async function transferHost(ctx: Ctx, userId: string, eventId: string, newHostUserId: string): Promise<void> {
+  const m = await getMinyanById(ctx.db, eventId);
   if (!m || m.hostUserId !== userId) throw NotFound();
   if (newHostUserId === userId) return; // no-op
-  const c = await getCommitment(db, eventId, newHostUserId);
+  const c = await getCommitment(ctx.db, eventId, newHostUserId);
   if (!c) throw new AppError(400, "transfer.not_participant");
-  await updateEventRow(db, eventId, { hostUserId: newHostUserId, updatedAt: new Date() });
+  await updateEventRow(ctx.db, eventId, { hostUserId: newHostUserId, updatedAt: new Date() });
+  // Notify participants that hosting changed (best-effort; the transfer already succeeded).
+  const info = await eventNotifyContext(ctx.db, eventId);
+  if (info) await onHostChanged(ctx, eventId, await recipientsForEvent(ctx.db, eventId), info);
 }
 
 /** Clear the stay↔minyan link for a Stay's commitments (013 "keep minyanim, unlink"). Owner only. */

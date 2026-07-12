@@ -418,6 +418,7 @@ export const en = {
         quorum_lost: "Dropped below 10 men",
         cancelled: "A minyan was cancelled",
         minyan_nearby: "A new minyan opened near you",
+        host_changed: "The minyan's host changed",
       },
     },
     commit: {

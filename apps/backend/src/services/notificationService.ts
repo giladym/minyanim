@@ -87,3 +87,8 @@ export async function onQuorumChange(ctx: Ctx, eventId: string): Promise<void> {
 export async function onCancelled(ctx: Ctx, eventId: string, recipients: repo.Recipient[], info: NotifyInfo): Promise<void> {
   await fanOut(ctx, eventId, "cancelled", recipients, info);
 }
+
+/** Notify committed participants that the minyan's host was reassigned (013 reassign-host action). */
+export async function onHostChanged(ctx: Ctx, eventId: string, recipients: repo.Recipient[], info: NotifyInfo): Promise<void> {
+  await fanOut(ctx, eventId, "host_changed", recipients, info);
+}

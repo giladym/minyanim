@@ -5,7 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 const navigate = vi.fn();
 vi.mock("@tanstack/react-router", () => ({ useNavigate: () => navigate }));
 const transferMutate = vi.fn();
-const useMinyan = vi.fn(() => ({ data: undefined }));
+const useMinyan = vi.fn((_id?: string) => ({ data: undefined }));
 vi.mock("../../lib/events", () => ({
   useMinyan: (id: string) => useMinyan(id),
   useTransferHost: () => ({ mutateAsync: transferMutate }),
