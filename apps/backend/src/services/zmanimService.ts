@@ -1,7 +1,7 @@
 import type { ZmanimResponse } from "@minyanim/shared";
 import type { Db } from "../db/client";
 import { getStayById } from "../repositories/stayRepository";
-import { getMinyanById } from "../repositories/eventRepository";
+import { getMinyanById, getEventById } from "../repositories/eventRepository";
 import {
   tzFromCoords,
   civilDate,
@@ -75,6 +75,43 @@ export async function minyanZmanim(db: Db, eventId: string): Promise<ZmanimRespo
   if (!isShabbat || isCancelled || isPast) return EMPTY(isShabbat, true);
 
   const shabbatDate = civilDate(m.eventDate, "UTC");
+  return {
+    coversShabbat: true,
+    hasCoordinates: true,
+    candleLightingOffsetMinutes: candleLightingOffsetMinutes(m.lat, m.lng),
+    shabbatot: [computeShabbatZmanim(m.lat, m.lng, shabbatDate)],
+  };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Shabbat zmanim for ANY hosted event (005, generalized in 014 T046). Minyan behavior is UNCHANGED
+ * (candle-lighting only when the event date is a Saturday — SC-005). A **hosting** gathering whose
+ * occasion is Shabbat additionally maps the flagship Shabbat-**dinner** (Friday-dated) to the next
+ * day's Shabbat, and a Shabbat lunch/seudah (Saturday-dated) to that Shabbat — so a guest sees the
+ * correct candle-lighting time. Festivals are out of v1 (they need Hebrew-calendar dates). Computed
+ * SERVER-SIDE ONLY (kosher-zmanim never ships to the client — ADR 0007). `null` → 404.
+ */
+export async function eventZmanim(db: Db, eventId: string): Promise<ZmanimResponse | null> {
+  const m = await getEventById(db, eventId);
+  if (!m) return null;
+
+  // Which Saturday (civil) does this event's Shabbat fall on, if any?
+  let saturday: Date | null = null;
+  if (m.type === "minyan") {
+    if (isSaturday(m.eventDate)) saturday = m.eventDate; // minyan: Saturday-only, unchanged
+  } else if (m.category === "hosting" && m.occasion === "shabbat") {
+    const dow = m.eventDate.getUTCDay();
+    if (dow === 6) saturday = m.eventDate; // Shabbat lunch / seudah shlishit
+    else if (dow === 5) saturday = new Date(m.eventDate.getTime() + DAY_MS); // Shabbat dinner (Fri eve)
+  }
+
+  const cancelled = m.storedStatus === "cancelled";
+  const past = isPastAt(m.eventDate, m.lat, m.lng);
+  if (!saturday || cancelled || past) return EMPTY(saturday !== null, true);
+
+  const shabbatDate = civilDate(saturday, "UTC");
   return {
     coversShabbat: true,
     hasCoordinates: true,

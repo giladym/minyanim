@@ -144,7 +144,7 @@ migration 0014 may drop/recreate; run the backend suite in small batches (port e
 - [X] T043 [P] Moderation/enforcement parity: extend the existing moderation tests to a hosting-gathering fixture (flag `contentType='event'` hides a hosting event; suspended host blocked from create + request). `apps/backend/test/`.
 - [X] T044 [P] i18n parity test green across all new namespaces (`i18n/parity.test.ts`); RTL spot-check of the new surfaces.
 - [X] T045 [P] **e2e + axe (WCAG 2.1 AA)**: Playwright `GEO_MODE=mock` — quickstart Scenario A end-to-end (create hosting event → discover → request → approve → address reveal) + Scenario E minyan regression; axe on kind picker, hosting form, hosting detail, requests panel, discovery filters. `apps/frontend/e2e/`.
-- [ ] T046 [P] SHOULD: candle-lighting/Havdalah zmanim panel on a hosting event with a Shabbat/festival occasion, reusing 005's `GET /api/events/:id/zmanim` (no new backend). `apps/frontend/src/features/events/EventDetail.tsx`.
+- [X] T046 [P] SHOULD: candle-lighting/Havdalah zmanim panel on a hosting event with a Shabbat/festival occasion, reusing 005's `GET /api/events/:id/zmanim` (no new backend). `apps/frontend/src/features/events/EventDetail.tsx`.
 - [X] T047 [P] Notify pending requesters when a hosting gathering is moderation-hidden/host-suspended (reuse the cancel-notify path). `apps/backend/src/services/`.
 - [X] T048 Run quickstart.md scenarios A–E manually via the app (`/run` or `pnpm dev`, `GEO_MODE=mock`); confirm SC-001..006. Deploy note: `pnpm db:migrate:remote` for 0014 (CI does not auto-migrate).
 

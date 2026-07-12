@@ -1,7 +1,7 @@
 import type { ZmanimResponse } from "@minyanim/shared";
 import type { Db } from "../db/client";
 import { NotFound } from "../lib/errors";
-import { stayZmanim, minyanZmanim } from "../services/zmanimService";
+import { stayZmanim, eventZmanim } from "../services/zmanimService";
 
 /** Build the response shape at the boundary (allowlist; mirrors the stay/folder controllers). */
 function toResponse(r: ZmanimResponse): ZmanimResponse {
@@ -26,9 +26,10 @@ export async function stayZmanimController(db: Db, userId: string, stayId: strin
   return toResponse(r);
 }
 
-/** Zmanim for a hosted Minyan (public; 404 if the event doesn't exist). */
+/** Zmanim for any hosted event — a minyan (Saturday) or a Shabbat hosting gathering (014 T046);
+ * public, 404 if the event doesn't exist. */
 export async function minyanZmanimController(db: Db, eventId: string) {
-  const r = await minyanZmanim(db, eventId);
+  const r = await eventZmanim(db, eventId);
   if (!r) throw NotFound();
   return toResponse(r);
 }

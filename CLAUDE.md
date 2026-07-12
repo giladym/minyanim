@@ -1,5 +1,24 @@
 <!-- SPECKIT START -->
-No active feature plan. **012 Media uploads** is built (`specs/012-media-uploads/`): one shared R2-backed
+**014 Multi-type events** is built (`specs/014-multi-type-events/`, merged to `develop`): the event
+model is generalized to a two-axis design — **behavior** (`event.type` = `minyan` quorum | `gathering`
+capacity+RSVP) + an extensible **category** (`hosting`|`social`|`learning`|`celebration`; NULL for
+minyan; a fixed shared enum now with an admin-managed-later seam — research R1). Independent axes
+`occasion`/`rsvp_mode`/`visibility`/`capacity` on every event. Migration 0014 replaces `commitment`
+with a unified **`attendance`** table (status + party_size + requested_at), adds a `gathering` 1:1
+detail (per-category `attrs` JSON via `ATTRS_BY_CATEGORY`) and new `event` columns (category/occasion/
+rsvp_mode/visibility/capacity/start_time/end_time/rsvp_cutoff/title). **Hosting (אירוח)** = open your
+table for a seudah: request→approve→waitlist, the exact address revealing ONLY on approval (guarded by
+a 13-site confirmed-predicate audit — SC-003; capacity = confirmed party-size sum via guarded
+single-statement writes, no overbook — SC-006). Flagship **minyan is byte-for-byte unchanged**
+(SC-005): it's the `type='minyan'` branch of a two-entry per-behavior strategy (`lib/eventStrategy.ts`);
+`/commit` stays a thin alias over the attendance service. Also shipped: **My-events**
+(`GET /api/me/events`) + request-flow **emails**; discovery **kind/occasion filters** + distinct pins;
+social gatherings; **edit/cancel** any type; a **Shabbat zmanim panel** on hosting detail (reuses the
+005 event-zmanim, generalized for Friday-eve dinners; festivals deferred). Attendance lives on the
+generic `/api/events/*` surface (`/attendance`, `/requests/:id/{approve,decline}`). User-facing kinds:
+מניין / אירוח / מפגש. Deferred: festivals in the zmanim panel; the admin-managed category graduation.
+
+**012 Media uploads** is built (`specs/012-media-uploads/`): one shared R2-backed
 pipeline (`mediaService` + `storageRepository` over the `IMAGES` bucket; `POST/DELETE/GET /api/media`)
 for user avatars (`user.image`), Stay/Minyan galleries (`stay.images`/`event.images`, migration 0013) and
 admin place photos (`place.images`). Parent-scoped keys `{kind}/{parentId}/{uuid}` drive authz + orphan
@@ -86,8 +105,10 @@ client). Tests: vitest-pool-workers, Vitest+Testing Library, Playwright + axe-co
 Latest migrations: 0009 (`user.kind`), 0010 (`place` + `layer` tables + `user.is_admin`), 0011 (006:
 `flag` reshaped polymorphic + reason + reportedUser; `stay.hidden`; `user.status` + `suspended_until`),
 0012 (011: reconcile `beit_chabad_pin` → `place` then DROP the table), 0013 (012: `stay.images` +
-`event.images`). Object storage: R2 bucket `IMAGES` (012; dev `minyanim-images-dev`) holds uploaded image
+`event.images`), 0014 (014: `commitment` → unified `attendance`; new `gathering` detail table; `event`
+axis columns category/occasion/rsvp_mode/visibility/capacity/start_time/end_time/rsvp_cutoff/title).
+Object storage: R2 bucket `IMAGES` (012; dev `minyanim-images-dev`) holds uploaded image
 bytes. Dev-only import tools live outside the workspace: `tools/seed-import/` (009) +
 `tools/places-import/` (010) — Node built-ins, `node --test`. Decisions: docs/adr/ (through 0012).
-001–012 shipped; next v1 remainder: import steps 2–4 of feature 009.
+001–014 shipped; next v1 remainder: import steps 2–4 of feature 009.
 <!-- SPECKIT END -->
