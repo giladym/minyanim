@@ -1,4 +1,16 @@
-# dev-seed — local test data for the Stay location-change guard (013)
+# dev-seed — local test data
+
+Two dev-only, zero-dependency Node scripts:
+
+- **`seed.mjs`** — a host + guest sharing a **linked minyan**, for the feature-013 Stay
+  location-change guard. Documented below.
+- **`seed-claim.mjs`** — a **seed user** (a stay + a hosted minyan, no login) plus a real
+  **claimer** carrying the **same phone**, for the feature-009 seed-import claim flow. See
+  [seed-claim](#seed-claim-feature-009) at the bottom.
+
+---
+
+# seed.mjs — local test data for the Stay location-change guard (013)
 
 A **dev-only**, zero-dependency Node script that seeds test users and a **linked minyan** through the
 real API (better-auth email/password + `/api/stays`, `/api/events`, `/api/events/:id/commit`). It is
@@ -82,3 +94,49 @@ API-level check (either stay id): `GET /api/stays/<id>/linked-minyanim` returns 
   as the `cookie` header on that user's subsequent requests.
 - Idempotent-ish: re-running signs the same users back in and creates **additional** stays/minyan each
   time (stays/events are not deduplicated). Reset by wiping the local D1 if you want a clean slate.
+
+---
+
+# seed-claim (feature 009)
+
+`seed-claim.mjs` reproduces the **seed-import claim** scenario so it can be tested by hand: a **seed**
+user that owns data + a **real** user with the same phone that can claim it.
+
+## Why it needs D1 access (and is local by default)
+
+A real seed user has **no better-auth account**, so it cannot be created through the sign-up API. The
+script therefore builds the seed's data (a stay + a hosted minyan + a phone) **through the real API**,
+then flips that user into a seed with two schema-stable SQL statements via `wrangler d1 execute`
+(`UPDATE "user" SET kind='seed'`; delete its `account` + `session` so it can never log in). That SQL
+step is the only part that touches D1 directly, so the script targets the **local** Miniflare D1 by
+default. Pass `--remote` deliberately (dev only) to flip a user on the remote dev D1.
+
+## Prerequisites
+
+Same local backend on `:8787` as above, **and** local migrations applied:
+
+```sh
+pnpm --filter @minyanim/backend run db:migrate:local
+```
+
+## Run
+
+```sh
+node tools/dev-seed/seed-claim.mjs
+# custom shared phone / API base / target DB:
+node tools/dev-seed/seed-claim.mjs --phone +972521234567 --api http://localhost:8787
+node tools/dev-seed/seed-claim.mjs --remote     # dev only — flips a user to seed on the remote D1
+```
+
+## Manual test — claim flow (009)
+
+1. Sign in as **`claimer@test.local`** / `password123`. The dashboard `ClaimBanner` should offer one
+   seed (1 stay + 1 minyan) matched on the shared phone.
+2. Confirm the claim → the seed's stay + minyan move to the claimer and the seed is deleted.
+
+API-level check: `GET /api/me/claims` lists the seed before, and is empty after.
+
+## Notes
+
+- Dev-only; local by default. The seed **source** user uses a random email, so re-runs never collide —
+  each run adds another claimable seed to `claimer@test.local`. Reset by wiping the local D1.
