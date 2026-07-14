@@ -31,6 +31,18 @@ export type AnyEventDTO = AnyMinyanDTO | AnyGatheringDTO;
 export const minyanKey = (id: string) => ["event", id] as const;
 export const myEventsKey = ["me", "events"] as const;
 
+/**
+ * Invalidate every view that reflects an event's existence or status: its detail query, the
+ * My-events list, and any location's events list + Stay-card chip (015 — keyed `["stay-events", …]`).
+ * Wired into the create / cancel / RSVP / role mutations so the "האירועים שלי כאן" list and the
+ * "N אירועים" count stay reactive when an event is added, cancelled, or its numbers change.
+ */
+function invalidateEventViews(qc: ReturnType<typeof useQueryClient>, id?: string) {
+  if (id) void qc.invalidateQueries({ queryKey: minyanKey(id) });
+  void qc.invalidateQueries({ queryKey: myEventsKey });
+  void qc.invalidateQueries({ queryKey: ["stay-events"] });
+}
+
 /** GET /events/:id — returns the viewer-appropriate tier for a minyan OR a gathering (014). */
 export const getMinyan = (id: string) => api<AnyEventDTO>(`/events/${id}`);
 export const hostMinyan = (input: CreateEventInputType) => api<OwnerMinyanDTO>("/events", { method: "POST", body: JSON.stringify(input) });
@@ -70,14 +82,15 @@ export function useMinyan(id: string) {
 }
 
 export function useHostMinyan() {
-  return useMutation({ mutationFn: hostMinyan });
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hostMinyan, onSuccess: () => invalidateEventViews(qc) });
 }
 
 export function useUpdateMinyan(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateEventInputType) => updateMinyan(id, input),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -85,7 +98,7 @@ export function useCancelMinyan(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => cancelMinyan(id),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -93,7 +106,7 @@ export function useCommit(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (numMen: number) => commitToMinyan(id, numMen),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -101,7 +114,7 @@ export function useChangeCommitment(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (numMen: number) => changeCommitment(id, numMen),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -109,7 +122,7 @@ export function useWithdraw(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => withdrawCommitment(id),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -120,7 +133,7 @@ export function useClaimRole(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (role: EventRole) => claimRole(id, role),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -128,7 +141,7 @@ export function useReleaseRole(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (role: EventRole) => releaseRole(id, role),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -150,7 +163,8 @@ export interface AttendanceResult {
 }
 
 export function useHostEvent() {
-  return useMutation({ mutationFn: hostEvent });
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hostEvent, onSuccess: () => invalidateEventViews(qc) });
 }
 
 /** POST /events/:id/attendance — join / request a seat (mode decided server-side). */
@@ -159,7 +173,7 @@ export function useRequestSeat(id: string) {
   return useMutation({
     mutationFn: ({ partySize, stayId }: { partySize: number; stayId?: string | null }) =>
       api<AttendanceResult>(`/events/${id}/attendance`, { method: "POST", body: JSON.stringify({ partySize, stayId: stayId ?? null }) }),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -169,7 +183,7 @@ export function useChangePartySize(id: string) {
   return useMutation({
     mutationFn: (partySize: number) =>
       api<AttendanceResult>(`/events/${id}/attendance`, { method: "PATCH", body: JSON.stringify({ partySize }) }),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -178,7 +192,7 @@ export function useCancelAttendance(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api(`/events/${id}/attendance`, { method: "DELETE" }),
-    onSettled: () => qc.invalidateQueries({ queryKey: minyanKey(id) }),
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -188,10 +202,7 @@ export function useApproveRequest(id: string) {
   return useMutation({
     mutationFn: (attendanceId: string) =>
       api<OwnerEventDTO>(`/events/${id}/requests/${attendanceId}/approve`, { method: "POST", body: "{}" }),
-    onSettled: () => {
-      void qc.invalidateQueries({ queryKey: minyanKey(id) });
-      void qc.invalidateQueries({ queryKey: myEventsKey });
-    },
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
@@ -201,10 +212,7 @@ export function useDeclineRequest(id: string) {
   return useMutation({
     mutationFn: (attendanceId: string) =>
       api<OwnerEventDTO>(`/events/${id}/requests/${attendanceId}/decline`, { method: "POST", body: "{}" }),
-    onSettled: () => {
-      void qc.invalidateQueries({ queryKey: minyanKey(id) });
-      void qc.invalidateQueries({ queryKey: myEventsKey });
-    },
+    onSettled: () => invalidateEventViews(qc, id),
   });
 }
 
