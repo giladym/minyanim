@@ -103,7 +103,8 @@ User types the suite must cover: **regular** (signed-in), **host** (owns an even
 | Places / layers (010/011) | `places`, `migration-0012` | `places.spec` | regular, admin |
 | Media (012) | `media`, `imageMeta` | (galleries within stays/events specs) | regular |
 | Zmanim / calendar | `stay-zmanim`, `minyan-zmanim`, `zmanim-lib`, `calendar` (lib **+ route** ✅ new) | `zmanim.spec` | regular |
-| Seed import & claim (009) | `claim`, `discovery-kinds`; `tools/seed-import` unit | **gap → §7 G3**; `seed-claim.mjs` gives a scripted path | seed + regular (claimer) |
+| Location holds events (015) | (via stays/events services) | `location-events.spec` ✅ — events list on edit + count chip on card + add→KindPicker | regular (host) |
+| Seed import & claim (009) | `claim`, `discovery-kinds`; `tools/seed-import` unit | `claim.spec` ✅ — seed (wrangler-flipped) → ClaimBanner → merge | seed + regular (claimer) |
 
 ✅ = added/closed by the current change.
 
@@ -118,10 +119,12 @@ directly via Drizzle (`claim.test.ts` → `seedUser(e164)`: `kind='seed'`, synth
 lives here: a real user adds a phone via `POST /api/me/phones`, a `seedUser` owns the same E.164, and
 `/api/me/claims` matches on that equality.
 
-**E2E** — four fixed logins seeded through the real API by `tools/dev-seed/seed.mjs` (password
-`password123`): `regular@test.local`, `host@test.local`, `guest@test.local`, `admin-e2e@example.com`
-(admin only because `ADMIN_EMAILS` lists it — mirrored in `playwright.config.ts`). Individual specs also
-create their own data through the API request context with unique identifiers.
+**E2E** — the suite does **not** use `dev-seed`. Each spec does its own **per-test signup** (a unique
+`u-${Date.now()}-…@example.com`) so it starts from zero, and seeds its domain data either through the UI
+form or directly via the API request context (`/api/events`, `/api/stays`, `/api/admin/*`). Multi-actor
+tests open a separate `request.newContext()` per actor for independent cookies. The only fixed identity
+is the admin: `admin-e2e@example.com`, promoted because `playwright.config.ts` sets `ADMIN_EMAILS` to it.
+(`tools/dev-seed/seed.mjs` is a separate **manual** local tool, not wired into the automated suite.)
 
 **Seed-user claim (feature 009) — same-phone pair for manual/scripted testing:**
 `tools/dev-seed/seed-claim.mjs` reproduces the claim scenario in a running local dev environment:
@@ -200,9 +203,13 @@ Each item below was checked against the tree, not assumed.
   changes in progress, not part of this testing work.* Backend Vitest still passes because it transforms
   modules per-file (a missing named import becomes `undefined`) and Zod strips the now-unknown keys —
   another reason typecheck must stay in the mandatory tier.
-- **G3 — No automated e2e for the seed-claim merge.** Verified: no `e2e/*claim*` spec (coverage is
-  `apps/backend/test/claim.test.ts` at the API level + `ClaimBanner.test.tsx` at the component level).
-  `seed-claim.mjs` now enables a manual/scripted run; an automated browser spec is still owed (Tier B).
+- **G3 — CLOSED.** Added `e2e/claim.spec.ts` (feature 009): builds a seed via the API then flips it to
+  `kind='seed'` with `wrangler d1 execute --local` (same mechanism as `seed-claim.mjs`), a claimer with
+  the matching phone signs in, and the dashboard `ClaimBanner` merge is driven + asserted. Also added
+  `e2e/location-events.spec.ts` (feature 015): the events-here list, the card count chip, and the
+  add→KindPicker `fromStay` entry point. Both pass on the `desktop` project.
+  Note: `claim.spec.ts` shells out to `wrangler` (cwd `apps/backend`) — it needs the local D1 the e2e
+  backend runs on, which CI already migrates before the e2e job; it is a Tier-B (full) spec.
 - **G4 — No mandatory/full tiering in CI yet.** Verified: `ci.yml` runs the full e2e on every PR. §2 is
   the proposed split; not yet implemented.
 - **G5 — Local e2e data accumulation.** Verified via `reuseExistingServer: !CI` in
