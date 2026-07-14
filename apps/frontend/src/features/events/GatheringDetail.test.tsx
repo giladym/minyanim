@@ -44,6 +44,17 @@ const baseG = {
 
 const roster = { ...baseG, hostContact: { name: "דוד", phone: null, email: null }, attendees: null, myStatus: null };
 
+// A social gathering (open mode) at 0 registered / 30 capacity — the empty-looks-full + generic-copy case.
+const socialBase = {
+  id: "s1", type: "gathering", category: "social", occasion: "none", title: "קידוש קהילתי",
+  city: "וינה", country: "אוסטריה", lat: 48.2, lng: 16.3, eventDate: Date.UTC(2099, 0, 3),
+  startTime: "11:00", endTime: null, rsvpCutoff: null, rsvpMode: "open", visibility: "public",
+  capacity: 30, seatsRemaining: 30, rsvpState: "open", notes: null, hostName: "דוד", hostImage: null,
+  images: null, createdAt: 0, updatedAt: 0, status: "forming", confirmedCount: 0,
+  attrs: { subcategory: "kiddush" },
+} as const;
+const socialViewer = { ...socialBase, hostContact: { name: "דוד", phone: null, email: null }, attendees: null, myStatus: null };
+
 beforeEach(() => {
   vi.clearAllMocks();
   session = { user: { id: "viewer" } };
@@ -106,5 +117,33 @@ describe("GatheringDetail — seats meter + RSVP band + RequestsPanel (T028/T029
     session = null;
     render(<GatheringDetail id="e1" g={baseG as never} />);
     expect(screen.getByText("התחברו כדי לבקש מקום")).toBeInTheDocument();
+  });
+});
+
+describe("GatheringDetail — social copy + owner framing (014 detail polish)", () => {
+  it("a social gathering uses generic seats copy (no seudah 'ליד השולחן' leak) and reads sensibly at 0 registered", () => {
+    render(<GatheringDetail id="s1" g={socialViewer as never} />);
+    // Generic "spots open" — not the hosting "seats at the table" wording.
+    expect(screen.getByText("30 מקומות פנויים")).toBeInTheDocument();
+    expect(screen.queryByText(/ליד השולחן/)).not.toBeInTheDocument();
+    // A 0-registered event shows registered-vs-capacity, so it doesn't look full.
+    expect(screen.getByText("0 מתוך 30 מקומות תפוסים")).toBeInTheDocument();
+  });
+
+  it("does not render an empty address card for a confirmed viewer with no address set", () => {
+    const confirmed = { ...socialViewer, myStatus: "confirmed", addressPrivate: null, addressNotes: null, attendees: [{ userId: "h", name: "דוד", numMen: 0, phone: null, email: null, image: null, isHost: true }] };
+    render(<GatheringDetail id="s1" g={confirmed as never} />);
+    // Neither the lock hint (private tier) nor the owner-only add-address hint appears — no blank card.
+    expect(screen.queryByText(/הכתובת המדויקת תיחשף/)).not.toBeInTheDocument();
+    expect(screen.queryByText("הוסיפו כתובת מדויקת")).not.toBeInTheDocument();
+  });
+
+  it("the owner sees the 'this is your event' band with an edit affordance", () => {
+    const owner = { ...socialBase, isHost: true, addressPrivate: null, addressNotes: null, attendees: null, pendingRequests: [] };
+    render(<GatheringDetail id="s1" g={owner as never} />);
+    expect(screen.getByText("זהו האירוע שלך")).toBeInTheDocument();
+    expect(screen.getByText("עריכת האירוע")).toBeInTheDocument();
+    // With no exact address set, the owner gets a purposeful "add address" hint (not a blank card).
+    expect(screen.getByText("הוסיפו כתובת מדויקת")).toBeInTheDocument();
   });
 });

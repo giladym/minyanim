@@ -51,6 +51,21 @@ describe("PlacesView (010 US1)", () => {
     expect(screen.getByTestId("places-map")).toBeInTheDocument();
   });
 
+  it("shows a collapsed change-location card whose button expands the location picker", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, "", "/places?lat=51.5&lng=-0.12&city=לונדון&country=בריטניה");
+    render(<PlacesView />);
+    // Summary shows the current city/country; picker is collapsed.
+    expect(screen.getByText("לונדון, בריטניה")).toBeInTheDocument();
+    expect(screen.queryByTestId("location-picker")).not.toBeInTheDocument();
+    const toggle = screen.getByRole("button", { name: "שנה מיקום" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    // Expanding reveals the reused LocationPicker and a collapse control.
+    await user.click(toggle);
+    expect(screen.getByTestId("location-picker")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "סגור" })).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("toggling a hidden layer on reveals its places; toggling a shown one off hides them", async () => {
     const user = userEvent.setup();
     render(<PlacesView />);

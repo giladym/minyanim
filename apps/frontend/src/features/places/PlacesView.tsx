@@ -7,6 +7,7 @@ import { searchPlaces } from "../../lib/geo";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { PlacesMap } from "./PlacesMap";
 import { googleMapsUrl, wazeUrl } from "./navLinks";
+import { Icon } from "../../components/Icon";
 
 /** Read the location prefill from the URL (entry from a Stay / Minyan / Discovery) without needing
  * router context (keeps this testable). Coordinates anchor directly; a city-only entry is geocoded. */
@@ -30,6 +31,9 @@ export function PlacesView() {
   // Seed the fallback picker with any city passed in the URL so a coordless entry still shows where
   // it means — and lets the geocode effect (below) resolve coordinates without the user re-typing.
   const [picker, setPicker] = useState<LocationValue>(() => ({ ...cityFromUrl(), lat: null, lng: null }));
+  // The change-location card is collapsed to a summary by default (mirrors the Stay edit page):
+  // reviewing the current spot is the common case, changing it the edge case.
+  const [locationOpen, setLocationOpen] = useState(false);
 
   // City-only entry (a Stay with no stored coordinates): geocode the city name to a centre once, so
   // reaching places from a Stay/Minyan prefills the map instead of dropping the user on "pick a place".
@@ -72,19 +76,31 @@ export function PlacesView() {
     [data?.places, off],
   );
 
+  /** Adopt a location chosen in the picker: keep the summary card in sync, and once real
+   * coordinates resolve re-centre the map (via `coords`), drop the stale pan bbox so places
+   * refetch around the new point, collapse the editor, and rewrite the URL search params so the
+   * view stays shareable/reloadable (mirrors how this view reads lat/lng/city/country). */
+  function applyLocation(v: LocationValue) {
+    setPicker(v);
+    if (v.lat == null || v.lng == null) return;
+    setCoords({ lat: v.lat, lng: v.lng });
+    setViewport(null);
+    setLocationOpen(false);
+    const q = new URLSearchParams(window.location.search);
+    q.set("lat", String(v.lat));
+    q.set("lng", String(v.lng));
+    if (v.city) q.set("city", v.city); else q.delete("city");
+    if (v.country) q.set("country", v.country); else q.delete("country");
+    window.history.replaceState({}, "", `${window.location.pathname}?${q.toString()}`);
+  }
+
   // No location yet → let the user pick one (also the coordless-Stay fallback).
   if (!coords) {
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-4 p-4 md:p-6" dir="rtl">
         <h1 className="font-display text-2xl font-extrabold text-ink">{t("places.title")}</h1>
         <p className="text-sm text-muted">{t("places.pickLocation")}</p>
-        <LocationPicker
-          value={picker}
-          onChange={(v) => {
-            setPicker(v);
-            if (v.lat != null && v.lng != null) setCoords({ lat: v.lat, lng: v.lng });
-          }}
-        />
+        <LocationPicker value={picker} onChange={applyLocation} />
       </div>
     );
   }
@@ -92,6 +108,48 @@ export function PlacesView() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 p-4 md:p-6" dir="rtl">
       <h1 className="font-display text-2xl font-extrabold text-ink">{t("places.title")}</h1>
+
+      <div className="rounded-xl border border-line bg-surface p-4">
+        {locationOpen ? (
+          <>
+            <LocationPicker value={picker} onChange={applyLocation} />
+            <button
+              type="button"
+              className="mt-3 flex items-center gap-1.5 self-start rounded-lg px-2 py-1.5 text-sm font-bold text-primary-ink"
+              aria-label={t("stays.location.close")}
+              aria-expanded={true}
+              onClick={() => setLocationOpen(false)}
+            >
+              <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-chip text-lg leading-none text-primary-ink">−</span>
+              {t("stays.location.close")}
+            </button>
+          </>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex min-w-0 flex-col">
+              <span className="text-sm font-bold text-ink">{t("stays.location.title")}</span>
+              <span className="flex items-center gap-2 text-ink">
+                <Icon name="map-pin" size={16} className="text-faint" aria-hidden />
+                <span className="truncate font-bold">
+                  {picker.city
+                    ? picker.city + (picker.country ? `, ${picker.country}` : "")
+                    : `${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}`}
+                </span>
+              </span>
+            </span>
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-bold text-primary-ink"
+              aria-label={t("stays.location.change")}
+              aria-expanded={false}
+              onClick={() => setLocationOpen(true)}
+            >
+              <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-chip text-lg leading-none text-primary-ink">+</span>
+              <span className="hidden sm:inline">{t("stays.location.change")}</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {layers.length > 0 && (
         <div className="flex flex-wrap gap-2" role="group" aria-label={t("places.layers")}>
