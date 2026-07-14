@@ -10,7 +10,7 @@ async function signIn(email = `u-${crypto.randomUUID()}@example.com`): Promise<s
   const res = await SELF.fetch("https://x/api/auth/sign-in/email", { method: "POST", headers: J, body: JSON.stringify({ email, password: "password123" }) });
   return (res.headers.getSetCookie?.() ?? [res.headers.get("set-cookie") ?? ""]).map((c) => c.split(";")[0]).filter(Boolean).join("; ");
 }
-const myId = async (cookie: string) =>
+const myId = async (_cookie: string) =>
   ((await env.DB.prepare("SELECT id FROM user WHERE id = (SELECT user_id FROM session ORDER BY created_at DESC LIMIT 1)").first()) as { id: string }).id;
 
 async function createStay(cookie: string): Promise<string> {

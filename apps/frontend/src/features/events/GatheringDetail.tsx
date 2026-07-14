@@ -44,7 +44,6 @@ function myStatusOf(g: AnyGatheringDTO): AttendanceStatus | null {
   return "myStatus" in g ? (g as RosterG).myStatus : null;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 function todayUtcMidnight(): number {
   const n = new Date();
   return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());

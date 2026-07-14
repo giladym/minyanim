@@ -1,6 +1,6 @@
 import { SELF } from "cloudflare:test";
 import { describe, it, expect } from "vitest";
-import type { LayerDTO, PlaceDTO, PlacesResponse } from "@minyanim/shared";
+import type { LayerDTO, PlacesResponse } from "@minyanim/shared";
 
 const J = { "content-type": "application/json" };
 
