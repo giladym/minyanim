@@ -519,7 +519,7 @@ export const he = {
       // Form — required fields
       arrivalDate: "תאריך הגעה",
       departureDate: "תאריך עזיבה",
-      numMen: "כמה גברים בקבוצה (כולל אותך)",
+      numMen: "מי מגיע — כמה אנשים בקבוצה (כולל אותך)",
       // Form — optional / disclosure
       addressPrivate: "כתובת מדויקת",
       addressPrivacy: "הכתובת המדויקת פרטית ולעולם אינה מוצגת לאחרים. רק העיר משמשת לחיפוש במפה.",
@@ -530,13 +530,15 @@ export const he = {
       contactEmail: "אימייל ליצירת קשר",
       formPrivacy: "פרטי הקשר והכתובת המדויקת נשמרים באופן פרטי ואינם נחשפים לאחרים בפיצ׳ר זה.",
       fixErrors: "יש לתקן את השדות המסומנים לפני השמירה ({{count}}).",
-      bringsSeferTorah: "מביא/ה ספר תורה",
-      // Prayer needs
-      prayerNeedsTitle: "צורכי תפילה",
-      shabbatNote: "תפילות שבת כלולות כברירת מחדל כאשר היעד חופף שבת.",
-      shacharit: "שחרית (חול)",
-      mincha: "מנחה (חול)",
-      maariv: "מעריב (חול)",
+      // 015: events attached to a location (Option B)
+      events: {
+        title: "האירועים שלי כאן",
+        add: "＋ הוסף אירוע",
+        empty: "עדיין אין אירועים במיקום הזה — הוסיפו מניין, סעודה או מפגש",
+        count_one: "אירוע אחד",
+        count_two: "שני אירועים",
+        count_other: "{{count}} אירועים",
+      },
       // Location picker
       location: {
         title: "עיר ומדינה",

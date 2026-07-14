@@ -493,6 +493,48 @@ export async function attendingEventsForUser(db: Db, userId: string): Promise<My
   return rows.map((r) => mapMyEvent(r, (r.myStatus as string | null) ?? null));
 }
 
+/**
+ * A location's events (015): events the user HOSTS attached to this stay (`event.stay_id = stayId`)
+ * UNION events the user JOINED from this stay (`attendance.stay_id = stayId` → its event), deduped by
+ * event id (a host self-attend row makes a minyan appear in both — hosted wins), earliest-first.
+ * `hosted` marks the host rows so the caller can attach the approval-mode `pendingRequestCount` badge.
+ */
+export async function eventsForStay(
+  db: Db,
+  stayId: string,
+  userId: string,
+): Promise<(MyEventQueryRow & { hosted: boolean })[]> {
+  const [hostedRows, joinedRows] = await Promise.all([
+    db
+      .select(MY_EVENT_SELECT)
+      .from(event)
+      .leftJoin(minyan, eq(minyan.eventId, event.id))
+      .where(and(eq(event.hostUserId, userId), eq(event.stayId, stayId)))
+      .orderBy(asc(event.eventDate)),
+    db
+      .select({ ...MY_EVENT_SELECT, myStatus: attendance.status })
+      .from(attendance)
+      .innerJoin(event, eq(event.id, attendance.eventId))
+      .leftJoin(minyan, eq(minyan.eventId, event.id))
+      .where(
+        and(
+          eq(attendance.userId, userId),
+          eq(attendance.stayId, stayId),
+          inArray(attendance.status, ["confirmed", "pending", "waitlisted"]),
+        ),
+      )
+      .orderBy(asc(event.eventDate)),
+  ]);
+
+  const byId = new Map<string, MyEventQueryRow & { hosted: boolean }>();
+  for (const r of hostedRows) byId.set(r.id, { ...mapMyEvent(r, null), hosted: true });
+  for (const r of joinedRows) {
+    if (byId.has(r.id)) continue; // hosted precedence (host self-attend row)
+    byId.set(r.id, { ...mapMyEvent(r, (r.myStatus as string | null) ?? null), hosted: false });
+  }
+  return [...byId.values()].sort((a, b) => a.eventDate.getTime() - b.eventDate.getTime());
+}
+
 /** Pending-request counts per event (approval-mode host badge). Map keyed by eventId (missing = 0). */
 export async function pendingCountsByEvent(db: Db, eventIds: string[]): Promise<Map<string, number>> {
   const out = new Map<string, number>();

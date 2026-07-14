@@ -519,7 +519,7 @@ export const en = {
       // Form — required fields
       arrivalDate: "Arrival date",
       departureDate: "Departure date",
-      numMen: "How many men in the group (including you)",
+      numMen: "Who's coming — how many people in the group (including you)",
       // Form — optional / disclosure
       addressPrivate: "Specific address",
       addressPrivacy: "The specific address is private and is never shown to others. Only the city is used for the map search.",
@@ -530,13 +530,15 @@ export const en = {
       contactEmail: "Contact email",
       formPrivacy: "Contact details and the specific address are stored privately and are not exposed to others in this feature.",
       fixErrors: "Please fix the highlighted fields before saving ({{count}}).",
-      bringsSeferTorah: "Bringing a Sefer Torah",
-      // Prayer needs
-      prayerNeedsTitle: "Prayer needs",
-      shabbatNote: "Shabbat prayers are included by default when the location covers a Shabbat.",
-      shacharit: "Shacharit (weekday)",
-      mincha: "Mincha (weekday)",
-      maariv: "Maariv (weekday)",
+      // 015: events attached to a location (Option B)
+      events: {
+        title: "My events here",
+        add: "＋ Add event",
+        empty: "No events at this location yet — add a minyan, meal, or gathering",
+        count_one: "1 event",
+        count_two: "{{count}} events",
+        count_other: "{{count}} events",
+      },
       // Location picker
       location: {
         title: "City and country",

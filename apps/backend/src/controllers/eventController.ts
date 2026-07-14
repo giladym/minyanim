@@ -1,7 +1,7 @@
 import { NotFound } from "../lib/errors";
 import type { Ctx } from "../lib/context";
 import type { CreateEventInputType, UpdateEventInputType } from "@minyanim/shared";
-import { createEvent, getEvent, updateEvent, cancelMinyan, getMyEvents } from "../services/eventService";
+import { createEvent, getEvent, updateEvent, cancelMinyan, getMyEvents, getStayEvents } from "../services/eventService";
 
 /** Create any event type (minyan or gathering) → OwnerEventDTO. */
 export async function createEventController(ctx: Ctx, userId: string, input: CreateEventInputType) {
@@ -11,6 +11,13 @@ export async function createEventController(ctx: Ctx, userId: string, input: Cre
 /** The signed-in user's hosted + attending events (FR-017) → MyEventsDTO. */
 export async function myEventsController(ctx: Ctx, userId: string) {
   return getMyEvents(ctx, userId);
+}
+
+/** A location's events (015): owner-only, 404 if the stay isn't the caller's → { events: MyEventRow[] }. */
+export async function stayEventsController(ctx: Ctx, userId: string, stayId: string) {
+  const res = await getStayEvents(ctx, userId, stayId);
+  if (!res) throw NotFound();
+  return res;
 }
 
 /** Fetch one event (minyan or gathering) in the viewer-appropriate tier; 404 if missing/hidden-to-non-host. */

@@ -19,8 +19,6 @@ const stayBody = (folderId?: string) => ({
   arrivalDate: Date.UTC(2027, 0, 10),
   departureDate: Date.UTC(2027, 0, 12),
   numMen: 2,
-  bringsSeferTorah: false,
-  prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
   ...(folderId ? { folderId } : {}),
 });
 

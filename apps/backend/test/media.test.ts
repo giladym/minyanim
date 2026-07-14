@@ -17,7 +17,6 @@ async function createStay(cookie: string): Promise<string> {
   const body = {
     city: "וינה", country: "AT", lat: 48.2, lng: 16.37, addressPrivate: null,
     arrivalDate: Date.UTC(2030, 5, 1), departureDate: Date.UTC(2030, 5, 8), numMen: 2,
-    bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
     contactName: null, contactPhone: null, contactEmail: null, groupMembers: null, notes: null, folderId: null,
   };
   return (await (await SELF.fetch("https://x/api/stays", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify(body) })).json()).id;

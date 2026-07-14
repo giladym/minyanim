@@ -10,8 +10,25 @@ import type {
   OwnerStayDTO,
   HistoryPage,
   LinkedMinyanDTO,
+  MyEventRow,
 } from "@minyanim/shared";
 import { api } from "./api";
+
+/**
+ * Events attached to a location (015). GET /api/stays/:id/events → `{ events: MyEventRow[] }`.
+ * The endpoint is landing in parallel with this UI, so the query degrades to an EMPTY list rather
+ * than surfacing an error until it exists. Disabled until a stay id is known.
+ */
+export function useStayEvents(stayId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["stay-events", stayId] as const,
+    queryFn: () =>
+      api<{ events: MyEventRow[] }>(`/stays/${stayId}/events`)
+        .then((r) => r.events)
+        .catch(() => [] as MyEventRow[]),
+    enabled: !!stayId,
+  });
+}
 
 /** Active minyanim linked to a Stay (013 location-change guard). Disabled until a stay id is known. */
 export function useLinkedMinyanim(stayId: string | null) {

@@ -1,20 +1,11 @@
 import { z } from "zod";
 
 /**
- * Prayer-needs selection for a Stay (D6). Shabbat is the always-on baseline (not stored);
- * only weekday services are tracked. Stored as a typed JSON column, validated by this schema
- * on both write and read.
+ * 015: a Stay (location) is a pure anchor — city/dates/address/contact + a light **group size**
+ * (`numMen`, "מי מגיע", feeds discovery potential-matchmaking). The minyan-specific fields
+ * (prayer-needs + Sefer-Torah) were REMOVED from the location and now live on actual minyan events
+ * attached to it (migration 0015). A location carries 0…N events via `event.stayId`.
  */
-export const PrayerNeedsSchema = z.object({
-  weekday: z
-    .object({
-      shacharit: z.boolean().default(false),
-      mincha: z.boolean().default(false),
-      maariv: z.boolean().default(false),
-    })
-    .default({ shacharit: false, mincha: false, maariv: false }),
-});
-export type PrayerNeeds = z.infer<typeof PrayerNeedsSchema>;
 
 /** Stored lifecycle state of a Stay (D5). "past" is derived, never stored. */
 export const StayStatusSchema = z.enum(["active", "cancelled"]);
@@ -42,8 +33,6 @@ export const CreateStayInput = z
     arrivalDate: z.number().int(),
     departureDate: z.number().int(),
     numMen: z.number().int().min(1, "num_men.too_low").max(1000, "num_men.too_high"),
-    bringsSeferTorah: z.boolean().default(false),
-    prayerNeeds: PrayerNeedsSchema,
     contactName: z.string().max(120).nullish(),
     contactPhone: z.string().nullish(),
     contactEmail: z.string().email().nullish(),
@@ -71,8 +60,6 @@ export const UpdateStayInput = z
     arrivalDate: z.number().int().optional(),
     departureDate: z.number().int().optional(),
     numMen: z.number().int().min(1, "num_men.too_low").max(1000, "num_men.too_high").optional(),
-    bringsSeferTorah: z.boolean().optional(),
-    prayerNeeds: PrayerNeedsSchema.optional(),
     contactName: z.string().max(120).nullish(),
     contactPhone: z.string().nullish(),
     contactEmail: z.string().email().nullish(),
@@ -103,8 +90,6 @@ export interface OwnerStayDTO {
   arrivalDate: number;
   departureDate: number;
   numMen: number;
-  bringsSeferTorah: boolean;
-  prayerNeeds: PrayerNeeds;
   status: StayStatus;
   isPast: boolean;
   coversShabbat: boolean;
@@ -159,8 +144,6 @@ export function toPublicStayDTO(owner: OwnerStayDTO): PublicStayDTO {
     arrivalDate: owner.arrivalDate,
     departureDate: owner.departureDate,
     numMen: owner.numMen,
-    bringsSeferTorah: owner.bringsSeferTorah,
-    prayerNeeds: owner.prayerNeeds,
     status: owner.status,
     isPast: owner.isPast,
     coversShabbat: owner.coversShabbat,

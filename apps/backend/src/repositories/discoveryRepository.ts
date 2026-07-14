@@ -14,7 +14,6 @@ export interface PotentialStay {
   id: string;
   userId: string;
   numMen: number;
-  bringsSeferTorah: boolean;
   arrivalDate: Date;
   departureDate: Date;
   /** Per-stay contact (used for seeded/imported travelers with no user account). */
@@ -31,7 +30,6 @@ const POTENTIAL_COLS = {
   id: stay.id,
   userId: stay.userId,
   numMen: stay.numMen,
-  bringsSeferTorah: stay.bringsSeferTorah,
   arrivalDate: stay.arrivalDate,
   departureDate: stay.departureDate,
   contactName: stay.contactName,
@@ -42,11 +40,10 @@ const POTENTIAL_COLS = {
 } as const;
 
 const normalizeStay = (r: {
-  id: string; userId: string; numMen: number; bringsSeferTorah: unknown; arrivalDate: Date; departureDate: Date;
+  id: string; userId: string; numMen: number; arrivalDate: Date; departureDate: Date;
   contactName: string | null; contactPhone: string | null; ownerName: string; ownerSharePhone: unknown; ownerKind: string;
 }): PotentialStay => ({
   ...r,
-  bringsSeferTorah: Boolean(r.bringsSeferTorah),
   ownerSharePhone: Boolean(r.ownerSharePhone),
 });
 

@@ -3,6 +3,8 @@ import { CreateStayInput, UpdateStayInput, flagContentSchema } from "@minyanim/s
 import { flagContent } from "../services/moderationService";
 import { linkedMinyanimForStay, unlinkStayCommitments } from "../services/commitmentService";
 import { cleanupParent } from "../services/mediaService";
+import { stayEventsController } from "../controllers/eventController";
+import { buildCtx } from "../lib/context";
 import { createAuth } from "../auth";
 import { createDb } from "../db/client";
 import { Unauthorized } from "../lib/errors";
@@ -60,6 +62,12 @@ stays.post("/api/stays", async (c) => {
 stays.get("/api/stays/:id", async (c) => {
   const userId = await requireUserId(c);
   return c.json(await getStayController(createDb(c.env.DB), userId, c.req.param("id"), clientTz(c)));
+});
+
+/** GET /api/stays/:id/events — the location's events (015): owner-only; 404 if not the caller's Stay. */
+stays.get("/api/stays/:id/events", async (c) => {
+  const userId = await requireUserId(c);
+  return c.json(await stayEventsController(buildCtx(c), userId, c.req.param("id")));
 });
 
 /** GET /api/stays/:id/linked-minyanim — active minyanim linked to this Stay (013 location guard). */

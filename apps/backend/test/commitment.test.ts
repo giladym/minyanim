@@ -92,7 +92,7 @@ describe("D12 Stay reconciliation", () => {
     // E registers a Stay covering the event date, then commits linking it.
     const stayRes = await SELF.fetch("https://x/api/stays", {
       method: "POST", headers: { ...J, cookie: e },
-      body: JSON.stringify({ city: "זקופנה", country: "פולין", lat: 49.3, lng: 19.95, arrivalDate: Date.UTC(2030, 0, 1), departureDate: Date.UTC(2030, 0, 10), numMen: 4, bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } } }),
+      body: JSON.stringify({ city: "זקופנה", country: "פולין", lat: 49.3, lng: 19.95, arrivalDate: Date.UTC(2030, 0, 1), departureDate: Date.UTC(2030, 0, 10), numMen: 4, }),
     });
     const stayId = (await stayRes.json()).id;
     expect((await (await commit(e, id, 4, stayId)).json()).minyan.committedMen).toBe(6); // 2 + 4

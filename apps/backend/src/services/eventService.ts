@@ -35,6 +35,7 @@ import type { MinyanJoined, GatheringJoined, GatheringInsert, MyEventQueryRow } 
 import { pendingRequestsForEvent, confirmedPartySize } from "../repositories/attendanceRepository";
 import { recipientsForEvent, eventNotifyContext } from "../repositories/notificationRepository";
 import { userRolesForEvent } from "../repositories/roleRepository";
+import { getStayById } from "../repositories/stayRepository";
 import { onCancelled, onMinyanCreated } from "./notificationService";
 import { usersWithStaysNear } from "./discoveryService";
 
@@ -329,6 +330,8 @@ export async function hostMinyan(ctx: Ctx, userId: string, input: CreateEventInp
       id,
       type: "minyan",
       hostUserId: userId,
+      // 015: stamp the location this minyan was created from (NULL for a standalone event).
+      stayId: input.stayId ?? null,
       city: input.city,
       country: input.country,
       lat: input.lat,
@@ -389,6 +392,8 @@ async function createGathering(ctx: Ctx, userId: string, input: CreateEventInput
       type: "gathering",
       category: category as Category,
       hostUserId: userId,
+      // 015: stamp the location this gathering was created from (NULL for a standalone event).
+      stayId: input.stayId ?? null,
       title: input.title ?? null,
       city: input.city,
       country: input.country,
@@ -528,51 +533,88 @@ export async function getMyEvents(ctx: Ctx, userId: string): Promise<MyEventsDTO
     repo.pendingCountsByEvent(ctx.db, hosted.filter((r) => r.rsvpMode === "approval").map((r) => r.id)),
   ]);
 
-  const deriveRowStatus = (r: MyEventQueryRow): MinyanStatus | GatheringStatus => {
-    const confirmed = men.get(r.id) ?? 0;
-    if (r.type === "minyan") {
-      const roles = rolesMap.get(r.id) ?? { baalTefila: false, baalKorei: false };
-      return deriveStatus({
-        storedStatus: r.storedStatus,
-        eventDate: r.eventDate,
-        lat: r.lat,
-        lng: r.lng,
-        committedMen: confirmed,
-        seferTorah: r.seferTorah,
-        services: r.services,
-        baalKoreiClaimed: roles.baalKorei,
-      });
-    }
-    return gatheringStatus({
+  return {
+    hosting: hosted.map((r) => toMyEventRow(r, true, men, rolesMap, pending)),
+    attending: attending.map((r) => toMyEventRow(r, false, men, rolesMap, pending)),
+  };
+}
+
+/** Derive the surfaced status for a compact "My events" row, per type (minyan quorum vs gathering). */
+function deriveMyEventStatus(
+  r: MyEventQueryRow,
+  men: Map<string, number>,
+  rolesMap: Map<string, { baalTefila: boolean; baalKorei: boolean }>,
+): MinyanStatus | GatheringStatus {
+  const confirmed = men.get(r.id) ?? 0;
+  if (r.type === "minyan") {
+    const roles = rolesMap.get(r.id) ?? { baalTefila: false, baalKorei: false };
+    return deriveStatus({
       storedStatus: r.storedStatus,
       eventDate: r.eventDate,
       lat: r.lat,
       lng: r.lng,
-      capacity: r.capacity,
-      confirmedPartySize: confirmed,
+      committedMen: confirmed,
+      seferTorah: r.seferTorah,
+      services: r.services,
+      baalKoreiClaimed: roles.baalKorei,
     });
-  };
+  }
+  return gatheringStatus({
+    storedStatus: r.storedStatus,
+    eventDate: r.eventDate,
+    lat: r.lat,
+    lng: r.lng,
+    capacity: r.capacity,
+    confirmedPartySize: confirmed,
+  });
+}
 
-  const toRow = (r: MyEventQueryRow, withPending: boolean): MyEventRow => {
-    const row: MyEventRow = {
-      id: r.id,
-      type: r.type,
-      category: r.category,
-      title: r.title,
-      city: r.city,
-      country: r.country,
-      eventDate: r.eventDate.getTime(),
-      status: deriveRowStatus(r),
-      myStatus: (r.myStatus as AttendanceStatus | null) ?? null,
-    };
-    if (withPending && r.rsvpMode === "approval") row.pendingRequestCount = pending.get(r.id) ?? 0;
-    return row;
+/** Build one compact MyEventRow; `withPending` attaches the approval-mode host badge (hosted rows). */
+function toMyEventRow(
+  r: MyEventQueryRow,
+  withPending: boolean,
+  men: Map<string, number>,
+  rolesMap: Map<string, { baalTefila: boolean; baalKorei: boolean }>,
+  pending: Map<string, number>,
+): MyEventRow {
+  const row: MyEventRow = {
+    id: r.id,
+    type: r.type,
+    category: r.category,
+    title: r.title,
+    city: r.city,
+    country: r.country,
+    eventDate: r.eventDate.getTime(),
+    status: deriveMyEventStatus(r, men, rolesMap),
+    myStatus: (r.myStatus as AttendanceStatus | null) ?? null,
   };
+  if (withPending && r.rsvpMode === "approval") row.pendingRequestCount = pending.get(r.id) ?? 0;
+  return row;
+}
 
-  return {
-    hosting: hosted.map((r) => toRow(r, true)),
-    attending: attending.map((r) => toRow(r, false)),
-  };
+/**
+ * A location's events (015): the owned Stay's events as compact rows — events the user HOSTS attached
+ * to the stay UNION events the user JOINED from it (deduped, earliest-first), each with the derived
+ * status + the viewer's `myStatus` (+ `pendingRequestCount` on hosted approval-mode events, like
+ * /api/me/events). Returns null when the stay is missing or not the caller's (owner-gated 404).
+ */
+export async function getStayEvents(
+  ctx: Ctx,
+  userId: string,
+  stayId: string,
+): Promise<{ events: MyEventRow[] } | null> {
+  const owned = await getStayById(ctx.db, userId, stayId);
+  if (!owned) return null;
+
+  const rows = await repo.eventsForStay(ctx.db, stayId, userId);
+  const ids = rows.map((r) => r.id);
+  const [men, rolesMap, pending] = await Promise.all([
+    repo.committedMenByEvent(ctx.db, ids),
+    repo.rolesByEvent(ctx.db, ids),
+    repo.pendingCountsByEvent(ctx.db, rows.filter((r) => r.hosted && r.rsvpMode === "approval").map((r) => r.id)),
+  ]);
+
+  return { events: rows.map((r) => toMyEventRow(r, r.hosted, men, rolesMap, pending)) };
 }
 
 /** Host-only cancel (D11): void attendances + roles, flip to cancelled, notify confirmed attendees. */

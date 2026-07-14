@@ -32,6 +32,7 @@ vi.mock("../../lib/stays", () => ({
   getStay: (...args: unknown[]) => getStayMock(...args),
   useLinkedMinyanim: () => ({ data: { minyanim: [] } }),
   useUnlinkMinyanim: () => ({ mutateAsync: vi.fn() }),
+  useStayEvents: () => ({ data: [] }),
 }));
 
 vi.mock("../../lib/folders", () => ({
@@ -113,7 +114,7 @@ describe("AddEditStayForm — validation (create)", () => {
 
   it("clamps the man count to 1..1000 (no 0 / NaN / huge reaches the server)", () => {
     render(<AddEditStayForm />);
-    const men = screen.getByLabelText("כמה גברים בקבוצה (כולל אותך)");
+    const men = screen.getByLabelText("מי מגיע — כמה אנשים בקבוצה (כולל אותך)");
     fireEvent.change(men, { target: { value: "0" } });
     expect(men).toHaveValue(1); // floors at 1
     fireEvent.change(men, { target: { value: "9999" } });
@@ -156,7 +157,7 @@ describe("AddEditStayForm — validation (create)", () => {
 describe("AddEditStayForm — smart defaults & disclosure", () => {
   it("defaults numMen to 1", async () => {
     render(<AddEditStayForm />);
-    expect(screen.getByLabelText("כמה גברים בקבוצה (כולל אותך)")).toHaveValue(1);
+    expect(screen.getByLabelText("מי מגיע — כמה אנשים בקבוצה (כולל אותך)")).toHaveValue(1);
     // Let the async profile prefill settle so its state update isn't an unwrapped act() warning.
     await screen.findByRole("button", { name: "שמירת יעד" });
   });
@@ -301,7 +302,7 @@ describe("AddEditStayForm — duplicate prefill (004 US3 / D9)", () => {
     render(<AddEditStayForm duplicateFromId="stay_src" />);
 
     // Details copied; dates cleared (empty inputs).
-    await waitFor(() => expect(screen.getByLabelText("כמה גברים בקבוצה (כולל אותך)")).toHaveValue(7));
+    await waitFor(() => expect(screen.getByLabelText("מי מגיע — כמה אנשים בקבוצה (כולל אותך)")).toHaveValue(7));
     expect(screen.getByLabelText("תיקייה")).toHaveValue("fld_a");
     expect(screen.getByLabelText("תאריך הגעה")).toHaveValue("");
     expect(screen.getByLabelText("תאריך עזיבה")).toHaveValue("");
@@ -319,6 +320,52 @@ describe("AddEditStayForm — duplicate prefill (004 US3 / D9)", () => {
         departureDate: Date.UTC(2099, 2, 5),
       }),
     );
+  });
+});
+
+describe("AddEditStayForm — 015 location↔events refactor", () => {
+  it("no longer renders the prayer-needs section or the Sefer-Torah control", async () => {
+    render(<AddEditStayForm />);
+    expect(screen.queryByText("צורכי תפילה")).not.toBeInTheDocument();
+    expect(screen.queryByText("שחרית (חול)")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("מביא/ה ספר תורה")).not.toBeInTheDocument();
+    await screen.findByRole("button", { name: "שמירת יעד" }); // settle async profile prefill
+  });
+
+  it("labels the group-size field with the new group-size label", async () => {
+    render(<AddEditStayForm />);
+    expect(screen.getByLabelText("מי מגיע — כמה אנשים בקבוצה (כולל אותך)")).toBeInTheDocument();
+    await screen.findByRole("button", { name: "שמירת יעד" }); // settle async profile prefill
+  });
+
+  it("does NOT send prayerNeeds / bringsSeferTorah in the create payload", async () => {
+    createMutate.mockResolvedValue({ id: "stay_new" });
+    const user = userEvent.setup();
+    render(<AddEditStayForm />);
+    await fillLocationManually(user, "לונדון", "בריטניה");
+    await fillDates(user, "2099-01-10", "2099-01-12");
+    await user.click(submitButton());
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    const payload = createMutate.mock.calls[0]![0];
+    expect(payload).not.toHaveProperty("prayerNeeds");
+    expect(payload).not.toHaveProperty("bringsSeferTorah");
+  });
+
+  it("shows the 'האירועים שלי כאן' section when editing an existing stay", async () => {
+    getStayMock.mockResolvedValue({
+      id: "stay_1", city: "פריז", country: "צרפת", lat: null, lng: null,
+      arrivalDate: Date.UTC(2099, 0, 10), departureDate: Date.UTC(2099, 0, 12), numMen: 3,
+      status: "active", isPast: false, coversShabbat: false, contactName: null, contactPhone: null,
+      contactEmail: null, groupMembers: null, notes: null, folderId: null, historyTag: null, images: null, createdAt: 0, updatedAt: 0,
+    });
+    render(<AddEditStayForm stayId="stay_1" />);
+    expect(await screen.findByText("האירועים שלי כאן")).toBeInTheDocument();
+  });
+
+  it("hides the events section on a new (unsaved) stay", async () => {
+    render(<AddEditStayForm />);
+    expect(screen.queryByText("האירועים שלי כאן")).not.toBeInTheDocument();
+    await screen.findByRole("button", { name: "שמירת יעד" }); // settle async profile prefill
   });
 });
 

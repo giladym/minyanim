@@ -53,11 +53,12 @@ export interface TravelerContact {
   numMen: number;
 }
 
-/** Per-Shabbat potential bucket (R3). `shabbat` is the Saturday civil date "YYYY-MM-DD". */
+/** Per-Shabbat potential bucket (R3). `shabbat` is the Saturday civil date "YYYY-MM-DD". 015: the
+ * Sefer-Torah count was dropped — it derived from `stay.brings_sefer_torah`, which moved off the
+ * location onto minyan events; potential now surfaces men-overlap only. */
 export interface PotentialBucket {
   shabbat: string;
   menCount: number;
-  seferTorahCount: number;
   /** The individual travelers covering this Shabbat, with contact for those who share it. */
   travelers: TravelerContact[];
 }

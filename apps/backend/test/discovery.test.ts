@@ -59,8 +59,6 @@ describe("GET /api/discovery", () => {
         arrivalDate: ymd(2027, 8, 2),
         departureDate: ymd(2027, 8, 8),
         numMen,
-        bringsSeferTorah: numMen === 6,
-        prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
         status: "active",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -97,10 +95,9 @@ describe("GET /api/discovery", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    // Potential: one Saturday bucket, 10 men, 1 Sefer Torah.
+    // Potential: one Saturday bucket, 10 men (Sefer-Torah moved off the location in 015).
     expect(body.potential.length).toBe(1);
     expect(body.potential[0].menCount).toBe(10);
-    expect(body.potential[0].seferTorahCount).toBe(1);
 
     // Exactly the one active future minyan (completed + hidden excluded). With only minyanim seeded,
     // the generalized `events` field contains just that minyan (US2 — gatherings could also appear).
@@ -140,8 +137,7 @@ describe("GET /api/discovery", () => {
     const mkStay = async (userId: string, extra: Record<string, unknown>) =>
       db.insert(stay).values({
         id: crypto.randomUUID(), userId, city: "London", country: "UK", lat: 51.51, lng: -0.13,
-        arrivalDate: ymd(2027, 8, 2), departureDate: ymd(2027, 8, 8), numMen: 2, bringsSeferTorah: false,
-        prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } }, status: "active",
+        arrivalDate: ymd(2027, 8, 2), departureDate: ymd(2027, 8, 8), numMen: 2, status: "active",
         createdAt: new Date(), updatedAt: new Date(), ...extra,
       });
 
