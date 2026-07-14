@@ -1,4 +1,17 @@
 <!-- SPECKIT START -->
+**015 Location holds events** is built (design brainstorm → Option B; merged to `develop`): a Stay
+(location/יעד) is a clean anchor carrying 0…N events instead of baking minyan fields in. Migration
+0015 dropped `stay.prayer_needs` + `stay.brings_sefer_torah` (kept `num_men` as a light group size
+that still feeds discovery "potential" — which now shows men-overlap only), and added a nullable
+`event.stay_id` FK (ON DELETE SET NULL). The location edit page drops the prayer/Sefer-Torah sections,
+relabels group-size, and shows an "האירועים שלי כאן" list + "＋ הוסף אירוע" → the shipped KindPicker
+flow (fromStay → `event.stay_id`); events surface as a chip on the Stay card. `GET /api/stays/:id/events`
+(owner) = hosted (`event.stay_id`) ∪ joined (`attendance.stay_id`) events as `MyEventRow[]`; the event
+mutations invalidate `["stay-events"]` so the list/chip stay reactive. Shipped alongside three UX fixes
+(#59): the Google-Maps deep link is coords-only (`query=lat,lng`, was a broken `(name)` suffix), the
+homepage's fabricated "travelers this week" stat became an honest value tile, and `/places` defaults to
+restaurants + shops on (others off).
+
 **014 Multi-type events** is built (`specs/014-multi-type-events/`, merged to `develop`): the event
 model is generalized to a two-axis design — **behavior** (`event.type` = `minyan` quorum | `gathering`
 capacity+RSVP) + an extensible **category** (`hosting`|`social`|`learning`|`celebration`; NULL for
@@ -110,5 +123,7 @@ axis columns category/occasion/rsvp_mode/visibility/capacity/start_time/end_time
 Object storage: R2 bucket `IMAGES` (012; dev `minyanim-images-dev`) holds uploaded image
 bytes. Dev-only import tools live outside the workspace: `tools/seed-import/` (009) +
 `tools/places-import/` (010) — Node built-ins, `node --test`. Decisions: docs/adr/ (through 0012).
-001–014 shipped; next v1 remainder: import steps 2–4 of feature 009.
+0015 (015: drop `stay.prayer_needs`+`stay.brings_sefer_torah`, keep `num_men` as group size; add
+`event.stay_id` FK linking events to a location). 001–015 shipped; next v1 remainder: import steps 2–4
+of feature 009.
 <!-- SPECKIT END -->
