@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { LayerDTO, PlaceDTO } from "@minyanim/shared";
 import { usePlaces, usePlacesInBbox, type PlacesBbox } from "../../lib/places";
-import { layerLabel } from "../../lib/layerLabel";
+import { layerLabel, defaultHiddenLayerIds } from "../../lib/layerLabel";
 import { searchPlaces } from "../../lib/geo";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { PlacesMap } from "./PlacesMap";
@@ -57,6 +57,16 @@ export function PlacesView() {
   const [off, setOff] = useState<Set<string>>(new Set()); // retired-from-view layer ids (toggles)
 
   const layers = data?.layers ?? [];
+
+  // Seed the toggles once layers first load: only kosher restaurants + shops start ON; everything
+  // else (synagogues, Chabad houses, mikvehs…) starts OFF. Applied once so later user toggles stick.
+  const defaultsApplied = useRef(false);
+  useEffect(() => {
+    if (defaultsApplied.current || layers.length === 0) return;
+    defaultsApplied.current = true;
+    setOff(defaultHiddenLayerIds(layers));
+  }, [layers]);
+
   const visible = useMemo(
     () => (data?.places ?? []).filter((p) => !off.has(p.layerId)),
     [data?.places, off],
@@ -134,7 +144,7 @@ function PlaceRow({ place: p, layer }: { place: PlaceDTO; layer?: LayerDTO }) {
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <a className={`${nav} bg-primary text-on-primary`} href={googleMapsUrl(p.lat, p.lng, p.name)} target="_blank" rel="noopener noreferrer">
+        <a className={`${nav} bg-primary text-on-primary`} href={googleMapsUrl(p.lat, p.lng)} target="_blank" rel="noopener noreferrer">
           {t("places.googleMaps")}
         </a>
         <a className={`${nav} border border-line text-ink`} href={wazeUrl(p.lat, p.lng)} target="_blank" rel="noopener noreferrer">

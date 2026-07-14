@@ -34,9 +34,8 @@ export const en = {
         tagCommunity: "Community",
         tagTradition: "Tradition",
         tagTech: "Anywhere",
-        statNumber: "1,200+",
-        statLabel: "travelers connected this week",
-        statBody: "Every day, minyanim form around the world through JStay's fast matching.",
+        statHeadline: "A Jewish community — wherever you go",
+        statBody: "A minyan, a Shabbat meal, a Chabad house and precise Shabbat times — all gathered around your next destination.",
       },
       how: {
         title: "How it works",
