@@ -94,11 +94,11 @@ User types the suite must cover: **regular** (signed-in), **host** (owns an even
 | Stay ↔ minyan guard (013) | `linked-minyanim` ✅ (new), `commitment` (D12 reconcile) | `stays-guard.spec` | host, guest |
 | Host reassignment (013) | `host-transfer` ✅ (new) | `host-transfer-notify.spec` | host, guest |
 | Events — minyan / gathering / hosting (014) | `events`, `event-edit-cancel`, `event-cascade`, `social-gathering`, `role` | `multi-type-events.spec` | host, guest |
-| Attendance / RSVP / capacity | `attendance-flow`, `attendance-capacity`, `attendance-dto`, `commitment` | (in `multi-type-events.spec`) | host, guest |
+| Attendance / RSVP / capacity | `attendance-flow`, `attendance-capacity`, `attendance-dto`, `commitment` | `gathering-rsvp.spec` ✅ (UI request→approve→address reveal + axe) + `multi-type-events.spec` (API) | host, guest |
 | Discovery | `discovery`, `discovery-kinds`, `near-stay` | `discovery.spec` | regular, seed (hidden contact) |
 | Folders / history | `folder`, `folder-cascade` | `folders-history.spec` | regular |
 | Notifications | `notification`, `minyan-nearby-notify` | (asserted in host-transfer) | host, guest |
-| Messaging (008) | `message` | — | regular |
+| Messaging (008) | `message` | `messaging.spec` ✅ (UI send/receive across two contexts + inbox + axe) | regular |
 | Admin / moderation (006) | `admin-guard`, `admin-places`, `moderation-admin`, `moderation-events`, `metrics`, `flag` | `admin.spec` | admin |
 | Places / layers (010/011) | `places`, `migration-0012` | `places.spec` | regular, admin |
 | Media (012) | `media`, `imageMeta` | (galleries within stays/events specs) | regular |
