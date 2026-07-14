@@ -99,7 +99,7 @@ describe("DiscoveryPage", () => {
     expect(screen.queryByText(/להצטרפות/)).not.toBeInTheDocument();
   });
 
-  it("renders a place-layer toggle (Chabad houses) that flips its pressed state (011)", async () => {
+  it("renders a place-layer toggle (Chabad houses) that starts OFF by default and flips on (011)", async () => {
     useDiscovery.mockReturnValue({ data: RESULT, isFetching: false });
     const user = userEvent.setup();
     render(<DiscoveryPage />);
@@ -108,9 +108,10 @@ describe("DiscoveryPage", () => {
     await user.type(screen.getByLabelText("מתאריך"), "2027-08-01");
     await user.type(screen.getByLabelText("עד תאריך"), "2027-08-31");
 
-    const toggle = await screen.findByRole("button", { name: "בתי חב״ד", pressed: true });
+    // Only kosher food layers default ON; Chabad houses (non-food) start OFF.
+    const toggle = await screen.findByRole("button", { name: "בתי חב״ד", pressed: false });
     await user.click(toggle);
-    expect(screen.getByRole("button", { name: "בתי חב״ד", pressed: false })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "בתי חב״ד", pressed: true })).toBeInTheDocument();
   });
 
   it("kind chips map to types/categories and hide the minyan-only sub-filters (US2)", async () => {

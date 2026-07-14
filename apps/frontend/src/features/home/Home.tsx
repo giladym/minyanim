@@ -150,8 +150,10 @@ export function Home() {
           </div>
           <div className="flex flex-col justify-between gap-8 rounded-2xl bg-primary p-8 text-on-primary md:p-10">
             <div>
-              <div className="font-display text-5xl font-extrabold">{t("home.mission.statNumber")}</div>
-              <div className="mt-2 text-sm font-bold opacity-80">{t("home.mission.statLabel")}</div>
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-on-primary/15" aria-hidden>
+                <Icon name="star-of-david" size={28} />
+              </span>
+              <div className="mt-5 font-display text-3xl font-extrabold leading-tight">{t("home.mission.statHeadline")}</div>
             </div>
             <p className="leading-relaxed opacity-90">{t("home.mission.statBody")}</p>
           </div>

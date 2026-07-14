@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearch, useNavigate, Link } from "@tanstack/react-router";
 import {
@@ -19,7 +19,7 @@ import { searchPlaces } from "../../lib/geo";
 import { useDiscovery, type DiscoveryParams } from "../../lib/discovery";
 import { DiscoveryMap } from "./DiscoveryMap";
 import { KosherPlacesCard } from "../places/KosherPlacesCard";
-import { layerLabel } from "../../lib/layerLabel";
+import { layerLabel, defaultHiddenLayerIds } from "../../lib/layerLabel";
 import { Icon, type IconName } from "../../components/Icon";
 
 /** Epoch-ms → "YYYY-MM-DD" for seeding the date inputs (UTC, matching the date convention). */
@@ -143,6 +143,17 @@ export function DiscoveryPage() {
   }, [center, from, to, kind, occasion, nusach, seferTorah, minyanInScope]);
 
   const { data, isFetching } = useDiscovery(params);
+
+  // Seed the place-layer toggles once layers first load: only kosher restaurants + shops start ON;
+  // every other layer (Chabad houses, synagogues, mikvehs…) starts OFF. Applied once so the user's
+  // later toggles stick.
+  const layerDefaultsApplied = useRef(false);
+  useEffect(() => {
+    const ls = data?.layers ?? [];
+    if (layerDefaultsApplied.current || ls.length === 0) return;
+    layerDefaultsApplied.current = true;
+    setHiddenLayers(defaultHiddenLayerIds(ls));
+  }, [data?.layers]);
 
   // Places (Chabad houses + any other active layer) filtered by the per-layer toggles.
   const visiblePlaces = useMemo(
