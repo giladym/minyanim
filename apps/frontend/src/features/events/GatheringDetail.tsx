@@ -58,19 +58,32 @@ export function buildGatheringShareText(g: AnyGatheringDTO, title: string, joinU
 }
 
 // ── Seats meter (aria-live) ───────────────────────────────────────────────────
+/**
+ * Capacity meter. The primary line is category-aware (hosting keeps the "seats at the table" seudah
+ * framing; other gatherings use generic "spots open") and the bar/subline show REGISTERED-vs-capacity
+ * so an empty event reads as empty (not a full green bar). Text + aria-live carry the state (never
+ * colour/width alone) for WCAG-AA.
+ */
 function SeatsMeter({ g }: { g: AnyGatheringDTO }) {
   const { t } = useTranslation();
   if (g.capacity == null || g.seatsRemaining == null) return null;
-  const remaining = Math.max(0, g.seatsRemaining);
-  const pct = Math.round((remaining / g.capacity) * 100);
-  const label = remaining === 0 ? t("hosting.seatsFull") : t("hosting.seatsLeft", { count: remaining });
+  const capacity = g.capacity;
+  const remaining = Math.max(0, Math.min(capacity, g.seatsRemaining));
+  const taken = capacity - remaining;
+  const fillPct = capacity > 0 ? Math.round((taken / capacity) * 100) : 0;
+  const hosting = g.category === "hosting";
+  const label =
+    remaining === 0
+      ? hosting ? t("hosting.seatsFull") : t("social.seatsFull")
+      : hosting ? t("hosting.seatsLeft", { count: remaining }) : t("social.seatsLeft", { count: remaining });
   return (
     <div className="mt-4">
-      <div className="mb-1.5 text-sm font-extrabold" aria-live="polite">
-        {label}
+      <div className="mb-1.5 flex items-baseline justify-between gap-2">
+        <span className="text-sm font-extrabold" aria-live="polite">{label}</span>
+        <span className="text-xs opacity-85">{t("rsvp.seatsTaken", { registered: taken, capacity })}</span>
       </div>
       <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
-        <div className="h-full rounded-full bg-on-primary transition-[width] duration-700 ease-out" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-on-primary transition-[width] duration-700 ease-out" style={{ width: `${fillPct}%` }} />
       </div>
     </div>
   );
@@ -402,6 +415,7 @@ function GatheringPhotos({ id, g }: { id: string; g: AnyGatheringDTO }) {
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
       <span className="text-xs font-bold uppercase tracking-wide text-faint">{t("media.photos")}</span>
+      {owner && <p className="-mt-1 text-xs text-muted">{t("gatheringOwner.photosHint")}</p>}
       <Gallery
         images={refs}
         itemName={g.title ?? g.city}
@@ -416,18 +430,54 @@ function GatheringPhotos({ id, g }: { id: string; g: AnyGatheringDTO }) {
 function GatheringAddress({ g }: { g: AnyGatheringDTO }) {
   const { t } = useTranslation();
   if (hasPrivateG(g)) {
-    return (
-      <section className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-5">
-        {g.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {g.addressPrivate}</p>}
-        {g.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {g.addressNotes}</p>}
-      </section>
-    );
+    // A confirmed viewer / the owner: show the exact address only when there is content — an empty
+    // bordered card read as a bug. For the owner with nothing set, offer a purposeful "add address"
+    // hint; other confirmed viewers with no address see nothing.
+    if (g.addressPrivate || g.addressNotes) {
+      return (
+        <section className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-5">
+          {g.addressPrivate && <p className="text-ink">{t("minyanDetail.address")}: {g.addressPrivate}</p>}
+          {g.addressNotes && <p className="text-sm text-ink">{t("minyanDetail.addressNotes")}: {g.addressNotes}</p>}
+        </section>
+      );
+    }
+    if (isOwnerG(g)) {
+      return (
+        <Link
+          to="/my-events"
+          className="flex items-center gap-2 rounded-2xl border border-dashed border-line2 bg-surface p-5 text-sm font-bold text-clay-ink"
+        >
+          <Icon name="add" size={16} />
+          {t("gatheringOwner.addAddress")}
+        </Link>
+      );
+    }
+    return null;
   }
   return (
     <p className="flex items-center gap-2 rounded-2xl border border-line bg-surface p-5 text-xs text-muted">
       <Icon name="check" size={14} />
       {t("rsvp.addressLockHint")}
     </p>
+  );
+}
+
+// ── Owner framing band (Screen-4 host affordance) ─────────────────────────────
+/** A compact "this is your event" band for the host of an OPEN gathering — otherwise the page has no
+ * RSVP band (owner) and no RequestsPanel (open mode) and reads as sparse. One tasteful band with an
+ * edit/manage action; a pending-requests hint surfaces when the owner has an approval queue. */
+function OwnerBand({ g }: { g: OwnerG }) {
+  const { t } = useTranslation();
+  return (
+    <section className="mn-fadeup flex items-center justify-between gap-3 rounded-2xl border-[1.5px] border-primary-container bg-primary-soft p-4">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="font-extrabold text-primary">{t("gatheringOwner.yourEvent")}</span>
+        <span className="text-xs text-muted">{t("gatheringOwner.yourEventHint")}</span>
+      </div>
+      <Link to="/my-events" className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-on-primary">
+        {t("gatheringOwner.edit")}
+      </Link>
+    </section>
   );
 }
 
@@ -587,6 +637,8 @@ export function GatheringDetail({ id, g, justPublished }: { id: string; g: AnyGa
       </section>
 
       {justPublished && g.visibility === "unlisted" && <UnlistedNotice />}
+
+      {isOwnerG(g) && active && <OwnerBand g={g} />}
 
       {active && !isOwnerG(g) && <RsvpBand id={id} g={g} />}
 
