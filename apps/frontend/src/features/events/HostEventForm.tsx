@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   CreateEventInput,
+  UpdateEventInput,
   EVENT_KINDS,
   type EventKind,
   type MealType,
@@ -11,10 +12,13 @@ import {
   type Occasion,
   type RsvpMode,
   type Visibility,
+  type OwnerGatheringDTO,
+  type HostingAttrs,
+  type SocialAttrs,
 } from "@minyanim/shared";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
 import { getStay } from "../../lib/stays";
-import { useHostEvent } from "../../lib/events";
+import { useHostEvent, useUpdateEvent } from "../../lib/events";
 import { ApiError } from "../../lib/api";
 import { Icon } from "../../components/Icon";
 import { KindPicker, type PickerContext } from "./KindPicker";
@@ -41,10 +45,13 @@ function dateToEpoch(v: string): number {
  * `HostMinyanForm`). Above the fold: title / mealType / date+time / seats / location; a collapsed
  * "פרטים נוספים" holds the secondary fields (SC-001 < 3 min). Publishes via `POST /api/events`.
  */
-export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan">; ctx: PickerContext }) {
+export function HostEventForm({ kind, ctx, editEvent }: { kind: Exclude<EventKind, "minyan">; ctx: PickerContext; editEvent?: OwnerGatheringDTO }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const host = useHostEvent();
+  const isEdit = Boolean(editEvent);
+  const editId = editEvent?.id ?? "";
+  const update = useUpdateEvent(editId);
   const isHosting = kind === "hosting";
 
   const [location, setLocation] = useState<LocationValue>({ city: "", country: "", lat: null, lng: null });
@@ -79,10 +86,50 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
   const [rsvpMode, setRsvpMode] = useState<RsvpMode>(isHosting ? "approval" : "open");
   const [visibility, setVisibility] = useState<Visibility>("public");
 
-  // Prefill location + a sensible date from a Stay context.
+  // Edit mode (014): seed EVERY field from the loaded event — exactly ONCE (ref-guarded so a later
+  // re-render, e.g. a language switch, can't clobber edits already made). The kind/type is fixed
+  // (the form is rendered by the edit page for this event's kind); location + date are immutable in
+  // v1 (not in UpdateEventInput) and shown read-only below.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (!editEvent || seeded.current) return;
+    seeded.current = true;
+    const g = editEvent;
+    setLocation({ city: g.city, country: g.country, lat: g.lat, lng: g.lng });
+    setTitle(g.title ?? "");
+    setEventDate(new Date(g.eventDate).toISOString().slice(0, 10));
+    setStartTime(g.startTime ?? "");
+    setEndTime(g.endTime ?? "");
+    setOccasion((g.occasion as Occasion) ?? "none");
+    setNotes(g.notes ?? "");
+    setRsvpMode(g.rsvpMode);
+    setVisibility(g.visibility);
+    setRsvpCutoff(g.rsvpCutoff ? new Date(g.rsvpCutoff).toISOString().slice(0, 16) : "");
+    setAddressPrivate(g.addressPrivate ?? "");
+    setAddressNotes(g.addressNotes ?? "");
+    if (g.category === "hosting") {
+      const a = g.attrs as HostingAttrs;
+      setMealType(a.mealType);
+      setSeats(g.capacity ?? 6);
+      setKashrut(a.kashrut);
+      setDietary(a.dietary ?? []);
+      setOffering(a.offering ?? "");
+      setBringItems(a.bringItems ?? "");
+      setAlcohol(a.alcohol ?? false);
+      setAccessibility(a.accessibility ?? "");
+    } else {
+      const a = g.attrs as SocialAttrs;
+      setSubcategory(a.subcategory);
+      setCapacity(g.capacity != null ? String(g.capacity) : "");
+    }
+    // Surface the "more details" fields when any of them carry content, so edits are visible.
+    setExpanded(true);
+  }, [editEvent]);
+
+  // Prefill location + a sensible date from a Stay context (create mode only).
   const prefilled = useRef(false);
   useEffect(() => {
-    if (prefilled.current) return;
+    if (isEdit || prefilled.current) return;
     if (ctx.fromStay) {
       prefilled.current = true;
       getStay(ctx.fromStay)
@@ -105,7 +152,7 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
   // Meal-type ↔ occasion derive (hosting): Shabbat meals pre-select Shabbat; a holiday meal requires
   // an explicit occasion. Only nudges when the user hasn't chosen an occasion yet (editable).
   useEffect(() => {
-    if (!isHosting) return;
+    if (!isHosting || isEdit) return;
     if ((mealType === "shabbat_dinner" || mealType === "shabbat_lunch" || mealType === "seudah_shlishit") && occasion === "none") {
       setOccasion("shabbat");
     }
@@ -115,7 +162,7 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
   // can't compute candle-lighting (the zmanim library is server-only, ADR 0007), so we seed a
   // sensible evening default; the exact time comes from the server's zmanim endpoint on the detail.
   useEffect(() => {
-    if (isHosting && YOM_TOV.has(occasion) && !startTime) setStartTime("18:00");
+    if (!isEdit && isHosting && YOM_TOV.has(occasion) && !startTime) setStartTime("18:00");
   }, [occasion, isHosting]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fieldError = (name: string) => (errors[name] ? <span className={errCls}>{t(`errors.${errors[name]}`)}</span> : null);
@@ -133,6 +180,50 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
     }
 
     const capNum = isHosting ? seats : capacity ? Math.max(1, Math.floor(Number(capacity))) : null;
+    const gatheringAttrs = isHosting
+      ? { mealType, kashrut, dietary, offering: offering || null, bringItems: bringItems || null, alcohol, accessibility: accessibility || null }
+      : { subcategory };
+
+    // ── Edit (PATCH) ─────────────────────────────────────────────────────────
+    // Location + date are immutable in v1 (absent from UpdateEventInput); everything else is editable.
+    if (isEdit) {
+      const editPayload = {
+        title: title || null,
+        addressPrivate: addressPrivate || null,
+        addressNotes: addressNotes || null,
+        notes: notes || null,
+        startTime: startTime || null,
+        endTime: endTime || null,
+        rsvpCutoff: rsvpCutoff ? Date.parse(rsvpCutoff) : null,
+        occasion,
+        rsvpMode,
+        visibility,
+        capacity: capNum,
+        gathering: gatheringAttrs,
+      };
+      const parsedEdit = UpdateEventInput.safeParse(editPayload);
+      if (!parsedEdit.success) {
+        const fe: Record<string, string> = {};
+        for (const issue of parsedEdit.error.issues) fe[issue.path.join(".") || "form"] = issue.message;
+        setErrors(fe);
+        return;
+      }
+      setErrors({});
+      try {
+        const dto = await update.mutateAsync(parsedEdit.data);
+        void navigate({ to: "/event/$id", params: { id: dto.id }, search: {} });
+      } catch (err) {
+        if (err instanceof ApiError && Array.isArray(err.body.errors) && err.body.errors.length) {
+          const fe: Record<string, string> = {};
+          for (const e2 of err.body.errors) if (e2.field) fe[e2.field] = e2.code;
+          setErrors(fe);
+          const nonField = err.body.errors.find((e2) => !e2.field);
+          if (nonField) setSubmitError(nonField.code.startsWith("user.") ? t(`errors.${nonField.code}`) : t("auth.error"));
+        } else setSubmitError(t("auth.error"));
+      }
+      return;
+    }
+
     const meta = EVENT_KINDS[kind];
     const payload = {
       type: "gathering" as const,
@@ -153,9 +244,7 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
       visibility,
       capacity: capNum,
       notes: notes || null,
-      gathering: isHosting
-        ? { mealType, kashrut, dietary, offering: offering || null, bringItems: bringItems || null, alcohol, accessibility: accessibility || null }
-        : { subcategory },
+      gathering: gatheringAttrs,
       hostNumMen: 1, // ignored server-side for gatherings (host is not counted), but required by the schema
       stayId: ctx.fromStay ?? null,
     };
@@ -184,7 +273,7 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5" dir="rtl">
-      <h1 className="text-2xl font-extrabold text-ink">{t(`eventKind.${kind}`)}</h1>
+      <h1 className="text-2xl font-extrabold text-ink">{isEdit ? t("hostEvent.editTitle") : t(`eventKind.${kind}`)}</h1>
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
         {/* Above the fold */}
         <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5">
@@ -218,7 +307,7 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className={labelCls}>{t("host.date")}</span>
-              <input type="date" className={fieldCls} value={eventDate} aria-label={t("host.date")} aria-invalid={!!errors.eventDate} onChange={(e) => setEventDate(e.target.value)} />
+              <input type="date" className={fieldCls + (isEdit ? " opacity-60" : "")} value={eventDate} aria-label={t("host.date")} aria-invalid={!!errors.eventDate} disabled={isEdit} onChange={(e) => setEventDate(e.target.value)} />
               {fieldError("eventDate")}
             </label>
             <label className="block">
@@ -240,13 +329,15 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
           {isHosting ? (
             <label className="block">
               <span className={labelCls}>{t("hosting.seatsLabel")}</span>
-              <input type="number" min={1} max={500} className={fieldCls} value={seats} aria-label={t("hosting.seatsLabel")} onChange={(e) => setSeats(Math.max(1, Math.floor(Number(e.target.value)) || 1))} />
+              <input type="number" min={1} max={500} className={fieldCls} value={seats} aria-label={t("hosting.seatsLabel")} aria-invalid={!!errors.capacity} onChange={(e) => setSeats(Math.max(1, Math.floor(Number(e.target.value)) || 1))} />
               <span className="mt-1 block text-xs text-muted">{t("hosting.seatsHelper")}</span>
+              {fieldError("capacity")}
             </label>
           ) : (
             <label className="block">
               <span className={labelCls}>{t("social.capacityLabel")}</span>
-              <input type="number" min={1} max={500} className={fieldCls} value={capacity} aria-label={t("social.capacityLabel")} onChange={(e) => setCapacity(e.target.value)} />
+              <input type="number" min={1} max={500} className={fieldCls} value={capacity} aria-label={t("social.capacityLabel")} aria-invalid={!!errors.capacity} onChange={(e) => setCapacity(e.target.value)} />
+              {fieldError("capacity")}
             </label>
           )}
 
@@ -257,8 +348,15 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
                 {location.city}{location.country ? `, ${location.country}` : ""}
               </p>
             )}
-            <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} precise />
-            {fieldError("city")}
+            {/* Location is immutable in v1 (not in UpdateEventInput) — show it read-only when editing. */}
+            {isEdit ? (
+              <p className="text-xs text-muted">{t("hostEvent.locationLocked")}</p>
+            ) : (
+              <>
+                <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} precise />
+                {fieldError("city")}
+              </>
+            )}
           </div>
         </section>
 
@@ -362,8 +460,8 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
         </section>
 
         {submitError && <p role="alert" className="text-sm font-bold text-clay-ink">{submitError}</p>}
-        <button type="submit" disabled={host.isPending} className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary transition disabled:opacity-60">
-          {host.isPending ? t("auth.submitting") : t("hostEvent.publish")}
+        <button type="submit" disabled={host.isPending || update.isPending} className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary transition disabled:opacity-60">
+          {host.isPending || update.isPending ? t("auth.submitting") : isEdit ? t("hostEvent.saveChanges") : t("hostEvent.publish")}
         </button>
       </form>
     </div>

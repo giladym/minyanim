@@ -57,6 +57,8 @@ export function useTransferHost() {
   });
 }
 export const updateMinyan = (id: string, input: UpdateEventInputType) => api<OwnerMinyanDTO>(`/events/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+/** PATCH /events/:id — generic host edit for ANY event type (014). Returns the owner tier. */
+export const updateEvent = (id: string, input: UpdateEventInputType) => api<OwnerEventDTO>(`/events/${id}`, { method: "PATCH", body: JSON.stringify(input) });
 export const cancelMinyan = (id: string) => api<{ ok: true }>(`/events/${id}/cancel`, { method: "POST", body: JSON.stringify({ confirm: true }) });
 export const commitToMinyan = (id: string, numMen: number, stayId?: string | null) =>
   api<{ minyan: ParticipantMinyanDTO; conflict: boolean }>(`/events/${id}/commit`, { method: "POST", body: JSON.stringify({ numMen, stayId: stayId ?? null }) });
@@ -90,6 +92,15 @@ export function useUpdateMinyan(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateEventInputType) => updateMinyan(id, input),
+    onSettled: () => invalidateEventViews(qc, id),
+  });
+}
+
+/** Host edit for any event (minyan or gathering) — PATCHes the generic endpoint (014 edit UI). */
+export function useUpdateEvent(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateEventInputType) => updateEvent(id, input),
     onSettled: () => invalidateEventViews(qc, id),
   });
 }

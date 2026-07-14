@@ -445,6 +445,11 @@ function EventDetailContent({ id, justPublished }: { id: string; justPublished?:
             <input type="checkbox" className="h-5 w-5" checked={m.seferTorah} aria-label={t("host.seferTorah")} onChange={(e) => update.mutate({ seferTorah: e.target.checked })} />
             {t("host.seferTorah")}
           </label>
+          {/* Full edit (nusach / tefillot / notes / address) lives on the edit page; the quick
+              Sefer-Torah toggle above stays inline. */}
+          <Link to="/event/$id/edit" params={{ id: m.id }} className="self-start rounded-[14px] bg-primary px-4 py-2.5 font-extrabold text-on-primary">
+            {t("minyanDetail.edit")}
+          </Link>
           <button
             type="button"
             className="self-start rounded-[14px] border border-clay px-4 py-2.5 font-bold text-clay disabled:opacity-60"

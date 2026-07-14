@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { CreateEventInput, type Nusach, type Tefilla } from "@minyanim/shared";
+import { CreateEventInput, UpdateEventInput, type Nusach, type Tefilla, type OwnerMinyanDTO } from "@minyanim/shared";
 import { LocationPicker, type LocationValue } from "../stays/LocationPicker";
-import { useHostMinyan } from "../../lib/events";
+import { useHostMinyan, useUpdateEvent } from "../../lib/events";
 import { useDiscovery } from "../../lib/discovery";
 import { getStay } from "../../lib/stays";
 import { Icon } from "../../components/Icon";
@@ -42,10 +42,13 @@ function dateToEpoch(v: string): number {
 
 /** Host-a-Minyan form (US2/FR-002): location + date + a set of tefillot (each optional time) +
  * nusach + Sefer Torah + notes + party size. On success routes to the new Minyan's detail page. */
-export function HostMinyanForm() {
+export function HostMinyanForm({ editEvent }: { editEvent?: OwnerMinyanDTO } = {}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const host = useHostMinyan();
+  const isEdit = Boolean(editEvent);
+  const editId = editEvent?.id ?? "";
+  const update = useUpdateEvent(editId);
 
   const [location, setLocation] = useState<LocationValue>({ city: "", country: "", lat: null, lng: null });
   const [addressPrivate, setAddressPrivate] = useState("");
@@ -63,11 +66,34 @@ export function HostMinyanForm() {
   //  • ?fromStay=<id> — the post-save "host a minyan" promotion (#4): location + first Shabbat.
   //  • lat/lng/city/country/date/nearby — the discovery "organize a minyan here" button: the
   //    searched location + that Shabbat, plus how many nearby people will be notified on save.
-  const search = useSearch({ from: "/authed/minyan/new" });
+  // `strict: false` so this hook is safe on BOTH the create route (`/minyan/new`, where these params
+  // are set) and the edit route (`/event/$id/edit`, which reuses this form with `editEvent`). In edit
+  // mode the search-driven prefill effect below no-ops.
+  const search = useSearch({ strict: false }) as {
+    fromStay?: string; lat?: number; lng?: number; city?: string; country?: string; date?: string; nearby?: number;
+  };
   const { fromStay, lat, lng, city, country, date, nearby } = search;
+
+  // Edit mode (014): seed every editable field from the loaded minyan — exactly ONCE (ref-guarded).
+  // Location + date are immutable in v1 (not in UpdateEventInput) and shown read-only below.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (!editEvent || seeded.current) return;
+    seeded.current = true;
+    const m = editEvent;
+    setLocation({ city: m.city, country: m.country, lat: m.lat, lng: m.lng });
+    setEventDate(new Date(m.eventDate).toISOString().slice(0, 10));
+    setNusach(m.nusach);
+    setSeferTorah(m.seferTorah);
+    setNotes(m.notes ?? "");
+    setAddressPrivate(m.addressPrivate ?? "");
+    setAddressNotes(m.addressNotes ?? "");
+    setServices(m.services.map((s) => ({ tefilla: s.tefilla, time: s.time ?? "" })));
+  }, [editEvent]);
+
   const prefilled = useRef(false);
   useEffect(() => {
-    if (prefilled.current) return;
+    if (isEdit || prefilled.current) return;
     if (fromStay) {
       prefilled.current = true;
       getStay(fromStay)
@@ -109,6 +135,42 @@ export function HostMinyanForm() {
       setErrors({ city: "location.required" });
       return;
     }
+
+    // ── Edit (PATCH) ─────────────────────────────────────────────────────────
+    // Location + date are immutable in v1 (absent from UpdateEventInput); the minyan detail + notes
+    // are editable. Party size (hostNumMen) is create-only.
+    if (isEdit) {
+      const editPayload = {
+        addressPrivate: addressPrivate || null,
+        addressNotes: addressNotes || null,
+        notes: notes || null,
+        nusach,
+        seferTorah,
+        services: services.map((s) => ({ tefilla: s.tefilla, time: s.time || null })),
+      };
+      const parsedEdit = UpdateEventInput.safeParse(editPayload);
+      if (!parsedEdit.success) {
+        const next: Record<string, string> = {};
+        for (const issue of parsedEdit.error.issues) next[issue.path.join(".") || "form"] = issue.message;
+        setErrors(next);
+        return;
+      }
+      setErrors({});
+      try {
+        const dto = await update.mutateAsync(parsedEdit.data);
+        void navigate({ to: "/minyan/$id", params: { id: dto.id } });
+      } catch (err) {
+        if (err instanceof ApiError && Array.isArray(err.body.errors) && err.body.errors.length) {
+          const next: Record<string, string> = {};
+          for (const e2 of err.body.errors) if (e2.field) next[e2.field] = e2.code;
+          setErrors(next);
+          const nonField = err.body.errors.find((e2) => !e2.field);
+          if (nonField) setSubmitError(nonField.code.startsWith("user.") ? t(`errors.${nonField.code}`) : t("auth.error"));
+        } else setSubmitError(t("auth.error"));
+      }
+      return;
+    }
+
     const payload = {
       type: "minyan" as const,
       city: location.city,
@@ -155,7 +217,7 @@ export function HostMinyanForm() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5" dir="rtl">
-      <h1 className="text-2xl font-extrabold text-ink">{t("host.title")}</h1>
+      <h1 className="text-2xl font-extrabold text-ink">{isEdit ? t("host.editTitle") : t("host.title")}</h1>
       {travelers.length > 0 ? (
         <TravelersPanel travelers={travelers} nearby={nearby} />
       ) : (
@@ -173,8 +235,15 @@ export function HostMinyanForm() {
               {location.city}{location.country ? `, ${location.country}` : ""}
             </p>
           )}
-          <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} precise />
-          {fieldError("city")}
+          {/* Location is immutable in v1 (not in UpdateEventInput) — read-only when editing. */}
+          {isEdit ? (
+            <p className="text-xs text-muted">{t("host.locationLocked")}</p>
+          ) : (
+            <>
+              <LocationPicker value={location} onChange={setLocation} invalid={!!errors.city} precise />
+              {fieldError("city")}
+            </>
+          )}
           <label className="mt-4 block">
             <span className={labelCls}>{t("host.addressPrivate")}<CommittedPill /></span>
             <input
@@ -203,7 +272,7 @@ export function HostMinyanForm() {
         <section className="rounded-2xl border border-line bg-surface p-5">
           <label className="block">
             <span className={labelCls}>{t("host.date")}</span>
-            <input type="date" className={fieldCls} value={eventDate} aria-label={t("host.date")} aria-invalid={!!errors.eventDate} onChange={(e) => setEventDate(e.target.value)} />
+            <input type="date" className={fieldCls + (isEdit ? " opacity-60" : "")} value={eventDate} aria-label={t("host.date")} aria-invalid={!!errors.eventDate} disabled={isEdit} onChange={(e) => setEventDate(e.target.value)} />
             {fieldError("eventDate")}
           </label>
 
@@ -240,11 +309,14 @@ export function HostMinyanForm() {
             <input type="checkbox" className="h-5 w-5" checked={seferTorah} aria-label={t("host.seferTorah")} onChange={(e) => setSeferTorah(e.target.checked)} />
             {t("host.seferTorah")}
           </label>
-          <label className="block">
-            <span className={labelCls}>{t("host.numMen")}</span>
-            <input type="number" min={1} max={50} className={fieldCls} value={hostNumMen} aria-label={t("host.numMen")} aria-invalid={!!errors.hostNumMen} onChange={(e) => setHostNumMen(Math.min(50, Math.max(1, Math.floor(Number(e.target.value)) || 1)))} />
-            {fieldError("hostNumMen")}
-          </label>
+          {/* Party size seeds the host's self-commitment on CREATE only — not part of an edit. */}
+          {!isEdit && (
+            <label className="block">
+              <span className={labelCls}>{t("host.numMen")}</span>
+              <input type="number" min={1} max={50} className={fieldCls} value={hostNumMen} aria-label={t("host.numMen")} aria-invalid={!!errors.hostNumMen} onChange={(e) => setHostNumMen(Math.min(50, Math.max(1, Math.floor(Number(e.target.value)) || 1)))} />
+              {fieldError("hostNumMen")}
+            </label>
+          )}
           <label className="block">
             <span className={labelCls}>{t("host.notes")}</span>
             <textarea className={fieldCls} rows={2} value={notes} aria-label={t("host.notes")} onChange={(e) => setNotes(e.target.value)} />
@@ -252,8 +324,8 @@ export function HostMinyanForm() {
         </section>
 
         {submitError && <p role="alert" className="text-sm font-bold text-clay-ink">{submitError}</p>}
-        <button type="submit" disabled={host.isPending} className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary transition disabled:opacity-60">
-          {host.isPending ? t("auth.submitting") : t("host.submit")}
+        <button type="submit" disabled={host.isPending || update.isPending} className="w-full rounded-[14px] bg-primary px-4 py-[15px] font-extrabold text-on-primary transition disabled:opacity-60">
+          {host.isPending || update.isPending ? t("auth.submitting") : isEdit ? t("host.saveChanges") : t("host.submit")}
         </button>
       </form>
     </div>

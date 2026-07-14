@@ -9,7 +9,10 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
   useSearch: () => ({}),
 }));
-vi.mock("../../lib/events", () => ({ useHostEvent: () => ({ mutateAsync, isPending: false }) }));
+vi.mock("../../lib/events", () => ({
+  useHostEvent: () => ({ mutateAsync, isPending: false }),
+  useUpdateEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
 vi.mock("../../lib/stays", () => ({ getStay: vi.fn() }));
 vi.mock("../stays/LocationPicker", () => ({
   LocationPicker: ({ onChange }: { onChange: (v: unknown) => void }) => (
