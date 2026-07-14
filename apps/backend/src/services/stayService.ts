@@ -1,5 +1,4 @@
 import {
-  PrayerNeedsSchema,
   ERROR_CODES,
   type CreateStayInputType,
   type UpdateStayInputType,
@@ -93,8 +92,6 @@ function toOwnerDTO(row: StayRow, clientTz?: string): OwnerStayDTO {
     arrivalDate: row.arrivalDate.getTime(),
     departureDate: row.departureDate.getTime(),
     numMen: row.numMen,
-    bringsSeferTorah: row.bringsSeferTorah,
-    prayerNeeds: PrayerNeedsSchema.parse(row.prayerNeeds),
     status,
     isPast,
     coversShabbat: coversShabbat(row.arrivalDate, row.departureDate, tz),
@@ -142,8 +139,6 @@ export async function createStay(
     arrivalDate: arrival,
     departureDate: departure,
     numMen: input.numMen,
-    bringsSeferTorah: input.bringsSeferTorah,
-    prayerNeeds: PrayerNeedsSchema.parse(input.prayerNeeds),
     status: "active",
     contactName: input.contactName ?? null,
     contactPhone: input.contactPhone ?? null,
@@ -299,8 +294,6 @@ export async function updateStay(
   if (input.arrivalDate !== undefined) fields.arrivalDate = arrival;
   if (input.departureDate !== undefined) fields.departureDate = departure;
   if (input.numMen !== undefined) fields.numMen = input.numMen;
-  if (input.bringsSeferTorah !== undefined) fields.bringsSeferTorah = input.bringsSeferTorah;
-  if (input.prayerNeeds !== undefined) fields.prayerNeeds = PrayerNeedsSchema.parse(input.prayerNeeds);
   if (input.contactName !== undefined) fields.contactName = input.contactName ?? null;
   if (input.contactPhone !== undefined) fields.contactPhone = input.contactPhone ?? null;
   if (input.contactEmail !== undefined) fields.contactEmail = input.contactEmail ?? null;

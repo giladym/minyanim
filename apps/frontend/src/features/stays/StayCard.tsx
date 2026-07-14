@@ -8,6 +8,7 @@ import { useProfile } from "../../lib/profile";
 import { SceneHeader } from "./SceneHeader";
 import { pickHeaderImage } from "./headerImages";
 import { ZmanimSection } from "./ZmanimSection";
+import { StayEventsChip } from "./StayEvents";
 
 /** Today at UTC midnight — Stay dates are stored as UTC-midnight civil dates. */
 function todayUtc(): number {
@@ -132,11 +133,14 @@ export function StayCard({
               <Icon name="calendar" size={17} className="text-faint" />
               {formatDate(stay.arrivalDate, locale)} – {formatDate(stay.departureDate, locale)}
             </p>
-            {folder && (
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">
-                {folder.name}
-              </span>
-            )}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {folder && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-chip px-2.5 py-1 text-xs font-bold text-muted">
+                  {folder.name}
+                </span>
+              )}
+              {!stay.isPast && <StayEventsChip stayId={stay.id} />}
+            </div>
           </div>
           {!stay.isPast && <CardMenu stay={stay} onCancel={onCancel} onMove={onMove} folders={folders} />}
         </div>

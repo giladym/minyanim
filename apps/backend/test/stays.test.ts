@@ -29,8 +29,6 @@ function futureStay(overrides: Record<string, unknown> = {}) {
     arrivalDate: utcMidnight(2027, 1, 10),
     departureDate: utcMidnight(2027, 1, 12),
     numMen: 3,
-    bringsSeferTorah: true,
-    prayerNeeds: { weekday: { shacharit: true, mincha: false, maariv: false } },
     ...overrides,
   };
 }
@@ -52,7 +50,6 @@ describe("POST /api/stays (create + structural validation)", () => {
     expect(body.isPast).toBe(false);
     // Jan 10–12 2027: Jan 10 is a Sunday, Jan 11 Mon, Jan 12 Tue — no Shabbat.
     expect(body.coversShabbat).toBe(false);
-    expect(body.prayerNeeds.weekday.shacharit).toBe(true);
   });
 
   it("computes coversShabbat=true when the range spans a Friday/Saturday", async () => {
@@ -185,8 +182,6 @@ describe("temporal validation (destination-local 'today', real tz-lookup)", () =
     city: "New York",
     country: "United States",
     numMen: 2,
-    bringsSeferTorah: false,
-    prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
   } as const;
 
   /** Anchor "now" at `hourUtc` of an arbitrary fixed date. */

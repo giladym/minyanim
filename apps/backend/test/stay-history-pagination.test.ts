@@ -22,8 +22,6 @@ const create = (cookie: string, arrival: number, departure: number) =>
       arrivalDate: arrival,
       departureDate: departure,
       numMen: 2,
-      bringsSeferTorah: false,
-      prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
     }),
   }).then((r) => r.json()) as Promise<OwnerStayDTO>;
 

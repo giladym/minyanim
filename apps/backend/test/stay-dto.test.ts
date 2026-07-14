@@ -11,8 +11,6 @@ const owner: OwnerStayDTO = {
   arrivalDate: Date.UTC(2027, 0, 10),
   departureDate: Date.UTC(2027, 0, 12),
   numMen: 3,
-  bringsSeferTorah: true,
-  prayerNeeds: { weekday: { shacharit: true, mincha: false, maariv: false } },
   status: "active",
   isPast: false,
   coversShabbat: false,

@@ -20,8 +20,6 @@ const stayBody = {
   arrivalDate: Date.UTC(2027, 0, 10),
   departureDate: Date.UTC(2027, 0, 12),
   numMen: 2,
-  bringsSeferTorah: false,
-  prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
 };
 
 describe("account deletion cascades stays (FR-008/SC-007)", () => {

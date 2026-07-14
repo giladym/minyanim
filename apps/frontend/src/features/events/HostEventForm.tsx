@@ -86,7 +86,14 @@ export function HostEventForm({ kind, ctx }: { kind: Exclude<EventKind, "minyan"
     if (ctx.fromStay) {
       prefilled.current = true;
       getStay(ctx.fromStay)
-        .then((s) => setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng }))
+        .then((s) => {
+          setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
+          // Prefill the event date from the location's arrival (015) — editable; only if the user
+          // hasn't already picked one.
+          if (Number.isFinite(s.arrivalDate)) {
+            setEventDate((prev) => prev || new Date(s.arrivalDate).toISOString().slice(0, 10));
+          }
+        })
         .catch(() => {});
     } else if (ctx.lat != null && ctx.lng != null) {
       prefilled.current = true;

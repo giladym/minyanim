@@ -27,7 +27,6 @@ async function createStay(cookie: string): Promise<string> {
   const body = {
     city: "בריסל", country: "BE", lat: 50.85, lng: 4.35, addressPrivate: null,
     arrivalDate: Date.UTC(2030, 5, 1), departureDate: Date.UTC(2030, 5, 8), numMen: 2,
-    bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
     contactName: null, contactPhone: null, contactEmail: null, groupMembers: null, notes: null, folderId: null,
   };
   const res = await SELF.fetch("https://x/api/stays", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify(body) });
@@ -100,7 +99,7 @@ describe("user sanctions + enforcement (006 US3 / FR-005)", () => {
     expect((await susp.json()).status).toBe("suspended");
 
     const blocked = await SELF.fetch("https://x/api/stays", { method: "POST", headers: { ...J, cookie: offender },
-      body: JSON.stringify({ city: "x", country: "x", lat: 1, lng: 1, arrivalDate: Date.UTC(2030, 5, 1), departureDate: Date.UTC(2030, 5, 2), numMen: 1, bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } }, folderId: null }) });
+      body: JSON.stringify({ city: "x", country: "x", lat: 1, lng: 1, arrivalDate: Date.UTC(2030, 5, 1), departureDate: Date.UTC(2030, 5, 2), numMen: 1, folderId: null }) });
     expect(blocked.status).toBe(403);
     const body = await blocked.json();
     expect(body.errors[0].code).toBe("user.suspended");

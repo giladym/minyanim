@@ -60,13 +60,12 @@ function travelerContact(s: PotentialStay, phones: Map<string, string>): Travele
 /** Bucket active Stays into per-Shabbat potential within [from, to] (D2/R3), attaching each
  * covering traveler's contact so a signed-in viewer can reach out to form a minyan. */
 function bucketPotential(stays: PotentialStay[], from: Date, to: Date, phones: Map<string, string>): PotentialBucket[] {
-  const byShabbat = new Map<string, { menCount: number; seferTorahCount: number; travelers: TravelerContact[] }>();
+  const byShabbat = new Map<string, { menCount: number; travelers: TravelerContact[] }>();
   for (const s of stays) {
     const contact = travelerContact(s, phones);
     for (const shabbat of shabbatSaturdaysInRange(s.arrivalDate, s.departureDate, from, to)) {
-      const cur = byShabbat.get(shabbat) ?? { menCount: 0, seferTorahCount: 0, travelers: [] };
+      const cur = byShabbat.get(shabbat) ?? { menCount: 0, travelers: [] };
       cur.menCount += s.numMen;
-      if (s.bringsSeferTorah) cur.seferTorahCount += 1;
       cur.travelers.push(contact);
       byShabbat.set(shabbat, cur);
     }

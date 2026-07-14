@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import {
-  CreateStayInput,
-  type CreateStayInputType,
-  type PrayerNeeds as PrayerNeedsValue,
-} from "@minyanim/shared";
+import { CreateStayInput, type CreateStayInputType } from "@minyanim/shared";
 import { getProfile } from "../../lib/profile";
 import { getStay, useCreateStay, useUpdateStay, useLinkedMinyanim, useUnlinkMinyanim } from "../../lib/stays";
 import { LocationChangeGuard } from "./LocationChangeGuard";
@@ -15,7 +11,7 @@ import { LocationPicker, type LocationValue } from "./LocationPicker";
 import { Gallery } from "../media/Gallery";
 import { ImageUploader } from "../media/ImageUploader";
 import { deleteImage } from "../../lib/media";
-import { PrayerNeeds } from "./PrayerNeeds";
+import { StayEventsSection } from "./StayEvents";
 import { KosherPlacesCard } from "../places/KosherPlacesCard";
 import { Icon } from "../../components/Icon";
 
@@ -36,27 +32,6 @@ function epochToDateInput(epoch: number): string {
   if (!Number.isFinite(epoch)) return "";
   return new Date(epoch).toISOString().slice(0, 10);
 }
-
-/**
- * Whether the civil-date range ["YYYY-MM-DD", "YYYY-MM-DD"] overlaps a Friday or Saturday — the
- * client-side mirror of the server's coversShabbat heuristic (D7). Dates are treated as civil and
- * parsed at UTC midnight, so `getUTCDay() ∈ {5, 6}` is the civil weekday. Returns false until
- * both dates are valid and ordered. */
-function rangeCoversShabbat(arrival: string, departure: string): boolean {
-  const start = dateInputToEpoch(arrival);
-  const end = dateInputToEpoch(departure);
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return false;
-  const DAY_MS = 24 * 60 * 60 * 1000;
-  for (let t = start; t <= end; t += DAY_MS) {
-    const day = new Date(t).getUTCDay();
-    if (day === 5 || day === 6) return true;
-  }
-  return false;
-}
-
-const emptyPrayerNeeds: PrayerNeedsValue = {
-  weekday: { shacharit: false, mincha: false, maariv: false },
-};
 
 /** Field-keyed validation errors (code strings rendered via t(`errors.${code}`)). */
 type FieldErrors = Record<string, string>;
@@ -102,8 +77,6 @@ export function AddEditStayForm({
   const [arrival, setArrival] = useState("");
   const [departure, setDeparture] = useState("");
   const [numMen, setNumMen] = useState(1);
-  const [bringsSeferTorah, setBringsSeferTorah] = useState(false);
-  const [prayerNeeds, setPrayerNeeds] = useState<PrayerNeedsValue>(emptyPrayerNeeds);
   const [addressPrivate, setAddressPrivate] = useState("");
   const [groupMembers, setGroupMembers] = useState("");
   const [notes, setNotes] = useState("");
@@ -164,12 +137,6 @@ export function AddEditStayForm({
   const createFolder = useCreateFolder();
   const busy = create.isPending || update.isPending;
 
-  // Date-driven Shabbat affordance: show the note only when the range covers a Fri/Sat (FR-009).
-  const coversShabbat = useMemo(
-    () => rangeCoversShabbat(arrival, departure),
-    [arrival, departure],
-  );
-
   // Smart defaults: pre-fill contact (name + first phone) from the profile (D12). Fresh-create
   // only — skipped when editing or duplicating (the source Stay's contact is used instead).
   useEffect(() => {
@@ -195,8 +162,6 @@ export function AddEditStayForm({
         setArrival(epochToDateInput(s.arrivalDate));
         setDeparture(epochToDateInput(s.departureDate));
         setNumMen(s.numMen);
-        setBringsSeferTorah(s.bringsSeferTorah);
-        setPrayerNeeds(s.prayerNeeds);
         setAddressPrivate(s.addressPrivate ?? "");
         setGroupMembers(s.groupMembers ?? "");
         setNotes(s.notes ?? "");
@@ -210,7 +175,7 @@ export function AddEditStayForm({
           city: s.city, country: s.country, lat: s.lat, lng: s.lng,
           addressPrivate: s.addressPrivate || null,
           arrivalDate: s.arrivalDate, departureDate: s.departureDate,
-          numMen: s.numMen, bringsSeferTorah: s.bringsSeferTorah, prayerNeeds: s.prayerNeeds,
+          numMen: s.numMen,
           contactName: s.contactName || null, contactPhone: s.contactPhone || null, contactEmail: s.contactEmail || null,
           groupMembers: s.groupMembers || null, notes: s.notes || null, folderId: s.folderId ?? null,
         });
@@ -231,8 +196,6 @@ export function AddEditStayForm({
       .then((s) => {
         setLocation({ city: s.city, country: s.country, lat: s.lat, lng: s.lng });
         setNumMen(s.numMen);
-        setBringsSeferTorah(s.bringsSeferTorah);
-        setPrayerNeeds(s.prayerNeeds);
         setAddressPrivate(s.addressPrivate ?? "");
         setGroupMembers(s.groupMembers ?? "");
         setNotes(s.notes ?? "");
@@ -256,8 +219,6 @@ export function AddEditStayForm({
       arrivalDate: dateInputToEpoch(arrival),
       departureDate: dateInputToEpoch(departure),
       numMen,
-      bringsSeferTorah,
-      prayerNeeds,
       contactName: contactName || null,
       contactPhone: contactPhone || null,
       contactEmail: contactEmail || null,
@@ -265,7 +226,7 @@ export function AddEditStayForm({
       notes: notes || null,
       folderId,
     }),
-    [location, addressPrivate, arrival, departure, numMen, bringsSeferTorah, prayerNeeds, contactName, contactPhone, contactEmail, groupMembers, notes, folderId],
+    [location, addressPrivate, arrival, departure, numMen, contactName, contactPhone, contactEmail, groupMembers, notes, folderId],
   );
 
   // Edit mode: enable "update" only once the form differs from the loaded Stay (nothing to save otherwise).
@@ -413,6 +374,10 @@ export function AddEditStayForm({
           <KosherPlacesCard lat={location.lat} lng={location.lng} city={location.city} country={location.country} />
         )}
 
+        {/* 015: events attached to this location. Only for a SAVED stay (needs an id to attach to);
+            a fresh create hides it — events are added after the location exists. */}
+        {isEdit && stayId && <StayEventsSection stayId={stayId} />}
+
         <Card>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="block">
@@ -456,20 +421,6 @@ export function AddEditStayForm({
               onChange={(e) => setNumMen(Math.min(1000, Math.max(1, Math.floor(Number(e.target.value)) || 1)))}
             />
             {fieldError("numMen")}
-          </label>
-        </Card>
-
-        <Card>
-          <PrayerNeeds value={prayerNeeds} onChange={setPrayerNeeds} coversShabbat={coversShabbat} />
-          <label className="mt-4 flex min-h-[44px] items-center gap-3 text-ink">
-            <input
-              type="checkbox"
-              className="h-5 w-5"
-              checked={bringsSeferTorah}
-              aria-label={t("stays.bringsSeferTorah")}
-              onChange={(e) => setBringsSeferTorah(e.target.checked)}
-            />
-            {t("stays.bringsSeferTorah")}
           </label>
         </Card>
 

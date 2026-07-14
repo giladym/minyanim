@@ -78,7 +78,6 @@ export function HostMinyanForm() {
           // gone one. The server remains authoritative for the timezone-correct past check.
           const shabbat = firstShabbat(Math.max(s.arrivalDate, todayUtcMidnight()), s.departureDate);
           if (shabbat) setEventDate(shabbat);
-          if (s.bringsSeferTorah) setSeferTorah(true);
           if (typeof s.numMen === "number") setHostNumMen(Math.min(50, Math.max(1, s.numMen)));
         })
         .catch(() => {});

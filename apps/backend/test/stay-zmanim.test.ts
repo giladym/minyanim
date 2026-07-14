@@ -20,8 +20,6 @@ const stayBody = (over: Record<string, unknown>) => ({
   arrivalDate: Date.UTC(2026, 6, 3), // Fri 3 Jul 2026
   departureDate: Date.UTC(2026, 6, 5), // Sun 5 Jul (covers Sat 4 Jul)
   numMen: 2,
-  bringsSeferTorah: false,
-  prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
   ...over,
 });
 

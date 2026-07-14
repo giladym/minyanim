@@ -27,7 +27,7 @@ import "../../i18n";
 
 const RESULT = {
   potential: [{
-    shabbat: "2027-08-07", menCount: 11, seferTorahCount: 2,
+    shabbat: "2027-08-07", menCount: 11,
     travelers: [
       { name: "יוסי", phone: "+972501112233", numMen: 2 },
       { name: "אורח פרטי", phone: null, numMen: 1 },

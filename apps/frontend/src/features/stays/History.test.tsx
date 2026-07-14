@@ -37,8 +37,6 @@ const stay = (id: string, departure: number, tag: "attended" | "cancelled"): Own
   arrivalDate: departure - 2 * 86400000,
   departureDate: departure,
   numMen: 2,
-  bringsSeferTorah: false,
-  prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
   status: tag === "cancelled" ? "cancelled" : "active",
   isPast: tag === "attended",
   coversShabbat: false,

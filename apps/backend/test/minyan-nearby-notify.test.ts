@@ -18,7 +18,7 @@ const stay = (cookie: string, lat: number, lng: number) =>
   SELF.fetch("https://x/api/stays", { method: "POST", headers: { ...J, cookie }, body: JSON.stringify({
     city: "וינה", country: "אוסטריה", lat, lng,
     arrivalDate: Date.UTC(2030, 0, 3), departureDate: Date.UTC(2030, 0, 7), // covers 5 Jan
-    numMen: 2, bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
+    numMen: 2,
   }) });
 
 const host = (cookie: string) =>
@@ -51,7 +51,7 @@ describe("host a minyan → nearby stay-havers notified (in-app)", () => {
     await SELF.fetch("https://x/api/stays", { method: "POST", headers: { ...J, cookie: other }, body: JSON.stringify({
       city: "וינה", country: "אוסטריה", lat: VIENNA.lat, lng: VIENNA.lng,
       arrivalDate: Date.UTC(2030, 5, 1), departureDate: Date.UTC(2030, 5, 3), // June — not 5 Jan
-      numMen: 2, bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
+      numMen: 2,
     }) });
     const hostCookie = await signIn();
     await host(hostCookie);

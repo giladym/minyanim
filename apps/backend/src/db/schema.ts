@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
-import type { PrayerNeeds, MinyanService, KosherMeta, GatheringAttrs } from "@minyanim/shared";
+import type { MinyanService, KosherMeta, GatheringAttrs } from "@minyanim/shared";
 
 // better-auth-owned tables (user/session/account/verification) + our phone_number.
 // Field KEYS match better-auth's model fields; DB column names are snake_case.
@@ -137,9 +137,10 @@ export const stay = sqliteTable(
     addressPrivate: text("address_private"),
     arrivalDate: integer("arrival_date", { mode: "timestamp" }).notNull(),
     departureDate: integer("departure_date", { mode: "timestamp" }).notNull(),
+    // 015: a light group size ("מי מגיע") — feeds discovery potential-matchmaking. The former
+    // minyan-specific stay fields (brings_sefer_torah, prayer_needs) were dropped here (migration
+    // 0015); that intent now lives on minyan events attached to the location via event.stay_id.
     numMen: integer("num_men").notNull(),
-    bringsSeferTorah: integer("brings_sefer_torah", { mode: "boolean" }).notNull().default(false),
-    prayerNeeds: text("prayer_needs", { mode: "json" }).$type<PrayerNeeds>().notNull(),
     status: text("status").notNull().default("active"),
     // 006: auto-hidden (≥3 distinct flags) or admin-removed — dropped from public discovery; the
     // owner still sees it ("under review"). Parallels event.hidden.
@@ -184,6 +185,9 @@ export const event = sqliteTable(
     hostUserId: text("host_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    // 015: the location this event is attached to (created via "＋ הוסף אירוע" from a Stay). NULL for
+    // a standalone event. ON DELETE SET NULL — deleting the location keeps the event (unfiled).
+    stayId: text("stay_id").references(() => stay.id, { onDelete: "set null" }),
     // 014: host-set title; NULL for a minyan (its label is derived from services/place).
     title: text("title"),
     city: text("city").notNull(),
@@ -219,6 +223,7 @@ export const event = sqliteTable(
     index("event_host_idx").on(t.hostUserId),
     index("event_lat_lng_idx").on(t.lat, t.lng),
     index("event_status_type_date_idx").on(t.status, t.type, t.eventDate),
+    index("event_stay_idx").on(t.stayId), // 015: a location's events
   ],
 );
 

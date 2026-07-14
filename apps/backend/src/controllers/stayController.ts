@@ -29,8 +29,6 @@ function toOwnerResponse(dto: OwnerStayDTO): OwnerStayDTO {
     arrivalDate: dto.arrivalDate,
     departureDate: dto.departureDate,
     numMen: dto.numMen,
-    bringsSeferTorah: dto.bringsSeferTorah,
-    prayerNeeds: dto.prayerNeeds,
     status: dto.status,
     isPast: dto.isPast,
     coversShabbat: dto.coversShabbat,

@@ -27,7 +27,7 @@ async function seedUser(e164: string): Promise<string> {
   await db.insert(stay).values({
     id: crypto.randomUUID(), userId: id, city: "פריז", country: "צרפת", lat: 48.85, lng: 2.35,
     arrivalDate: new Date(Date.UTC(2030, 7, 1)), departureDate: new Date(Date.UTC(2030, 7, 10)),
-    numMen: 2, bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: true, mincha: false, maariv: false } },
+    numMen: 2,
     status: "active", createdAt: new Date(), updatedAt: new Date(),
   });
   return id;

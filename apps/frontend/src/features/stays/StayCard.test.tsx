@@ -12,6 +12,8 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("../../lib/profile", () => ({ useProfile: () => ({ data: { havdalahOpinion: "geonim" } }) }));
 vi.mock("../../lib/zmanim", () => ({ useStayZmanim: () => ({ data: undefined, isLoading: false, isError: false }) }));
 vi.mock("../../lib/config", () => ({ useMaptilerTileKey: () => undefined, staticMapUrl: () => null }));
+// StayCard now shows a compact events chip (015) via useStayEvents — stub it (no QueryClient here).
+vi.mock("../../lib/stays", () => ({ useStayEvents: () => ({ data: [] }) }));
 
 import { StayCard } from "./StayCard";
 import "../../i18n";
@@ -19,7 +21,6 @@ import "../../i18n";
 const stay: OwnerStayDTO = {
   id: "stay_1", city: "קרקוב", country: "פולין", lat: 50.06, lng: 19.94, addressPrivate: null,
   arrivalDate: Date.UTC(2026, 6, 14), departureDate: Date.UTC(2026, 6, 16), numMen: 2,
-  bringsSeferTorah: false, prayerNeeds: { weekday: { shacharit: false, mincha: false, maariv: false } },
   status: "active", isPast: false, coversShabbat: false, contactName: null, contactPhone: null,
   contactEmail: null, groupMembers: null, notes: null, folderId: null, historyTag: null, images: null,
   createdAt: 0, updatedAt: 0,
