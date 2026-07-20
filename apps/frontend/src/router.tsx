@@ -139,6 +139,8 @@ const eventNewRoute = createRoute({
   }),
   component: lazyRouteComponent(() => import("./features/events/HostEventForm"), "HostEventPage"),
 });
+// Edit an event (014) — host-only; loads the event, guards non-hosts, renders the matching form in edit mode.
+const eventEditRoute = createRoute({ getParentRoute: () => authedLayout, path: "/event/$id/edit", component: lazyRouteComponent(() => import("./features/events/EditEventPage"), "EditEventPage") });
 // My events (014 US1 — Screen 7): hosted + attending, host requests-queue badge.
 const myEventsRoute = createRoute({ getParentRoute: () => authedLayout, path: "/my-events", component: lazyRouteComponent(() => import("./features/events/MyEvents"), "MyEvents") });
 // Notifications inbox (003 US5).
@@ -186,7 +188,7 @@ const routeTree = rootRoute.addChildren([
   verifyRoute,
   minyanDetailRoute,
   eventDetailRoute,
-  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, eventNewRoute, myEventsRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute, adminModerationRoute, adminMetricsRoute]), placesRoute]),
+  authedLayout.addChildren([staysRoute, staysHistoryRoute, staysNewRoute, staysEditRoute, profileRoute, discoveryRoute, minyanNewRoute, eventNewRoute, eventEditRoute, myEventsRoute, notificationsRoute, messagesRoute, messageThreadRoute, adminLayoutRoute.addChildren([adminLayersRoute, adminPlacesRoute, adminModerationRoute, adminMetricsRoute]), placesRoute]),
 ]);
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: NotFound });

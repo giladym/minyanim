@@ -397,6 +397,9 @@ export const en = {
       numMen: "How many men are coming with you (including you)",
       notes: "Notes",
       submit: "Host the minyan",
+      editTitle: "Edit minyan",
+      saveChanges: "Save changes",
+      locationLocked: "Location and date can't be changed after publishing.",
     },
     minyanDetail: {
       back: "Back to search",
@@ -420,6 +423,7 @@ export const en = {
       contactEmail: "Email",
       noContact: "No contact details provided",
       hostControls: "Host controls",
+      edit: "Edit minyan",
       cancel: "Cancel this minyan",
       cancelConfirm: "Cancel this minyan? Committed participants will be notified.",
       rolesTitle: "Prayer roles",
@@ -789,6 +793,9 @@ export const en = {
       descriptionLabel: "Description",
       descriptionPlaceholder: "Tell guests about the event",
       back: "Back",
+      editTitle: "Edit event",
+      saveChanges: "Save changes",
+      locationLocked: "Location and date can't be changed after publishing.",
     },
     zmanim: {
       title: "Shabbat times",

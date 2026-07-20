@@ -397,6 +397,9 @@ export const he = {
       numMen: "כמה גברים מגיעים איתך (כולל אותך)",
       notes: "הערות",
       submit: "אירוח המניין",
+      editTitle: "עריכת מניין",
+      saveChanges: "שמירת שינויים",
+      locationLocked: "לא ניתן לשנות את המיקום והתאריך לאחר הפרסום.",
     },
     minyanDetail: {
       back: "חזרה לחיפוש",
@@ -420,6 +423,7 @@ export const he = {
       contactEmail: "אימייל",
       noContact: "לא נמסרו פרטי קשר",
       hostControls: "ניהול המארח",
+      edit: "עריכת המניין",
       cancel: "ביטול המניין",
       cancelConfirm: "לבטל את המניין? המשתתפים הרשומים יקבלו הודעה.",
       rolesTitle: "תפקידים",
@@ -789,6 +793,9 @@ export const he = {
       descriptionLabel: "תיאור",
       descriptionPlaceholder: "ספרו לאורחים על האירוע",
       back: "חזרה",
+      editTitle: "עריכת אירוע",
+      saveChanges: "שמירת שינויים",
+      locationLocked: "לא ניתן לשנות את המיקום והתאריך לאחר הפרסום.",
     },
     zmanim: {
       title: "זמני שבת",

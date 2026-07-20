@@ -444,7 +444,8 @@ function GatheringAddress({ g }: { g: AnyGatheringDTO }) {
     if (isOwnerG(g)) {
       return (
         <Link
-          to="/my-events"
+          to="/event/$id/edit"
+          params={{ id: g.id }}
           className="flex items-center gap-2 rounded-2xl border border-dashed border-line2 bg-surface p-5 text-sm font-bold text-clay-ink"
         >
           <Icon name="add" size={16} />
@@ -474,7 +475,7 @@ function OwnerBand({ g }: { g: OwnerG }) {
         <span className="font-extrabold text-primary">{t("gatheringOwner.yourEvent")}</span>
         <span className="text-xs text-muted">{t("gatheringOwner.yourEventHint")}</span>
       </div>
-      <Link to="/my-events" className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-on-primary">
+      <Link to="/event/$id/edit" params={{ id: g.id }} className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-extrabold text-on-primary">
         {t("gatheringOwner.edit")}
       </Link>
     </section>
